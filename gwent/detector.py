@@ -13,7 +13,7 @@ import hasasia.sim as hassim
 
 current_path = os.getcwd()
 splt_path = current_path.split("/")
-top_path_idx = splt_path.index('DetectorDesignSensitivities')
+top_path_idx = splt_path.index('gwent')
 top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class PTA:
@@ -526,11 +526,10 @@ class SpaceBased(Interferometer):
         del self._S_n_f
 
     def Load_Transfer_Function(self):
-        LISA_Transfer_Function_filedirectory = top_directory + '/LoadFiles/LISATransferFunction/'
-        LISA_Transfer_Function_filename = 'transfer.dat' #np.loadtxting transfer function for Lisa noise curve
-        LISA_Transfer_Function_filelocation = LISA_Transfer_Function_filedirectory + LISA_Transfer_Function_filename
-        LISA_Transfer_Function_data = np.loadtxt(LISA_Transfer_Function_filelocation)
-        self._transferfunctiondata = LISA_Transfer_Function_data
+        #np.loadtxting Numerical transfer function
+        Numerical_Transfer_Function_filedirectory = top_directory + '/docs/LoadFiles/NumericalTransferFunction/transfer.dat'
+        Numerical_Transfer_Function_data = np.loadtxt(Numerical_Transfer_Function_filedirectory)
+        self._transferfunctiondata = Numerical_Transfer_Function_data
 
     def Get_Numeric_Transfer_Function(self):
         if not hasattr(self,'_transferfunctiondata'):

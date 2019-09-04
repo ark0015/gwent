@@ -11,7 +11,7 @@ import utils
 
 current_path = os.getcwd()
 splt_path = current_path.split("/")
-top_path_idx = splt_path.index('DetectorDesignSensitivities')
+top_path_idx = splt_path.index('gwent')
 top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class BinaryBlackHole:
@@ -84,7 +84,7 @@ class BinaryBlackHole:
             if os.path.exists(self.load_location):
                 self._load_data = np.loadtxt(self.load_location)
             else:
-                raise IOException('File %s does not exist, please assign load_location a correct filepath.' %load_location)
+                raise IOError('File %s does not exist, please assign load_location a correct filepath.' %self.load_location)
         else:
             raise ValueError('load_location is not assigned, please set with name_of_BBH.load_location="path/to/file".')
 
@@ -191,10 +191,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
         del self._f
 
     def Get_Fitcoeffs(self):
-        fit_coeffs_filedirectory = top_directory + '/LoadFiles/PhenomDFiles/'
-        fit_coeffs_filename = 'fitcoeffsWEB.dat'
-        fit_coeffs_file = fit_coeffs_filedirectory + fit_coeffs_filename
-        self._fitcoeffs = np.loadtxt(fit_coeffs_file) #load QNM fitting files for speed later
+        #load QNM fitting files for speed later
+        fit_coeffs_filedirectory = top_directory + '/docs/LoadFiles/PhenomDFiles/fitcoeffsWEB.dat'
+        self._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
 
     def Get_PhenomD_Strain(self):
         if not hasattr(self,'_fitcoeffs'):
