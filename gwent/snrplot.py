@@ -12,7 +12,7 @@ from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
 def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=True,dl_axis=False,smooth_contours=False,figloc=None):
-    '''Plots the SNR contours from calcSNR
+    """Plots the SNR contours from calcSNR
         Takes in the source and instrument objects
         x and y-axis variables along with the corresponding samples
         The SNRMatrix from getSNRMatrix
@@ -20,7 +20,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         dl_axis turns on the right hand side labels of luminosity distance 
         smooth_contours turns on a finer mesh size to appear smooth instead of tiered contours
         figloc is None, unless saving the figure to a file by the string figloc = '/path/to/save/location/figname.type'
-    '''
+    """
 
     axissize = 16
     labelsize = 18

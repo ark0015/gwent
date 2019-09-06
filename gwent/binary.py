@@ -16,8 +16,8 @@ top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class BinaryBlackHole:
     def __init__(self,M,q,z,**kwargs):
-        '''args order: M,q,chi1,chi2,z,inc
-            kwargs: f_low=1e-5,nfreqs=int(1e3)'''
+        """args order: M,q,chi1,chi2,z,inc
+            kwargs: f_low=1e-5,nfreqs=int(1e3)"""
         self.M = M
         self.q = q
         self.z = z
@@ -90,8 +90,8 @@ class BinaryBlackHole:
 
 class BBHFrequencyDomain(BinaryBlackHole):
     def __init__(self,*args,**kwargs):
-        '''args order: M,q,chi1,chi2,z,inc
-            kwargs: f_low=1e-5,nfreqs=int(1e3)'''
+        """args order: M,q,chi1,chi2,z,inc
+            kwargs: f_low=1e-5,nfreqs=int(1e3)"""
 
         [M,q,chi1,chi2,z,inc] = args
         super().__init__(M,q,z,**kwargs)
@@ -201,9 +201,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
         [self._phenomD_f,self._phenomD_h] = Get_Waveform(self)
 
     def Get_Time_From_Merger(self,f_obs):
-        '''Takes in an initally observed frequency, outputs the binary's time
+        """Takes in an initally observed frequency, outputs the binary's time
             from merger.
-        '''
+        """
         m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
         eta = self.q/(1+self.q)**2
 
@@ -214,9 +214,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
         return 5*(M_chirp)**(-5/3)*(8*np.pi*f_obs_source)**(-8/3)
 
     def Get_Source_Freq(self,tau):
-        '''Takes in a time from merger (tau) and calculates the binary's
+        """Takes in a time from merger (tau) and calculates the binary's
             GW frequency at that time. Assumes tau is in the source frame
-        '''
+        """
         m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
         eta = self.q/(1+self.q)**2
 
@@ -251,10 +251,10 @@ class BBHFrequencyDomain(BinaryBlackHole):
         T_obs_source = T_obs/(1+self.z)
         #print('T_obs_source: ',T_obs_source.to('yr'))
 
-        '''
+        """
         #Assumes t_init is in source frame, can either be randomly drawn
         t_init_source = np.random.uniform(0,100)*u.yr
-        '''
+        """
         #Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
         self.f_init = self.instrument.f_opt
         t_init_source = self.Get_Time_From_Merger(self.f_init)
@@ -291,7 +291,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         delf_obs =  delf_obs_source_approx/(1+self.z)
         #print('delf_obs: ',delf_obs)
 
-        '''
+        """
         #Old way I was doing this....
         M_redshifted_time = self.M.to('kg')*(1+self.z)*m_conv
         M_chirp = eta**(3/5)*M_redshifted_time
@@ -305,7 +305,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         delf = 1./8./np.pi/M_chirp*(5*M_chirp/t_init)**(3./8.)*(3*T_obs/8/t_init)
         print('delf old: ',delf)
         print('')
-        '''
+        """
         
         if delf_obs < (1/T_obs):
             self.ismono = True
@@ -317,7 +317,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
 class BBHTimeDomain(BinaryBlackHole):
     def __init__(self,*args,**kwargs):
-        '''args order: M,q,z'''
+        """args order: M,q,z"""
         super().__init__(*args,**kwargs)
         self.Get_hf_from_hcross_hplus()
 
@@ -362,7 +362,14 @@ class BBHTimeDomain(BinaryBlackHole):
 
 
     def Get_hf_from_hcross_hplus(self,interp_res='coarse',windowing='left'):
-        '''Converts dimensionless, time domain strain to frequency space'''
+        """Converts dimensionless, time domain strain to frequency space
+
+        Parameters
+        ----------
+        interp_res : {'coarse','fine'}, optional
+            'coarse' 
+
+        """
 
         #Interpolate time to evenly sampled data, can be fine or coarse
         diff_t = np.diff(self.t.value)
@@ -382,14 +389,14 @@ class BBHTimeDomain(BinaryBlackHole):
         hann_window = np.hanning(len(interp_t)) #Two sided
         if windowing == 'left':
             #########################
-            '''Applies window to first (left) half'''
+            """Applies window to first (left) half"""
             first_half = hann_window[:int(len(interp_t)/2)] # Only need tapering on first half of waveform
             second_half = np.ones(len(interp_t)-len(first_half)) #no windowing on second half of waveform
             #########################
             window = np.append(first_half,second_half) # Only apply window to first half of waveform
         elif windowing == 'right':
             #########################
-            '''Applies window to second (right) half'''
+            """Applies window to second (right) half"""
             second_half = hann_window[int(len(interp_t)/2):] # Only need tapering on second half of waveform
             first_half = np.ones(len(interp_t)-len(second_half)) #no windowing on first half of waveform
             #########################
@@ -422,6 +429,19 @@ class BBHTimeDomain(BinaryBlackHole):
 
 
 def Strain_Conv(source,natural_f,natural_h):
+    """Converts frequency and strain in natural units (G=c=1) to Hertz and dimensionless, respectively.
+
+    Parameters
+    ----------
+    source
+        Instance of gravitational wave source class
+    natural_f : array [Mf]
+        the frequency of the source in natural units (G=c=1)
+    natural_h : array [Mf]
+        the strain of the source in natural units (G=c=1)
+
+
+    """
     DL = cosmo.luminosity_distance(source.z)
     DL = DL.to('m')
 
@@ -439,36 +459,54 @@ def Strain_Conv(source,natural_f,natural_h):
     return [f,h_f]
 
 def Get_Char_Strain(source):
+    """Converts source strain to characteristic strain
+
+    Parameters
+    ----------
+    source
+        Instance of gravitational wave source class
+
+    """
     h_char = np.sqrt(4*source.f**2*source.h_f**2)
     return h_char
 
 def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
-    '''Calculates the strain from a binary in source emitting
-        at a frequency of f_gw.
-    '''
+    """Calculates the strain from a binary black hole.
+
+    Parameters
+    ----------
+    f_gw : float
+        The source frequency of the gravitational wave.
+    strain_const : {'Averaged','UseInc','Optimal'}, optional
+        'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) https://arxiv.org/pdf/1803.01944.pdf
+        'UseInc' uses the source inclination value from Rosado, Sesana, and Gair (2015) https://arxiv.org/abs/1503.04803, will be innacurate because nothing else accounts for inclination
+        'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
+
+    Returns
+    -------
+    float
+        the strain of a monochromatic source in the dector frame
+
+    """
     f_gw = utils.make_quant(f_gw,'Hz')
     if isinstance(strain_const,str):
         DL = cosmo.luminosity_distance(source.z)
         DL = DL.to('m')
 
-        m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
+        #Converts M = [M] to M = [sec]
+        m_conv = const.G/const.c**3 
 
         eta = source.q/(1+source.q)**2
         M_redshifted_time = source.M.to('kg')*(1+source.z)*m_conv
         M_chirp = eta**(3/5)*M_redshifted_time
-        #Source is emitting at one frequency (monochromatic)
-        #strain of instrument at f_cw
+
         if strain_const == 'UseInc':
-            #Strain from Rosado, Sesana, and Gair (2015) https://arxiv.org/abs/1503.04803
-            #inc = 0.0 #optimally oriented
             a = 1+np.cos(source.inc)**2
             b = -2*np.cos(source.inc)
             const_val = 2*np.sqrt(.5*(a**2+b**2))
-        elif strain_const == 'Hazboun':
+        elif strain_const == 'Optimal':
             const_val = 4.
         elif strain_const == 'Averaged':
-            #Strain from Robson et al. 2019 (eqn 27) https://arxiv.org/pdf/1803.01944.pdf
-            #(ie. #(ie. sky and inclination averaged 4 * sqrt(4/5))
             const_val = 8/np.sqrt(5)
         else:
             raise ValueError('Can only use "UseInc" or "Averaged" monochromatic strain calculation.')

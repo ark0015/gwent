@@ -17,7 +17,7 @@ top_path_idx = splt_path.index('gwent')
 top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class PTA:
-    '''
+    """
     Class to make a PTA instrument using the methods of Hazboun, Romano, Smith 2019
 
     Parameters
@@ -25,34 +25,33 @@ class PTA:
 
     name : string
         name of the instrument
-    *args
-        T_obs : float
-            the observation time of the PTA in [years]
-        N_p : int
-            the number of pulsars in the PTA 
-        sigma : float
-            the rms error on the pulsar TOAs in [sec]
-        cadence : float
-            How often the pulsars are observed in [num/year]
 
-    **kwargs
-        load_location : string, optional
-            If you want to load a PTA curve from a file, it's the file path
-        A_GWB : float, optional
-            Amplitude of the gravitational wave background added as red noise
-        alpha_GWB : float, optional
-            the GWB power law, if empty and A_GWB is set, it is assumed to be -2/3
-        A_rn : float, optional
-            Individual pulsar red noise amplitude, is a list of [min,max] values from which to uniformly sample
-        alpha_rn : float, optional
-            Individual pulsar red noise alpha (power law), is a list of [min,max] values from which to uniformly sample
-        f_low : float, optional
-            Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
-        f_high : float, optional
-            Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
-        nfreqs : int, optional
-            Number of frequencies in logspace the sensitivity is calculated
-    '''
+    T_obs : float
+        the observation time of the PTA in [years]
+    N_p : int
+        the number of pulsars in the PTA 
+    sigma : float
+        the rms error on the pulsar TOAs in [sec]
+    cadence : float
+        How often the pulsars are observed in [num/year]
+
+    load_location : string, optional
+        If you want to load a PTA curve from a file, it's the file path
+    A_GWB : float, optional
+        Amplitude of the gravitational wave background added as red noise
+    alpha_GWB : float, optional
+        the GWB power law, if empty and A_GWB is set, it is assumed to be -2/3
+    A_rn : float, optional
+        Individual pulsar red noise amplitude, is a list of [min,max] values from which to uniformly sample
+    alpha_rn : float, optional
+        Individual pulsar red noise alpha (power law), is a list of [min,max] values from which to uniformly sample
+    f_low : float, optional
+        Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
+    f_high : float, optional
+        Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
+    nfreqs : int, optional
+        Number of frequencies in logspace the sensitivity is calculated
+    """
     def __init__(self,name,*args,**kwargs):
         self.name = name
         for keys,value in kwargs.items():
@@ -145,7 +144,7 @@ class PTA:
 
     @property
     def h_n_f(self):
-        #Effective Strain Noise Amplitude
+        """Effective Strain Noise Amplitude"""
         if not hasattr(self,'_h_n_f'):
             if not hasattr(self,'_sensitivitycurve'):
                 self.Init_PTA()
@@ -227,7 +226,7 @@ class PTA:
 
 
 class Interferometer:
-    '''
+    """
     Class to make an interferometer
 
     Parameters
@@ -245,7 +244,7 @@ class Interferometer:
     I_type : string, optional
         Type of input data; can be the effective strain spectral density $S_{n}(f)$ ('ENSD'), 
         the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'), or the characteristic strain $h_{n}(f)$ ('h')
-    '''
+    """
     def __init__(self,name,T_obs,**kwargs):
         self.name = name
         self.T_obs = T_obs
@@ -350,14 +349,14 @@ class Interferometer:
 
 
 class GroundBased(Interferometer):
-    '''
+    """
     Class to make a Ground Based Instrument using the Interferometer base class
-    '''
+    """
     def __init__(self,name,T_obs,**kwargs):
         super().__init__(name,T_obs,**kwargs)
-        '''
+        """
         Currently doesn't do anything differently that Instrument object, can be updated if we ever construct at Ground Based PSD...
-        '''
+        """
 
     @property
     def P_n_f(self):
@@ -370,7 +369,7 @@ class GroundBased(Interferometer):
 
 
 class SpaceBased(Interferometer):
-    '''
+    """
     Class to make a Space Based interferometer
 
     Parameters
@@ -400,7 +399,7 @@ class SpaceBased(Interferometer):
             Assigned highest frequency of instrument (default is 1Hz)
         nfreqs : int
             Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
-        '''
+        """
     def __init__(self,name,T_obs,*args,**kwargs):
         super().__init__(name,T_obs,**kwargs)
         self.name = name
@@ -576,10 +575,10 @@ class SpaceBased(Interferometer):
 
 
     def Add_Background(self):
-        '''
+        """
         Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
             corresponding to array index 0,1,2,3 respectively
-        '''
+        """
         A = 9e-45
         a = np.array([0.133,0.171,0.165,0.138])
         b = np.array([243,292,299,-221])

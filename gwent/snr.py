@@ -77,10 +77,10 @@ def Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
     return [sample_x,sample_y,SNRMatrix]
 
 def Get_Samples(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
-    ''' Takes in a object (either for the instrument or source), and the variables
+    """ Takes in a object (either for the instrument or source), and the variables
         and sample rates desired in the SNR matrix. The function uses that to create a
         sample space for the variable either in linear space (for q,x1,or x2) or logspace
-        for everything else.'''
+        for everything else."""
     sample_x = []
     sample_y = []
     recalculate_strain = False

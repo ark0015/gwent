@@ -1,7 +1,7 @@
 import numpy as np
 
 def Get_Waveform(source,pct_of_peak=0.01):
-    '''
+    """
     Uses Mass Ratio (q <= 18), aligned spins (|a/m|~0.85 or when q=1 |a/m|<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown
@@ -20,7 +20,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
         the waveform frequencies in geometrized units (G=c=1)
     fullwaveform : numpy array of floats
         the waveform strain in geometrized units (G=c=1)
-    '''
+    """
     f_low = source.f_low.value
     N = source.nfreqs
     q = source.q
