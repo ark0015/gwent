@@ -15,9 +15,32 @@ top_path_idx = splt_path.index('gwent')
 top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class BinaryBlackHole:
-    def __init__(self,M,q,z,**kwargs):
-        """args order: M,q,chi1,chi2,z,inc
-            kwargs: f_low=1e-5,nfreqs=int(1e3)"""
+    """Base Class for frequency domain strains from Binary Black Holes.
+
+    Parameters
+    ----------
+    M : float
+        Total mass of the black hole binary (m1+m2)
+    q : float
+        Mass ratio of the black hole binary (m1/m2, m1<m2)
+    z : float
+        Redshift of the black hole binary
+
+    load_location : string, optional
+        the directory of the loaded file, ie. '/path/to/file')
+
+    Notes
+    -----
+    IMRPhenomD waveforms calibrated for q = m1/m2 < 18
+
+    """
+    def __init__(self,*args,**kwargs):
+        if len(args) == 3:
+            [M,q,z] = args
+        elif len(args) == 6:
+            [M,q,_,_,z,_] = args
+        else:
+            raise ValueError('args must be a list of 3 ([M,q,z]) or 6 ([M,q,z,chi1,chi2,inc')
         self.M = M
         self.q = q
         self.z = z
@@ -89,13 +112,30 @@ class BinaryBlackHole:
             raise ValueError('load_location is not assigned, please set with name_of_BBH.load_location="path/to/file".')
 
 class BBHFrequencyDomain(BinaryBlackHole):
+    """Subclass of BinaryBlackHole for BBH GWs generated in the frequency domain.
+
+    Parameters
+    ----------
+    chi1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    chi2 : float
+        The dimensionless spin parameter |a/m| for black hole m2
+    inc : float
+        The inclination of the BBH
+
+    f_low : float, optional
+        The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
+    nfreqs : int, optional
+        The number of frequencies at which the BBH waveform is calculated
+
+    Notes
+    -----
+    IMRPhenomD waveforms calibrated for aligned spins chi_1, chi_2 = |a/m| <= 0.85 or if q=1 |a/m|<0.98
+
+    """
     def __init__(self,*args,**kwargs):
-        """args order: M,q,chi1,chi2,z,inc
-            kwargs: f_low=1e-5,nfreqs=int(1e3)"""
-
-        [M,q,chi1,chi2,z,inc] = args
-        super().__init__(M,q,z,**kwargs)
-
+        super().__init__(*args,**kwargs)
+        [_,_,_,chi1,chi2,inc] = args
         self.chi1 = chi1
         self.chi2 = chi2
         self.inc = inc
@@ -191,18 +231,24 @@ class BBHFrequencyDomain(BinaryBlackHole):
         del self._f
 
     def Get_Fitcoeffs(self):
-        #load QNM fitting files for speed later
+        """Loads Quasi-Normal Mode fitting files for speed later."""
         fit_coeffs_filedirectory = top_directory + '/docs/LoadFiles/PhenomDFiles/fitcoeffsWEB.dat'
         self._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
 
     def Get_PhenomD_Strain(self):
+        """Gets the BBH's frequency and waveform from IMRPhenomD."""
         if not hasattr(self,'_fitcoeffs'):
             self.Get_Fitcoeffs()
         [self._phenomD_f,self._phenomD_h] = Get_Waveform(self)
 
     def Get_Time_From_Merger(self,f_obs):
-        """Takes in an initally observed frequency, outputs the binary's time
-            from merger.
+        """Calculates the time from merger of a binary black hole given an observed frequency.
+
+        Parameter
+        ---------
+        f_obs : float
+            the initially observed frequency in the instrument frame.
+
         """
         m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
         eta = self.q/(1+self.q)**2
@@ -214,8 +260,13 @@ class BBHFrequencyDomain(BinaryBlackHole):
         return 5*(M_chirp)**(-5/3)*(8*np.pi*f_obs_source)**(-8/3)
 
     def Get_Source_Freq(self,tau):
-        """Takes in a time from merger (tau) and calculates the binary's
-            GW frequency at that time. Assumes tau is in the source frame
+        """Calculates the binary black hole's gravitational wave frequency given a time from merger
+
+        Parameters
+        ----------
+        tau : float
+            the time from merger in the source frame
+
         """
         m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
         eta = self.q/(1+self.q)**2
@@ -226,21 +277,22 @@ class BBHFrequencyDomain(BinaryBlackHole):
         return 1./8./np.pi/M_chirp*(5*M_chirp/tau)**(3./8.)
 
     def Check_Freq_Evol(self):
-        #####################################
-        #If the initial observed time from merger is less than the time observed
-        #(ie t_init-T_obs < 0 => f_evolve is complex),
-        #the BBH will or has already merged during the observation
+        """Checks the frequency evolution of the black hole binary.
 
-        #If the initial observed time from merger is greater than the time observed
-        #(ie t_init-T_obs > 0 => f_evolve is real),
-        #And if the frequency of the binary does evolve over more than one bin,
-        #(ie f_T_obs-f_init < 1/T_obs), it is monochromatic, so we set the frequency
-        #to the optimal frequency of the detector
+        Notes
+        -----
+        If the frequency of the binary does evolve over more than one bin,
+        (ie f(T_obs)-f(t_init) = delf_obs < 1/T_obs), it is monochromatic, so we set the frequency
+        to the optimal frequency of the detector
 
-        #Otherwise it is chirping and evolves over the observation and we
-        #set the starting frequency we observe it at to f(Tobs), which is the 
-        #frequency at an observation time before merger
-        #####################################
+        Otherwise it is chirping and evolves over the observation and we
+        set the starting frequency we observe it at to f(Tobs), which is the 
+        frequency at an observation time before merger
+
+        To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) https://arxiv.org/abs/1907.04341
+        which uses binomial expansion of f_T_obs_inst - f_init_inst and thus will never be imaginary
+
+        """
         m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
         eta = self.q/(1+self.q)**2
 
@@ -249,12 +301,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
         T_obs = utils.make_quant(self.instrument.T_obs,'s')
         T_obs_source = T_obs/(1+self.z)
-        #print('T_obs_source: ',T_obs_source.to('yr'))
 
-        """
+        
         #Assumes t_init is in source frame, can either be randomly drawn
-        t_init_source = np.random.uniform(0,100)*u.yr
-        """
+        #t_init_source = np.random.uniform(0,100)*u.yr
+        
         #Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
         self.f_init = self.instrument.f_opt
         t_init_source = self.Get_Time_From_Merger(self.f_init)
@@ -265,47 +316,14 @@ class BBHFrequencyDomain(BinaryBlackHole):
         self.f_T_obs = f_T_obs_source/(1+self.z)
 
         #t_init_source = make_quant(t_init_source,'s')
-        #print('t_init_source: ',t_init_source.to('yr'))
-
         #f_init_source = self.Get_Source_Freq(t_init_source)
-        #print('f_init_source: ',f_init_source)
-        
         #self.f_init = f_init_source/(1+self.z)
-        #print('f_init_inst: ',self.f_init)
-        
         #f_after_T_obs_source = self.Get_Source_Freq((t_init_source-T_obs_source))
-        #print('f_end_source: ',f_after_T_obs_source)
-        
         #self.f_T_obs = f_after_T_obs_source/(1+self.z)
-        #print('f_T_obs_inst: ',self.f_T_obs)
-        
         #delf_obs_source_exact = f_after_T_obs_source-f_init_source
-        #print('delf_source: ',delf_obs_source_exact)
         
-        #from eqn 41 from Hazboun,Romano, and Smith (2019) https://arxiv.org/abs/1907.04341
-        #Uses binomial expansion of f_T_obs_inst - f_init_inst
-        #Will not ever be imaginary, so probably better to use
         delf_obs_source_approx = 1./8./np.pi/M_chirp_source*(5*M_chirp_source/t_init_source)**(3./8.)*(3*T_obs_source/8/t_init_source)
-        #print('delf_Jeff: ',delf_obs_source_approx)
-        
         delf_obs =  delf_obs_source_approx/(1+self.z)
-        #print('delf_obs: ',delf_obs)
-
-        """
-        #Old way I was doing this....
-        M_redshifted_time = self.M.to('kg')*(1+self.z)*m_conv
-        M_chirp = eta**(3/5)*M_redshifted_time
-        t_init = 5*(M_chirp)**(-5/3)*(8*np.pi*self.instrument.f_opt)**(-8/3)
-        #print('t_init: ', t_init.to('yr'))
-        #f(t) from eqn 40
-        f_evolve = 1./8./np.pi/M_chirp*(5*M_chirp/(t_init-T_obs))**(3./8.)
-        f_T_obs = 1./8./np.pi/M_chirp*(5*M_chirp/T_obs)**(3./8.)
-        print(f_T_obs)
-        #from eqn 41 from Hazboun,Romano, and Smith (2019) https://arxiv.org/abs/1907.04341
-        delf = 1./8./np.pi/M_chirp*(5*M_chirp/t_init)**(3./8.)*(3*T_obs/8/t_init)
-        print('delf old: ',delf)
-        print('')
-        """
         
         if delf_obs < (1/T_obs):
             self.ismono = True
@@ -316,8 +334,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
 
 class BBHTimeDomain(BinaryBlackHole):
+    """Subclass of BinaryBlackHole for input in the time domain"""
     def __init__(self,*args,**kwargs):
-        """args order: M,q,z"""
         super().__init__(*args,**kwargs)
         self.Get_hf_from_hcross_hplus()
 
@@ -362,12 +380,24 @@ class BBHTimeDomain(BinaryBlackHole):
 
 
     def Get_hf_from_hcross_hplus(self,interp_res='coarse',windowing='left'):
-        """Converts dimensionless, time domain strain to frequency space
+        """Converts dimensionless, time domain strain to frequency space using a windowed fft
 
         Parameters
         ----------
         interp_res : {'coarse','fine'}, optional
-            'coarse' 
+            'coarse' uses maximum difference between subsequent time steps for interpolation
+            'fine' uses minimum difference between subsequent time steps for interpolation
+        windowing : {'left','right','all'}, optional
+            'left' windows the left side of the time data
+            'right' windows the right side of the time data
+            'all' windows the both the left and right side of the time data
+
+        Returns
+        -------
+        natural_f : array
+            The frequency of the input source in natural units (G=c=1)
+        natural_h : array
+            The strain of the input source in natural units (G=c=1)
 
         """
 
