@@ -2,26 +2,51 @@ import numpy as np
 import scipy.interpolate as interp
 import scipy.integrate as integrate
 
-import astropy.constants as const
 import astropy.units as u
-from astropy.cosmology import z_at_value
-from astropy.cosmology import WMAP9 as cosmo
 
 import detector
 import binary
 from utils import make_quant
 
 
-def Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
-    # # Setting Up SNR Calculation
-    # Uses the variable given and the data range to sample the space either logrithmically or linearly based on the 
-    # selection of variables. Then it computes the SNR for each value.
-    # Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
-    # 
+def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
+    """Calculates SNR Matrix
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+    var_x : str
+        x-axis variable
+    sample_rate_x : int
+        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
+    var_y : str
+        y-axis variable
+    sample_rate_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+
+    Returns
+    -------
+    sample_x : array
+        samples at which SNRMatrix was calculated corresponding to the x-axis variable
+    sample_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    SNRMatrix : array-like
+        the sample_rate_y X sample_rate_x matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
+    
+    Notes
+    -----
+    Uses the variable given and the data range to sample the space either logrithmically or linearly based on the 
+    selection of variables. Then it computes the SNR for each value.
+    Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
+    
+    """
 
     source.instrument = instrument
     #Get Samples for variables
-    [sample_x,sample_y,recalculate_strain,recalculate_noise] = Get_Samples(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y)
+    [sample_x,sample_y,recalculate_strain,recalculate_noise] = Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y)
 
     sampleSize_x = len(sample_x)
     sampleSize_y = len(sample_y)
@@ -76,11 +101,38 @@ def Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
 
     return [sample_x,sample_y,SNRMatrix]
 
-def Get_Samples(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
-    """ Takes in a object (either for the instrument or source), and the variables
-        and sample rates desired in the SNR matrix. The function uses that to create a
+def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
+    """Gets the x and y-axis samples
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+    var_x : str
+        x-axis variable
+    sample_rate_x : int
+        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
+    var_y : str
+        y-axis variable
+    sample_rate_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+
+    Returns
+    -------
+    sample_x : array
+        samples at which SNRMatrix was calculated corresponding to the x-axis variable
+    sample_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+
+    Notes
+    -----
+        The function uses that to create a
         sample space for the variable either in linear space (for q,x1,or x2) or logspace
-        for everything else."""
+        for everything else.
+
+    """
     sample_x = []
     sample_y = []
     recalculate_strain = False
@@ -108,43 +160,52 @@ def Get_Samples(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y):
     if var_x_dict['min'] != None and var_x_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
         if var_x == 'q' or var_x == 'chi1' or var_x == 'chi2':
             #Sample in linear space for mass ratio and spins
-            sample_x = np.linspace(var_x_dict['min'],var_x_dict['max'],sampleRate_x)
+            sample_x = np.linspace(var_x_dict['min'],var_x_dict['max'],sample_rate_x)
             recalculate_strain = True #Must recalculate the waveform at each point
         elif var_x == 'T_obs':
             #sample in linear space for instrument variables
             T_obs_min = make_quant(var_x_dict['min'],'s')
             T_obs_max = make_quant(var_x_dict['max'],'s')
-            sample_x = np.linspace(T_obs_min.value,T_obs_max.value,sampleRate_x)
+            sample_x = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_x)
         else:
             #Sample in log space for any other variables
             #Need exception for astropy variables
             if isinstance(var_x_dict['min'],u.Quantity) and isinstance(var_x_dict['max'],u.Quantity):
-                sample_x = np.logspace(np.log10(var_x_dict['min'].value),np.log10(var_x_dict['max'].value),sampleRate_x)
+                sample_x = np.logspace(np.log10(var_x_dict['min'].value),np.log10(var_x_dict['max'].value),sample_rate_x)
             else:
-                sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sampleRate_x)
+                sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sample_rate_x)
         
     if var_y_dict['min'] != None and var_y_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == 'q' or var_y == 'chi1' or var_y == 'chi2':
             #Sample in linear space for mass ratio and spins
-            sample_y = np.linspace(var_y_dict['min'],var_y_dict['max'],sampleRate_y)
+            sample_y = np.linspace(var_y_dict['min'],var_y_dict['max'],sample_rate_y)
             recalculate_strain = True #Must recalculate the waveform at each point
         elif var_y == 'T_obs':
             #sample in linear space for instrument variables
             T_obs_min = make_quant(var_y_dict['min'],'s')
             T_obs_max = make_quant(var_y_dict['max'],'s')
-            sample_y = np.linspace(T_obs_min.value,T_obs_max.value,sampleRate_y)
+            sample_y = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_y)
         else:
             #Sample in log space for any other variables
             #Need exception for astropy variables
             if isinstance(var_y_dict['min'],u.Quantity) and isinstance(var_y_dict['max'],u.Quantity):
-                sample_y = np.logspace(np.log10(var_y_dict['min'].value),np.log10(var_y_dict['max'].value),sampleRate_y)
+                sample_y = np.logspace(np.log10(var_y_dict['min'].value),np.log10(var_y_dict['max'].value),sample_rate_y)
             else:
-                sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sampleRate_y)
+                sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sample_rate_y)
 
     return sample_x,sample_y,recalculate_strain,recalculate_noise
 
 def Calc_Mono_SNR(source,instrument):
-    #SNR for a monochromatic source in a PTA
+    """Calculates the SNR for a monochromatic source
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+
+    """
     if isinstance(instrument,detector.PTA):
     	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Hazboun')
     else:
@@ -154,14 +215,25 @@ def Calc_Mono_SNR(source,instrument):
     return source.h_gw*np.sqrt(instrument.T_obs.to('s')/instrument.S_n_f[indxfgw])
 
 def Calc_Chirp_SNR(source,instrument):
-    #Calculates evolving source using non-precessing binary black hole waveform model IMRPhenomD
-    #See Husa et al. 2016 (https://arxiv.org/abs/1508.07250) and Khan et al. 2016 (https://arxiv.org/abs/1508.07253)
-    #Uses an interpolated method to align waveform and instrument noise, then integrates 
-    # over the overlapping region. See eqn 18 from Robson,Cornish,and Liu 2018 https://arxiv.org/abs/1803.01944
-    # Values outside of the sensitivity curve are arbitrarily set to 1e30 so the SNR is effectively 0
+    """Calculates the SNR for an evolving source
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+
+    Notes
+    -----
+    Uses an interpolated method to align waveform and instrument noise, then integrates 
+    over the overlapping region. See eqn 18 from Robson,Cornish,and Liu 2018 https://arxiv.org/abs/1803.01944
+    Values outside of the sensitivity curve are arbitrarily set to 1e30 so the SNR is effectively 0
+
+    """
 
     #Use to integrate from initial observed frequency f(t_init) to f(t_init-T_obs)
-    #   Does not work unless t_init is randomly sampled, which we don't do 
+    #Does not work unless t_init is randomly sampled, which we don't do 
     #indxfgw_start = np.abs(source.f-source.f_init).argmin()
     #indxfgw_end = np.abs(source.f-source.f_T_obs).argmin()
 
@@ -203,8 +275,24 @@ def Calc_Chirp_SNR(source,instrument):
     return np.sqrt(SNRsqrd)
 
 
-def Save_SNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filename):
-    #Save SNR Matrix
+def saveSNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filename):
+    """Saves SNR Matrix
+
+    Parameters
+    ----------
+    sample_x : array
+        samples at which SNRMatrix was calculated corresponding to the x-axis variable
+    sample_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    SNRMatrix : array-like
+        the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
+    save_location : str
+        the directory to which the Samples and SNR are saved
+    SNR_filename : str
+        the name of the SNR file
+    sample_filename : str
+        the name of the sample file
+
+    """
     np.savetxt(save_location+SNR_filename,SNRMatrix)
-    #Save Samples
     np.savetxt(save_location+sample_filename,[sample_x,sample_y])

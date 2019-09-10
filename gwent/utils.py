@@ -1,16 +1,27 @@
 import astropy.units as u
 
 def make_quant(param, default_unit):
-    """
-    Taken from https://github.com/Hazboun6/hasasia/blob/master/hasasia/sensitivity.py#L834
-    Convenience function to intialize a parameter as an astropy quantity.
-    param == parameter to initialize.
-    default_unit == string that matches an astropy unit, set as
-                    default for this parameter.
-    returns:
+    """Convenience function to intialize a parameter as an astropy quantity.
+
+    Parameters
+    ----------
+    param : float, or Astropy Quantity
+        Parameter to initialize
+    default_unit : str
+        Astropy unit string, sets as default for param.
+
+    Returns
+    -------
         an astropy quantity
-    example:
+    
+    Example
+    -------
         self.f0 = make_quant(f0,'MHz')
+
+    Notes
+    -----
+    Taken from https://github.com/Hazboun6/hasasia/blob/master/hasasia/sensitivity.py#L834
+
     """
     default_unit = u.core.Unit(default_unit)
     if hasattr(param, 'unit'):
@@ -26,6 +37,29 @@ def make_quant(param, default_unit):
 
 
 def Get_Var_Dict(obj,value):
+    """Updates and initializes variable dictionaries used to keep track of
+    current values and variable minima and maxima.
+
+    Parameters
+    ----------
+    obj : object
+        Instance of class with parameter variables
+    value : array-like
+        value(s) that are assigned into dictionary
+
+    Notes
+    -----
+    value contains the variable name in the first index
+    the next is the current value of the variable
+    the last two are optional and contain the variable min and max
+
+    Examples
+    -------
+    obj.var_dict = ['M',value]
+    where obj is in this case an instance of a BinaryBlackHole
+
+    """
+
     if not hasattr(obj,'var_dict'):
             obj._var_dict = {}
     if isinstance(value,list):

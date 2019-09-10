@@ -13,13 +13,33 @@ from astropy.cosmology import WMAP9 as cosmo
 
 def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=True,dl_axis=False,smooth_contours=False,figloc=None):
     """Plots the SNR contours from calcSNR
-        Takes in the source and instrument objects
-        x and y-axis variables along with the corresponding samples
-        The SNRMatrix from getSNRMatrix
-        display can be turned off for running multiple saves to file
-        dl_axis turns on the right hand side labels of luminosity distance 
-        smooth_contours turns on a finer mesh size to appear smooth instead of tiered contours
-        figloc is None, unless saving the figure to a file by the string figloc = '/path/to/save/location/figname.type'
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+    var_x : str
+        x-axis variable
+    sample_x : array
+        samples at which SNRMatrix was calculated corresponding to the x-axis variable
+    var_y : str
+        y-axis variable
+    sample_y : array
+        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    SNRMatrix : array-like
+        the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
+
+    display : bool, optional
+        Option to turn off display if saving multiple plots to a file
+    dl_axis : bool, optional
+        Option to turn on the right hand side labels of luminosity distance
+    smooth_contours : bool, optional
+        Option to interpolate contours to a finer mesh size to appear smooth instead of tiered contours
+    figloc : str, optional
+        If not None, saves the figure to the path figloc (ie. figloc = '/path/to/save/location/figname.type')
+
     """
 
     axissize = 16
@@ -199,7 +219,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax2.set_ylabel(r'$D_{L}$ [Gpc]',fontsize=labelsize)
         cbar = fig.colorbar(CS1,ax=(ax1,ax2),pad=0.01,ticks=print_logLevels)
     else:
-        #########################
         #Make colorbar
         cbar = fig.colorbar(CS1,ticks=print_logLevels)
         #Remove y-axis labels
@@ -211,13 +230,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     if display:
         plt.show()
 
-    #########################
     #Save Figure to File
     if figloc != None:
         fig.savefig(figloc,bbox_inches='tight')
-
-def saveSNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filename):
-    #Save SNR Matrix
-    np.savetxt(save_location+SNR_filename,SNRMatrix)
-    #Save Samples
-    np.savetxt(save_location+sample_filename,[sample_x,sample_y])

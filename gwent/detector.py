@@ -18,7 +18,7 @@ top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class PTA:
     """
-    Class to make a PTA instrument using the methods of Hazboun, Romano, Smith 2019
+    Class to make a PTA instrument using the methods of Hazboun, Romano, Smith (2019) https://arxiv.org/abs/1907.04341
 
     Parameters
     ----------
@@ -51,6 +51,7 @@ class PTA:
         Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated
+        
     """
     def __init__(self,name,*args,**kwargs):
         self.name = name
@@ -186,7 +187,13 @@ class PTA:
         self.h_n_f = self._I_data[:,1]
 
     def Init_PTA(self):
-        #### Using Jeff's Methods/code https://arxiv.org/abs/1907.04341
+        """Initializes a PTA in hasasia
+        
+        See Also
+        --------
+        Hazboun, Romano, Smith (2019) https://arxiv.org/abs/1907.04341
+
+        """
 
         #Random Sky Locations of Pulsars
         phi = np.random.uniform(0, 2*np.pi,size=self.N_p)
