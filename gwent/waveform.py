@@ -30,19 +30,18 @@ def Get_Waveform(source,pct_of_peak=0.01):
 
     #M = m1+m2 #Total Mass
     #q = m2/m1 #Mass Ratio: Paper tested up to 18
-    #eta = m1*m2/M**2 
-    eta = q/(q+1)**2  #reduced mass: Paper tested up to 0.05 (q=18)
+    #eta = m1*m2/M**2 reduced mass: Paper tested up to 0.05 (q=18)
+    eta = q/(q+1)**2
     x_PN = chi_PN(eta,x1,x2) #PN reduced spin parameter
     a_f = a_final(x1,x2,q,eta) #dimensionless spin
-    #f_low = 1e-9 #Starting frequency of waveform (should pick better value?)
 
     ##################
-    #Finds f_ringdown and f_damp from fit taken from  	arXiv:gr-qc/0512160
+    #Finds f_ringdown and f_damp from fit taken from arXiv:gr-qc/0512160
     n = 0      #QNM indices
     l = 2
     m = 2
     numn = 3   #number of n's included in the table
-    #fitcoeffs = load('fitcoeffsWEB.dat')
+
     index = (l-2)*(2*l+1)*numn + (l-m)*numn + n
     f_fit = fitcoeffs[index][3:6]
     q_fit = fitcoeffs[index][6:9]
@@ -66,10 +65,10 @@ def Get_Waveform(source,pct_of_peak=0.01):
     cutoffFreq = Find_Cutoff_Freq(f_RD,f_damp,[Gamma1,Gamma2,Gamma3],pct_of_peak=pct_of_peak)
 
     #If lowest frequency is lower than cutoffFreq, throw error
-    assert (f_low <= cutoffFreq),"Error. \nLower frequency bound must be lower than  of merger ringdown." 
+    if f_low <= cutoffFreq:
+        raise ValueError('Lower frequency bound must be lower than that of the merger ringdown.')
     
     Mf = np.logspace(np.log10(f_low),np.log10(cutoffFreq),N)
-    #Mf = np.linpace(f_low,1,retstep = (N,1/Tobs))
 
     v1 = A_insp(f1,eta,x1,x2,x_PN)
     v2 = Lambda(eta,x_PN,3)
@@ -94,15 +93,37 @@ def Get_Waveform(source,pct_of_peak=0.01):
     return [Mf,fullwaveform]
 
 def A_norm(freqs,eta):
-    ##########################
-    #Calculates the constant scaling factor A_0
+    """Calculates the constant scaling factor A_0
+
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    eta : float
+        The reduced mass ratio
+
+    """
     const = np.sqrt(2*eta/3/np.pi**(1/3))
     return const*freqs**-(7/6)
 
 
 def A_insp(freqs,eta,x1,x2,X_PN):
-    ##########################
-    #Calculates the Insnp.piral Amplitude
+    """Calculates the Inspiral Amplitude
+
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    eta : float
+        The reduced mass ratio
+    x1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    x2 : float
+        The dimensionless spin parameter |a/m| for black hole m2.
+    x_PN : float
+        The PN reduced spin parameter
+
+    """
     A_PN = 0.0
     A_higher = 0.0
     for i in range(7):
@@ -113,8 +134,22 @@ def A_insp(freqs,eta,x1,x2,X_PN):
 
 
 def DA_insp(freqs,eta,x1,x2,X_PN):
-    #########################
-    #Calculates Derivative, seems to do what A_ins_prime does but faster by a lot
+    """Calculates Derivative of the inspiral amplitude.
+
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    eta : float
+        The reduced mass ratio
+    x1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    x2 : float
+        The dimensionless spin parameter |a/m| for black hole m2.
+    x_PN : float
+        The PN reduced spin parameter
+
+    """
     DA_PN = 0.0
     DA_higher = 0.0
     for i in range(7):
@@ -128,16 +163,40 @@ def DA_insp(freqs,eta,x1,x2,X_PN):
 
 
 def A_MR(freqs,f_RD,f_damp,Gammas):
-    ##########################
-    #Calculates the Normalized Merger-Ringdown Amplitude
+    """Calculates the Normalized Merger-Ringdown Amplitude
+    
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    f_RD : float
+        Frequency of the Ringdown transition
+    f_damp : float
+        Damping frequency
+    Gammas : array-like
+        Normalizes lorentzian to correct shape
+
+    """
     varf = freqs-f_RD
     fg_d = Gammas[2]*f_damp 
     return (Gammas[0]*fg_d)/(varf**2+fg_d**2)*np.exp(-(Gammas[1]/fg_d)*varf)
 
 
 def DA_MR(freqs,f_RD,f_damp,Gammas):
-    #########################
-    #Calculates Derivative, seems to do what A_MR_prime does but faster by a lot
+    """Calculates Derivative of the Merger-Ringdown Amplitude
+    
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    f_RD : float
+        Frequency of the Ringdown transition
+    f_damp : float
+        Damping frequency
+    Gammas : array-like
+        Normalizes lorentzian to correct shape
+
+    """
     varf = freqs-f_RD
     fg_d = Gammas[2]*f_damp
     A_MR_0 = A_MR(freqs,f_RD,f_damp,Gammas)
@@ -145,7 +204,7 @@ def DA_MR(freqs,f_RD,f_damp,Gammas):
 
 
 def A_intermediate(f1,f2,f3,v1,v2,v3,d1,d3):
-    #Solves system of equations
+    """Solves system of equations for intermediate amplitude matching"""
     Mat = np.array([[1., f1, f1**2, f1**3, f1**4],[1., f2, f2**2, f2**3, f2**4],[1., f3, f3**2, f3**3, f3**4], \
             [0., 1., 2*f1, 3*f1**2, 4*f1**3],[0., 1., 2*f3, 3*f3**2, 4*f3**3]],dtype='float')
     a = np.array([v1,v2,v3,d1,d3],dtype='float')
@@ -153,13 +212,32 @@ def A_intermediate(f1,f2,f3,v1,v2,v3,d1,d3):
 
 
 def A_int(freqs,delt):
-    ##########################
-    #Calculates the Intermediate Amplitude
+    """Calculates the Intermediate Amplitude
+
+    Parameters
+    ----------
+    freqs : array
+        The frequencies in Natural units (Mf, G=c=1) of the waveform
+    delt : array
+        Coefficient solutions to match the inspiral to the merger-ringdown portion of the waveform
+
+    """
     return (delt[0]+delt[1]*freqs+delt[2]*freqs**2+delt[3]*freqs**3+delt[4]*freqs**4)
 
 
 def Lambda(eta,x_PN,lmbda):
-    #Eqn 31 in arXiv:1508.07253
+    """Gets the Lambdas from Eqn 31 in arXiv:1508.07253
+
+    Parameters
+    ----------
+    eta : float
+        The reduced mass ratio
+    x_PN : float
+        The PN reduced spin parameter
+    lmbda : int
+        Iterator for different Lambda variables using the zeta function
+
+    """
     xi = x_PN-1
     xi2 = xi*xi
     xi3 = xi2*xi
@@ -186,7 +264,7 @@ def Lambda(eta,x_PN,lmbda):
 
 
 def zeta(k):
-    #Coefficients in table 5 of arXiv:1508.07253
+    """Coefficients in table 5 of arXiv:1508.07253"""
     if k == 0: #rho 1
         coeffs = [3931.9, -17395.8, 3132.38, 343966.0, -1.21626e6, -70698.0, 1.38391e6, -3.96628e6, -60017.5, 803515.0, -2.09171e6]
     elif k == 1: #rho 2
@@ -205,7 +283,26 @@ def zeta(k):
 
 
 def PN_coeffs(eta,x1,x2,i):
-    #Coefficients in apnp.pix B (eqns B14-B20) of arXiv:1508.07253
+    """Gets the PN Amplitude coefficients
+
+    Parameters
+    ----------
+    eta : float
+        The reduced mass ratio
+    x1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    x2 : float
+        The dimensionless spin parameter |a/m| for black hole m2.
+    q : float
+        The mass ratio m1/m2, m1<=m2
+    i : int
+        iterator to dictate which PN Amplitude to use
+
+    Notes
+    -----
+    Coefficients in appendix B (eqns B14-B20) of arXiv:1508.07253
+
+    """
     delta = np.sqrt(1.0-4.0*eta)
     chi_s = (x1+x2)/2.0
     chi_a = (x1-x2)/2.0
@@ -232,9 +329,23 @@ def PN_coeffs(eta,x1,x2,i):
 
 
 def Calc_f_peak(f_RD,f_damp,Gammas):
-    #####################
-    #NOTE: There's a problem with this expression from the paper becoming imaginary if gamma2>=1
-    #Fix: if gamma2 >= 1 then set the square root term to zero.
+    """ Calculates the frequency at the peak of the merger
+
+    Parameters
+    ----------
+    f_RD : float
+        Frequency of the Ringdown transition
+    f_damp : float
+        Damping frequency
+    Gammas : array-like
+        Normalizes lorentzian to correct shape
+    
+    Notes
+    -----
+    There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1 
+        so if gamma2 >= 1 then set the square root term to zero.
+
+    """
     if Gammas[1] <= 1:
         f_max = np.abs(f_RD+f_damp*Gammas[2]*(np.sqrt(1-Gammas[1]**2)-1)/Gammas[1])
     else:
@@ -243,8 +354,22 @@ def Calc_f_peak(f_RD,f_damp,Gammas):
 
 
 def Find_Cutoff_Freq(f_RD,f_damp,Gammas,pct_of_peak=0.0001):
-    ##############################
-    #Cutoff signal when the amplitude is a factor of 10 below the value at f_RD
+    """Cutoff signal when the amplitude is a factor of 10 below the value at f_RD
+
+    Parameters
+    ----------
+    f_RD : float
+        Frequency of the Ringdown transition
+    f_damp : float
+        Damping frequency
+    Gammas : array-like
+        Normalizes lorentzian to correct shape
+
+    pct_of_peak : float, optional
+        the percentange of the strain at merger that dictates the maximum 
+        frequency the waveform is calculated at in geometrized units (G=c=1) 
+
+    """
     tempfreqs = np.logspace(np.log10(f_RD),np.log10(10*f_RD),100)
     cutoffAmp = pct_of_peak*A_MR(f_RD,f_RD,f_damp,[Gammas[0],Gammas[1],Gammas[2]])
     merger_ringdown_Amp = A_MR(tempfreqs,f_RD,f_damp,[Gammas[0],Gammas[1],Gammas[2]])
@@ -252,8 +377,25 @@ def Find_Cutoff_Freq(f_RD,f_damp,Gammas,pct_of_peak=0.0001):
     return tempfreqs[cutoffindex]
 
 def a_final(x1,x2,q,eta):
-    #using eq. 3 in https://arxiv.org/pdf/0904.2577.pdf, changed to match our q convention
-    #a=J/M**2 where J = x1*m1**2 + x2*x2**2
+    """The Final spin of the binary remnant black hole
+
+    Parameters
+    ----------
+    x1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    x2 : float
+        The dimensionless spin parameter |a/m| for black hole m2.
+    q : float
+        The mass ratio m1/m2, m1<=m2
+    eta : float
+        The reduced mass ratio
+
+    Notes
+    -----
+    Uses eq. 3 in https://arxiv.org/pdf/0904.2577.pdf, changed to match our q convention
+    a=J/M**2 where J = x1*m1**2 + x2*m2**2
+
+    """
     a = (q**2*x1+x2)/(q**2+1)
     s4 = -0.1229
     s5 = 0.4537
@@ -264,8 +406,22 @@ def a_final(x1,x2,q,eta):
 
 
 def chi_PN(eta,x1,x2):
-    #PN reduced snp.pin parameter
-    #See Eq 5.9 in http://arxiv.org/pdf/1107.1267v2.pdf
+    """Calculates the PN reduced spin parameter
+
+    Parameters
+    ----------
+    eta : float
+        The reduced mass ratio
+    x1 : float
+        The dimensionless spin parameter |a/m| for black hole m1.
+    x2 : float
+        The dimensionless spin parameter |a/m| for black hole m2.
+
+    Notes
+    -----
+    See Eq 5.9 in http://arxiv.org/pdf/1107.1267v2.pdf
+
+    """
     delta = np.sqrt(1.0-4.0*eta)
     chi_s = (x1+x2)/2.0
     chi_a = (x1-x2)/2.0
