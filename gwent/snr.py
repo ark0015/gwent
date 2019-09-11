@@ -4,9 +4,9 @@ import scipy.integrate as integrate
 
 import astropy.units as u
 
-import detector
-import binary
-from utils import make_quant
+from . import detector
+from . import binary
+from .utils import make_quant
 
 
 def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
@@ -35,13 +35,13 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
         samples at which SNRMatrix was calculated corresponding to the y-axis variable
     SNRMatrix : array-like
         the sample_rate_y X sample_rate_x matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
-    
+
     Notes
     -----
-    Uses the variable given and the data range to sample the space either logrithmically or linearly based on the 
+    Uses the variable given and the data range to sample the space either logrithmically or linearly based on the
     selection of variables. Then it computes the SNR for each value.
     Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
-    
+
     """
 
     source.instrument = instrument
@@ -51,7 +51,7 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     sampleSize_x = len(sample_x)
     sampleSize_y = len(sample_y)
     SNRMatrix = np.zeros((sampleSize_x,sampleSize_y))
-    
+
     for i in range(sampleSize_x):
         for j in range(sampleSize_y):
 
@@ -71,7 +71,7 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 #Update Attribute (also updates dictionary)
                 setattr(source,var_x,sample_x[i])
                 setattr(source,var_y, sample_y[j])
-            
+
             if recalculate_noise != 'neither':
                 #Recalculate noise curves if something is varied
                 if hasattr(instrument,'fT'):
@@ -145,7 +145,7 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
         var_x_dict = instrument.var_dict[var_x]
     else:
         raise ValueError(var_x + ' is not a variable in the source nor the instrument.')
-    
+
     if var_y in source.var_dict.keys():
         var_y_dict = source.var_dict[var_y]
     elif var_y in instrument.var_dict.keys():
@@ -174,7 +174,7 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 sample_x = np.logspace(np.log10(var_x_dict['min'].value),np.log10(var_x_dict['max'].value),sample_rate_x)
             else:
                 sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sample_rate_x)
-        
+
     if var_y_dict['min'] != None and var_y_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == 'q' or var_y == 'chi1' or var_y == 'chi2':
             #Sample in linear space for mass ratio and spins
@@ -226,14 +226,14 @@ def Calc_Chirp_SNR(source,instrument):
 
     Notes
     -----
-    Uses an interpolated method to align waveform and instrument noise, then integrates 
+    Uses an interpolated method to align waveform and instrument noise, then integrates
     over the overlapping region. See eqn 18 from Robson,Cornish,and Liu 2018 https://arxiv.org/abs/1803.01944
     Values outside of the sensitivity curve are arbitrarily set to 1e30 so the SNR is effectively 0
 
     """
 
     #Use to integrate from initial observed frequency f(t_init) to f(t_init-T_obs)
-    #Does not work unless t_init is randomly sampled, which we don't do 
+    #Does not work unless t_init is randomly sampled, which we don't do
     #indxfgw_start = np.abs(source.f-source.f_init).argmin()
     #indxfgw_end = np.abs(source.f-source.f_T_obs).argmin()
 
@@ -242,7 +242,7 @@ def Calc_Chirp_SNR(source,instrument):
     indxfgw_end = len(source.f)
     if indxfgw_start >= len(source.f)-1:
         #If the SMBH has already merged set the SNR to ~0
-        return 1e-30  
+        return 1e-30
     else:
         f_cut = source.f[indxfgw_start:indxfgw_end]
         h_cut = source.h_f[indxfgw_start:indxfgw_end]
@@ -251,7 +251,7 @@ def Calc_Chirp_SNR(source,instrument):
     #Interpolate the Strain Noise Spectral Density to only the frequencies the
     #strain runs over
     #Set Noise to 1e30 outside of signal frequencies
-    S_n_f_interp_old = interp.interp1d(np.log10(instrument.fT.value),np.log10(instrument.S_n_f.value),kind='cubic',fill_value=30.0, bounds_error=False) 
+    S_n_f_interp_old = interp.interp1d(np.log10(instrument.fT.value),np.log10(instrument.S_n_f.value),kind='cubic',fill_value=30.0, bounds_error=False)
     S_n_f_interp_new = S_n_f_interp_old(np.log10(f_cut.value))
     S_n_f_interp = 10**S_n_f_interp_new
 

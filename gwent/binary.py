@@ -6,8 +6,8 @@ import scipy.interpolate as interp
 from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
-from waveform import Get_Waveform
-import utils
+from .waveform import Get_Waveform
+from . import utils
 
 current_path = os.getcwd()
 splt_path = current_path.split("/")
@@ -101,7 +101,7 @@ class BinaryBlackHole:
     @var_dict.setter
     def var_dict(self,value):
         utils.Get_Var_Dict(self,value)
-    
+
     def Load_Data(self):
         if hasattr(self,'load_location'):
             if os.path.exists(self.load_location):
@@ -286,7 +286,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         to the optimal frequency of the detector
 
         Otherwise it is chirping and evolves over the observation and we
-        set the starting frequency we observe it at to f(Tobs), which is the 
+        set the starting frequency we observe it at to f(Tobs), which is the
         frequency at an observation time before merger
 
         To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) https://arxiv.org/abs/1907.04341
@@ -302,10 +302,10 @@ class BBHFrequencyDomain(BinaryBlackHole):
         T_obs = utils.make_quant(self.instrument.T_obs,'s')
         T_obs_source = T_obs/(1+self.z)
 
-        
+
         #Assumes t_init is in source frame, can either be randomly drawn
         #t_init_source = np.random.uniform(0,100)*u.yr
-        
+
         #Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
         self.f_init = self.instrument.f_opt
         t_init_source = self.Get_Time_From_Merger(self.f_init)
@@ -321,16 +321,16 @@ class BBHFrequencyDomain(BinaryBlackHole):
         #f_after_T_obs_source = self.Get_Source_Freq((t_init_source-T_obs_source))
         #self.f_T_obs = f_after_T_obs_source/(1+self.z)
         #delf_obs_source_exact = f_after_T_obs_source-f_init_source
-        
+
         delf_obs_source_approx = 1./8./np.pi/M_chirp_source*(5*M_chirp_source/t_init_source)**(3./8.)*(3*T_obs_source/8/t_init_source)
         delf_obs =  delf_obs_source_approx/(1+self.z)
-        
+
         if delf_obs < (1/T_obs):
             self.ismono = True
         else:
             self.ismono = False
 
-    
+
 
 
 class BBHTimeDomain(BinaryBlackHole):
@@ -433,7 +433,7 @@ class BBHTimeDomain(BinaryBlackHole):
             window = np.append(first_half,second_half)
         elif windowing == 'all':
             window = hann_window
-        #Window!     
+        #Window!
         win_h_cross_t = np.multiply(interp_h_cross_t,window)
         win_h_plus_t = np.multiply(interp_h_plus_t,window)
 
@@ -444,14 +444,14 @@ class BBHTimeDomain(BinaryBlackHole):
 
         #cut = np.abs(freqs).argmax() #Cut off the negative frequencies
         f_cut_low = 3e-3 #Low Cutoff frequency
-        f_cut_high = 1.5e-1 #High Cutoff frequency 
+        f_cut_high = 1.5e-1 #High Cutoff frequency
         cut_low = np.abs(freqs-f_cut_low).argmin() #Cut off frequencies lower than a frequency
         cut_high = np.abs(freqs-f_cut_high).argmin() #Cut off frequencies higher than a frequency
         #cut=int(len(freqs)*0.9) #Cut off percentage of frequencies
         h_cross_f = h_cross_f[cut_low:cut_high]
         h_plus_f = h_plus_f[cut_low:cut_high]
         natural_f = freqs[cut_low:cut_high]
-        
+
         #Combine them for raw spectral power
         natural_h_f = np.sqrt((np.abs(h_cross_f))**2 + (np.abs(h_plus_f))**2)
         return [natural_f,natural_h_f]
@@ -477,13 +477,13 @@ def Strain_Conv(source,natural_f,natural_h):
 
     m_conv = const.G/const.c**3 #Converts M = [M] to M = [sec]
     M_redshifted_time = source.M.to('kg')*(1+source.z)*m_conv
-    
+
     #frequency and strain of source in detector frame
     freq_conv = 1/M_redshifted_time
     #Normalized factor to match Stationary phase approx at low frequencies?
     #Changed from sqrt(5/16/pi)
     strain_conv = np.sqrt(1/4/np.pi)*(const.c/DL)*M_redshifted_time**2
-    
+
     f = natural_f*freq_conv
     h_f = natural_h*strain_conv
     return [f,h_f]
@@ -524,7 +524,7 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
         DL = DL.to('m')
 
         #Converts M = [M] to M = [sec]
-        m_conv = const.G/const.c**3 
+        m_conv = const.G/const.c**3
 
         eta = source.q/(1+source.q)**2
         M_redshifted_time = source.M.to('kg')*(1+source.z)*m_conv

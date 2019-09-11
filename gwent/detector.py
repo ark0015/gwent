@@ -6,7 +6,7 @@ import scipy.interpolate as interp
 from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
-import utils
+from . import utils
 
 import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
@@ -29,7 +29,7 @@ class PTA:
     T_obs : float
         the observation time of the PTA in [years]
     N_p : int
-        the number of pulsars in the PTA 
+        the number of pulsars in the PTA
     sigma : float
         the rms error on the pulsar TOAs in [sec]
     cadence : float
@@ -51,7 +51,7 @@ class PTA:
         Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated
-        
+
     """
     def __init__(self,name,*args,**kwargs):
         self.name = name
@@ -157,7 +157,7 @@ class PTA:
     @h_n_f.deleter
     def h_n_f(self):
         del self._h_n_f
-    
+
     @property
     def S_n_f(self):
         #Effective noise power amplitude
@@ -188,7 +188,7 @@ class PTA:
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
-        
+
         See Also
         --------
         Hazboun, Romano, Smith (2019) https://arxiv.org/abs/1907.04341
@@ -214,7 +214,7 @@ class PTA:
             if not hasattr(self,'alpha_rn_min'):
                 alphas = np.random.uniform(-3/4,1,size=self.N_p)
             else:
-                alphas = np.random.uniform(self.alpha_rn_min,self.alpha_rn_max,size=self.N_p)            
+                alphas = np.random.uniform(self.alpha_rn_min,self.alpha_rn_max,size=self.N_p)
             #Make a set of psrs with uniformly sampled red noise
             psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
                 phi=phi, theta=theta, Npsrs=self.N_p,A_rn=A_rn,alpha=alphas,freqs=self.fT.value)
@@ -249,7 +249,7 @@ class Interferometer:
     load_location : string, optional
         If you want to load an instrument curve from a file, it's the file path
     I_type : string, optional
-        Type of input data; can be the effective strain spectral density $S_{n}(f)$ ('ENSD'), 
+        Type of input data; can be the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'), or the characteristic strain $h_{n}(f)$ ('h')
     """
     def __init__(self,name,T_obs,**kwargs):
@@ -428,7 +428,7 @@ class SpaceBased(Interferometer):
             self.f_low = 1e-5*u.Hz
         if not hasattr(self,'f_high'):
             self.f_high = 1.0*u.Hz
-        if not hasattr(self,'Background'): 
+        if not hasattr(self,'Background'):
             self.Background = False
 
         if len(args) != 0:
@@ -498,8 +498,8 @@ class SpaceBased(Interferometer):
             if not hasattr(self,'_T_Function_Type'):
                 self.Set_T_Function_Type()
 
-            P_acc = self.A_acc**2*(1+(self.f_acc_break_low/self.fT)**2)*(1+(self.fT/(self.f_acc_break_high))**4)/(2*np.pi*self.fT)**4 #Acceleration Noise 
-            P_IMS = self.A_IFO**2*(1+(self.f_IMS_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM 
+            P_acc = self.A_acc**2*(1+(self.f_acc_break_low/self.fT)**2)*(1+(self.fT/(self.f_acc_break_high))**4)/(2*np.pi*self.fT)**4 #Acceleration Noise
+            P_IMS = self.A_IFO**2*(1+(self.f_IMS_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM
 
             f_trans = const.c/2/np.pi/self.L #Transfer frequency
             self._P_n_f = (P_IMS + 2*(1+np.cos(self.fT.value/f_trans.value)**2)*P_acc)/self.L**2/u.Hz
@@ -521,9 +521,9 @@ class SpaceBased(Interferometer):
                 elif self._I_Type == 'h':
                     self._S_n_f = self.h_n_f**2/self.fT
             else:
-                S_n_f = self.P_n_f/self.transferfunction**2 
+                S_n_f = self.P_n_f/self.transferfunction**2
                 if self.Background:
-                    self._S_n_f= S_n_f+self.Add_Background() 
+                    self._S_n_f= S_n_f+self.Add_Background()
                 else:
                     self._S_n_f = S_n_f
         return self._S_n_f
@@ -560,7 +560,7 @@ class SpaceBased(Interferometer):
             self.fT = np.logspace(np.log10(self.f_low),np.log10(self.f_high),self.nfreqs)*u.Hz
         f_L = const.c/2/np.pi/self.L #Transfer frequency
         #3/10 is normalization 2/5sin(openingangle)
-        R_f = 3/10/(1+0.6*(self.fT/f_L)**2) 
+        R_f = 3/10/(1+0.6*(self.fT/f_L)**2)
         self.transferfunction = np.sqrt(R_f)
 
     def Set_T_Function_Type(self,calc_type):
