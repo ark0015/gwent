@@ -4,7 +4,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
     """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown
-    Uses methods found in arXiv:1508.07253 and arXiv:1508.07250
+    Uses methods found in <https://arxiv.org/abs/1508.07253> and <https://arxiv.org/abs/1508.07250>
 
     Parameters
     ----------
@@ -36,7 +36,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
     a_f = a_final(x1,x2,q,eta) #dimensionless spin
 
     ##################
-    #Finds f_ringdown and f_damp from fit taken from arXiv:gr-qc/0512160
+    #Finds f_ringdown and f_damp from fit taken from <https://arxiv.org/abs/gr-qc/0512160>
     n = 0      #QNM indices
     l = 2
     m = 2
@@ -226,7 +226,7 @@ def A_int(freqs,delt):
 
 
 def Lambda(eta,x_PN,lmbda):
-    """Gets the Lambdas from Eqn 31 in arXiv:1508.07253
+    """Gets the Lambdas from Eqn 31 in <https://arxiv.org/abs/1508.07253>
 
     Parameters
     ----------
@@ -264,7 +264,7 @@ def Lambda(eta,x_PN,lmbda):
 
 
 def zeta(k):
-    """Coefficients in table 5 of arXiv:1508.07253"""
+    """Coefficients in table 5 of <https://arxiv.org/abs/1508.07253>"""
     if k == 0: #rho 1
         coeffs = [3931.9, -17395.8, 3132.38, 343966.0, -1.21626e6, -70698.0, 1.38391e6, -3.96628e6, -60017.5, 803515.0, -2.09171e6]
     elif k == 1: #rho 2
@@ -300,7 +300,7 @@ def PN_coeffs(eta,x1,x2,i):
 
     Notes
     -----
-    Coefficients in appendix B (eqns B14-B20) of arXiv:1508.07253
+    Coefficients in appendix B (eqns B14-B20) of <https://arxiv.org/abs/1508.07253>
 
     """
     delta = np.sqrt(1.0-4.0*eta)
@@ -329,7 +329,7 @@ def PN_coeffs(eta,x1,x2,i):
 
 
 def Calc_f_peak(f_RD,f_damp,Gammas):
-    """ Calculates the frequency at the peak of the merger
+    """Calculates the frequency at the peak of the merger
 
     Parameters
     ----------
@@ -343,7 +343,7 @@ def Calc_f_peak(f_RD,f_damp,Gammas):
     Notes
     -----
     There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1 
-        so if gamma2 >= 1 then set the square root term to zero.
+    so if gamma2 >= 1 then set the square root term to zero.
 
     """
     if Gammas[1] <= 1:

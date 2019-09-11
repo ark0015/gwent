@@ -470,7 +470,6 @@ def Strain_Conv(source,natural_f,natural_h):
     natural_h : array [Mf]
         the strain of the source in natural units (G=c=1)
 
-
     """
     DL = cosmo.luminosity_distance(source.z)
     DL = DL.to('m')

@@ -189,9 +189,9 @@ class PTA:
     def Init_PTA(self):
         """Initializes a PTA in hasasia
 
-        See Also
-        --------
-        Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341>
+        Notes
+        -----
+        See Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341> for details
 
         """
 
@@ -245,12 +245,12 @@ class Interferometer:
     T_obs : float
         the observation time of the PTA in [years]
 
-    **kwargs
     load_location : string, optional
         If you want to load an instrument curve from a file, it's the file path
     I_type : string, optional
         Type of input data; can be the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'), or the characteristic strain $h_{n}(f)$ ('h')
+
     """
     def __init__(self,name,T_obs,**kwargs):
         self.name = name
@@ -292,7 +292,7 @@ class Interferometer:
 
     @property
     def f_opt(self):
-        #The optimal frequency of the instrument ie. the frequecy at the lowest strain
+        """The optimal frequency of the instrument ie. the frequecy at the lowest strain"""
         self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
@@ -303,7 +303,7 @@ class Interferometer:
 
     @property
     def S_n_f(self):
-        #Effective Noise Power Specral Density
+        """Effective Noise Power Specral Density"""
         if not hasattr(self,'_S_n_f'):
             if hasattr(self,'_I_data'):
                 if self._I_Type == 'ASD':
@@ -319,7 +319,7 @@ class Interferometer:
 
     @property
     def h_n_f(self):
-        #Characteristic Strain/effective strain noise amplitude
+        """Characteristic Strain/effective strain noise amplitude"""
         if not hasattr(self,'_h_n_f'):
             if hasattr(self,'_I_data') and self._I_Type == 'h':
                 self._h_n_f = self._I_data[:,1]
@@ -381,32 +381,31 @@ class SpaceBased(Interferometer):
 
     Parameters
     ----------
-    *args
-        L : float
-            the armlength the of detector in [meters]
-        A_acc : float
-            the Amplitude of the Acceleration Noise in [meters/second^2]
-        f_acc_break_low : float
-            the lower break frequency of the acceleration noise in [Hz]
-        f_acc_break_high : float
-            the higher break frequency of the acceleration noise in [Hz]
-        A_IFO : float
-            the amplitude of the interferometer
+    L : float
+        the armlength the of detector in [meters]
+    A_acc : float
+        the Amplitude of the Acceleration Noise in [meters/second^2]
+    f_acc_break_low : float
+        the lower break frequency of the acceleration noise in [Hz]
+    f_acc_break_high : float
+        the higher break frequency of the acceleration noise in [Hz]
+    A_IFO : float
+        the amplitude of the interferometer
 
-    **kwargs
-        T_Function_Type : string, optional
-            Picks the transfer function generation method
-            To use the numerically approximated method in Robson, Cornish, and Liu, 2019, input "N"
-            To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A"
-        Background : Boolean
-            Add in a Galactic Binary Confusion Noise
-        f_low : float
-            Assigned lowest frequency of instrument (default assigns 10^-5Hz)
-        f_high : float
-            Assigned highest frequency of instrument (default is 1Hz)
-        nfreqs : int
-            Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
-        """
+    T_Function_Type : string, optional
+        Picks the transfer function generation method
+        To use the numerically approximated method in Robson, Cornish, and Liu, 2019, input "N"
+        To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A"
+    Background : Boolean
+        Add in a Galactic Binary Confusion Noise
+    f_low : float
+        Assigned lowest frequency of instrument (default assigns 10^-5Hz)
+    f_high : float
+        Assigned highest frequency of instrument (default is 1Hz)
+    nfreqs : int
+        Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
+
+    """
     def __init__(self,name,T_obs,*args,**kwargs):
         super().__init__(name,T_obs,**kwargs)
         self.name = name
@@ -493,7 +492,7 @@ class SpaceBased(Interferometer):
 
     @property
     def P_n_f(self):
-        #Power Spectral Density
+        """Power Spectral Density"""
         if not hasattr(self,'_P_n_f'):
             if not hasattr(self,'_T_Function_Type'):
                 self.Set_T_Function_Type()
@@ -510,7 +509,7 @@ class SpaceBased(Interferometer):
 
     @property
     def S_n_f(self):
-        #Effective Noise Power Specral Density
+        """Effective Noise Power Specral Density"""
         if not hasattr(self,'_S_n_f'):
             if hasattr(self,'_I_data'):
                 if self._I_Type == 'ASD':
@@ -532,7 +531,7 @@ class SpaceBased(Interferometer):
         del self._S_n_f
 
     def Load_Transfer_Function(self):
-        #np.loadtxting Numerical transfer function
+        #Numerical transfer function
         Numerical_Transfer_Function_filedirectory = top_directory + '/docs/LoadFiles/NumericalTransferFunction/transfer.dat'
         Numerical_Transfer_Function_data = np.loadtxt(Numerical_Transfer_Function_filedirectory)
         self._transferfunctiondata = Numerical_Transfer_Function_data
@@ -584,7 +583,7 @@ class SpaceBased(Interferometer):
     def Add_Background(self):
         """
         Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
-            corresponding to array index 0,1,2,3 respectively
+        corresponding to array index 0,1,2,3 respectively
         """
         A = 9e-45
         a = np.array([0.133,0.171,0.165,0.138])
