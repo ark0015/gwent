@@ -4,19 +4,15 @@
 """Tests for `gwent` package."""
 
 
-import unittest
+import pytest
 
-from gwent import gwent
+from gwent import binary
+from gwent import detector
+from gwent import snr
+from gwent import snrplot
+from gwent import utils
+from gwent import waveform
 
 
-class TestGwent(unittest.TestCase):
+class TestGwent():
     """Tests for `gwent` package."""
-
-    def setUp(self):
-        """Set up test fixtures, if any."""
-
-    def tearDown(self):
-        """Tear down test fixtures, if any."""
-
-    def test_000_something(self):
-        """Test something."""
