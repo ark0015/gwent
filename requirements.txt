@@ -2,3 +2,4 @@ numpy >= 1.14
 scipy >= 1.0
 astropy >= 3.0
 hasasia >= 0.1.7
+matplotlib > 3.0

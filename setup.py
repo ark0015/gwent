@@ -14,7 +14,8 @@ with open('HISTORY.rst') as history_file:
 requirements = ['numpy',
                 'scipy',
                 'astropy',
-                'hasasia',]
+                'hasasia',
+                'matplotlib',]
 
 setup_requirements = ['pytest-runner', ]
 
