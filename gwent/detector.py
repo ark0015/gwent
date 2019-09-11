@@ -18,7 +18,7 @@ top_directory = "/".join(splt_path[0:top_path_idx+1])
 
 class PTA:
     """
-    Class to make a PTA instrument using the methods of Hazboun, Romano, Smith (2019) https://arxiv.org/abs/1907.04341
+    Class to make a PTA instrument using the methods of Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341>
 
     Parameters
     ----------
@@ -191,7 +191,7 @@ class PTA:
 
         See Also
         --------
-        Hazboun, Romano, Smith (2019) https://arxiv.org/abs/1907.04341
+        Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341>
 
         """
 

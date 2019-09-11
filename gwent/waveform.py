@@ -1,8 +1,7 @@
 import numpy as np
 
 def Get_Waveform(source,pct_of_peak=0.01):
-    """
-    Uses Mass Ratio (q <= 18), aligned spins (|a/m|~0.85 or when q=1 |a/m|<0.98),
+    """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown
     Uses methods found in arXiv:1508.07253 and arXiv:1508.07250
@@ -20,6 +19,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
         the waveform frequencies in geometrized units (G=c=1)
     fullwaveform : numpy array of floats
         the waveform strain in geometrized units (G=c=1)
+
     """
     f_low = source.f_low.value
     N = source.nfreqs
@@ -117,9 +117,9 @@ def A_insp(freqs,eta,x1,x2,X_PN):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     x_PN : float
         The PN reduced spin parameter
 
@@ -143,9 +143,9 @@ def DA_insp(freqs,eta,x1,x2,X_PN):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     x_PN : float
         The PN reduced spin parameter
 
@@ -290,9 +290,9 @@ def PN_coeffs(eta,x1,x2,i):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     q : float
         The mass ratio m1/m2, m1<=m2
     i : int
@@ -382,9 +382,9 @@ def a_final(x1,x2,q,eta):
     Parameters
     ----------
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     q : float
         The mass ratio m1/m2, m1<=m2
     eta : float
@@ -392,7 +392,7 @@ def a_final(x1,x2,q,eta):
 
     Notes
     -----
-    Uses eq. 3 in https://arxiv.org/pdf/0904.2577.pdf, changed to match our q convention
+    Uses eq. 3 in <https://arxiv.org/abs/0904.2577>, changed to match our q convention
     a=J/M**2 where J = x1*m1**2 + x2*m2**2
 
     """
@@ -413,13 +413,13 @@ def chi_PN(eta,x1,x2):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
 
     Notes
     -----
-    See Eq 5.9 in http://arxiv.org/pdf/1107.1267v2.pdf
+    See Eq 5.9 in <https://arxiv.org/abs/1107.1267v2>
 
     """
     delta = np.sqrt(1.0-4.0*eta)

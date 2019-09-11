@@ -27,7 +27,7 @@ class BinaryBlackHole:
         Redshift of the black hole binary
 
     load_location : string, optional
-        the directory of the loaded file, ie. '/path/to/file')
+        the directory of the loaded file, (ie. '/path/to/file')
 
     Notes
     -----
@@ -117,9 +117,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
     Parameters
     ----------
     chi1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     chi2 : float
-        The dimensionless spin parameter |a/m| for black hole m2
+        The dimensionless spin parameter abs(a/m) for black hole m2
     inc : float
         The inclination of the BBH
 
@@ -130,7 +130,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     Notes
     -----
-    IMRPhenomD waveforms calibrated for aligned spins chi_1, chi_2 = |a/m| <= 0.85 or if q=1 |a/m|<0.98
+    IMRPhenomD waveforms calibrated for aligned spins chi_1, chi_2 = abs(a/m) <= 0.85 or if q=1 abs(a/m)<0.98
 
     """
     def __init__(self,*args,**kwargs):
@@ -244,8 +244,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def Get_Time_From_Merger(self,f_obs):
         """Calculates the time from merger of a binary black hole given an observed frequency.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         f_obs : float
             the initially observed frequency in the instrument frame.
 
@@ -289,7 +289,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         set the starting frequency we observe it at to f(Tobs), which is the
         frequency at an observation time before merger
 
-        To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) https://arxiv.org/abs/1907.04341
+        To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) <https://arxiv.org/abs/1907.04341>
         which uses binomial expansion of f_T_obs_inst - f_init_inst and thus will never be imaginary
 
         """
@@ -508,8 +508,8 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
     f_gw : float
         The source frequency of the gravitational wave.
     strain_const : {'Averaged','UseInc','Optimal'}, optional
-        'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) https://arxiv.org/pdf/1803.01944.pdf
-        'UseInc' uses the source inclination value from Rosado, Sesana, and Gair (2015) https://arxiv.org/abs/1503.04803, will be innacurate because nothing else accounts for inclination
+        'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
+        'UseInc' uses the source inclination value from Rosado, Sesana, and Gair (2015) <https://arxiv.org/abs/1503.04803>, will be innacurate because nothing else accounts for inclination
         'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
 
     Returns
