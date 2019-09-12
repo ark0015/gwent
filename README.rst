@@ -16,8 +16,9 @@ gwent
 
 
 
-Gravitational Wave Detector Design Toolkit.
+Gravitational Wave dEtector desigN Toolkit.
 
+Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
 
 * Free software: MIT license
 * Documentation: https://gwent.readthedocs.io.
