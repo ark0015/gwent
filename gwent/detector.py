@@ -6,15 +6,14 @@ import scipy.interpolate as interp
 from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
+import gwent
 from . import utils
 
 import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
 
-current_path = os.getcwd()
-splt_path = current_path.split("/")
-top_path_idx = splt_path.index('gwent')
-top_directory = "/".join(splt_path[0:top_path_idx+1])
+current_path = os.path.abspath(gwent.__path__[0])
+load_directory = os.path.join(current_path,'gwent','LoadFiles/')
 
 class PTA:
     """
@@ -532,7 +531,7 @@ class SpaceBased(Interferometer):
 
     def Load_Transfer_Function(self):
         #Numerical transfer function
-        Numerical_Transfer_Function_filedirectory = top_directory + '/docs/LoadFiles/NumericalTransferFunction/transfer.dat'
+        Numerical_Transfer_Function_filedirectory = os.path.join(load_directory,'/NumericalTransferFunction/transfer.dat')
         Numerical_Transfer_Function_data = np.loadtxt(Numerical_Transfer_Function_filedirectory)
         self._transferfunctiondata = Numerical_Transfer_Function_data
 

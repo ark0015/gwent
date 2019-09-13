@@ -6,13 +6,12 @@ import scipy.interpolate as interp
 from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
+import gwent
 from .waveform import Get_Waveform
 from . import utils
 
-current_path = os.getcwd()
-splt_path = current_path.split("/")
-top_path_idx = splt_path.index('gwent')
-top_directory = "/".join(splt_path[0:top_path_idx+1])
+current_path = os.path.abspath(gwent.__path__[0])
+load_directory = os.path.join(current_path,'gwent','LoadFiles/')
 
 class BinaryBlackHole:
     """Base Class for frequency domain strains from Binary Black Holes.
@@ -232,7 +231,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     def Get_Fitcoeffs(self):
         """Loads Quasi-Normal Mode fitting files for speed later."""
-        fit_coeffs_filedirectory = top_directory + '/docs/LoadFiles/PhenomDFiles/fitcoeffsWEB.dat'
+        fit_coeffs_filedirectory = os.path.join(load_directory,'PhenomDFiles/fitcoeffsWEB.dat')
         self._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
 
     def Get_PhenomD_Strain(self):
