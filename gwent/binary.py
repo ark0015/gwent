@@ -538,8 +538,8 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
         elif strain_const == 'Averaged':
             const_val = 8/np.sqrt(5)
         else:
-            raise ValueError('Can only use "UseInc" or "Averaged" monochromatic strain calculation.')
+            raise ValueError('Can only use "UseInc", "Averaged", or "Optimal" monochromatic strain calculation.')
 
         return const_val*(const.c/DL)*(np.pi*f_gw)**(2./3.)*M_chirp**(5./3.)
     else:
-        raise ValueError('Can only use "UseInc" or "Averaged" monochromatic strain calculation.')
+        raise ValueError('Can only use "UseInc", "Averaged", or "Optimal" monochromatic strain calculation.')
