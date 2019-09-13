@@ -207,7 +207,7 @@ def Calc_Mono_SNR(source,instrument):
 
     """
     if isinstance(instrument,detector.PTA):
-    	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Hazboun')
+    	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Optimal')
     else:
     	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Averaged')
     indxfgw = np.abs(instrument.fT-instrument.f_opt).argmin()
