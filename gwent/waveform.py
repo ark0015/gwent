@@ -64,9 +64,10 @@ def Get_Waveform(source,pct_of_peak=0.01):
 
     cutoffFreq = Find_Cutoff_Freq(f_RD,f_damp,[Gamma1,Gamma2,Gamma3],pct_of_peak=pct_of_peak)
 
-    #If lowest frequency is lower than cutoffFreq, throw error
+    #If lowest frequency is lower than cutoffFreq, then set to lower frequency, alternatively should raise error?
     if f_low <= cutoffFreq:
-        raise ValueError('Lower frequency bound must be lower than that of the merger ringdown.')
+        f_low = 1e-5
+        #raise ValueError('Lower frequency bound must be lower than that of the merger ringdown.')
     
     Mf = np.logspace(np.log10(f_low),np.log10(cutoffFreq),N)
 
