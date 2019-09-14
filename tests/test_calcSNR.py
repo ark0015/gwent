@@ -11,7 +11,6 @@ import gwent.snr as snr
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 load_directory = os.path.join(current_path,'../docs/LoadFiles/InstrumentFiles/')
-
 # Constants and Initial Parameters
 
 '''
@@ -219,9 +218,9 @@ def Get_Instrument(model):
 model = 2
 instrument = Get_Instrument(model)
 source = Get_Source(model)
-[sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,                                                 var_x,sampleRate_x,var_y,sampleRate_y)
-
-
+[sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source, instrument, var_x,
+                                                   sampleRate_x, var_y,
+                                                   sampleRate_y)
 
 #Whole Hog Creation of SNR Matrices and Samples
 
