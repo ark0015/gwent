@@ -37,7 +37,7 @@ class BinaryBlackHole:
         if len(args) == 3:
             [M,q,z] = args
         elif len(args) == 6:
-            [M,q,_,_,z,_] = args
+            [M,q,z,_,_,_] = args
         else:
             raise ValueError('args must be a list of 3 ([M,q,z]) or 6 ([M,q,z,chi1,chi2,inc')
         self.M = M
