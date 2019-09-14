@@ -207,7 +207,7 @@ def Calc_Mono_SNR(source,instrument):
 
     """
     if isinstance(instrument,detector.PTA):
-    	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Hazboun')
+    	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Optimal')
     else:
     	source.h_gw = binary.Get_Mono_Strain(source,instrument.f_opt,strain_const='Averaged')
     indxfgw = np.abs(instrument.fT-instrument.f_opt).argmin()
@@ -227,7 +227,7 @@ def Calc_Chirp_SNR(source,instrument):
     Notes
     -----
     Uses an interpolated method to align waveform and instrument noise, then integrates
-    over the overlapping region. See eqn 18 from Robson,Cornish,and Liu 2018 https://arxiv.org/abs/1803.01944
+    over the overlapping region. See eqn 18 from Robson,Cornish,and Liu 2018 <https://arxiv.org/abs/1803.01944>
     Values outside of the sensitivity curve are arbitrarily set to 1e30 so the SNR is effectively 0
 
     """

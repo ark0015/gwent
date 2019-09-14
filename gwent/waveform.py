@@ -1,11 +1,10 @@
 import numpy as np
 
 def Get_Waveform(source,pct_of_peak=0.01):
-    """
-    Uses Mass Ratio (q <= 18), aligned spins (|a/m|~0.85 or when q=1 |a/m|<0.98),
+    """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown
-    Uses methods found in arXiv:1508.07253 and arXiv:1508.07250
+    Uses methods found in <https://arxiv.org/abs/1508.07253> and <https://arxiv.org/abs/1508.07250>
 
     Parameters
     ----------
@@ -20,8 +19,9 @@ def Get_Waveform(source,pct_of_peak=0.01):
         the waveform frequencies in geometrized units (G=c=1)
     fullwaveform : numpy array of floats
         the waveform strain in geometrized units (G=c=1)
+
     """
-    f_low = source.f_low.value
+    f_low = source.f_low
     N = source.nfreqs
     q = source.q
     x1 = source.chi1
@@ -36,7 +36,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
     a_f = a_final(x1,x2,q,eta) #dimensionless spin
 
     ##################
-    #Finds f_ringdown and f_damp from fit taken from arXiv:gr-qc/0512160
+    #Finds f_ringdown and f_damp from fit taken from <https://arxiv.org/abs/gr-qc/0512160>
     n = 0      #QNM indices
     l = 2
     m = 2
@@ -64,9 +64,9 @@ def Get_Waveform(source,pct_of_peak=0.01):
 
     cutoffFreq = Find_Cutoff_Freq(f_RD,f_damp,[Gamma1,Gamma2,Gamma3],pct_of_peak=pct_of_peak)
 
-    #If lowest frequency is lower than cutoffFreq, throw error
-    if f_low <= cutoffFreq:
-        raise ValueError('Lower frequency bound must be lower than that of the merger ringdown.')
+    #If lowest frequency is lower than cutoffFreq, then set to lower frequency, alternatively should raise error?
+    if f_low >= cutoffFreq:
+        raise ValueError('Lower frequency bound (ie. f_low) must be lower than that of the merger ringdown.')
     
     Mf = np.logspace(np.log10(f_low),np.log10(cutoffFreq),N)
 
@@ -117,9 +117,9 @@ def A_insp(freqs,eta,x1,x2,X_PN):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     x_PN : float
         The PN reduced spin parameter
 
@@ -143,9 +143,9 @@ def DA_insp(freqs,eta,x1,x2,X_PN):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     x_PN : float
         The PN reduced spin parameter
 
@@ -226,7 +226,7 @@ def A_int(freqs,delt):
 
 
 def Lambda(eta,x_PN,lmbda):
-    """Gets the Lambdas from Eqn 31 in arXiv:1508.07253
+    """Gets the Lambdas from Eqn 31 in <https://arxiv.org/abs/1508.07253>
 
     Parameters
     ----------
@@ -264,7 +264,7 @@ def Lambda(eta,x_PN,lmbda):
 
 
 def zeta(k):
-    """Coefficients in table 5 of arXiv:1508.07253"""
+    """Coefficients in table 5 of <https://arxiv.org/abs/1508.07253>"""
     if k == 0: #rho 1
         coeffs = [3931.9, -17395.8, 3132.38, 343966.0, -1.21626e6, -70698.0, 1.38391e6, -3.96628e6, -60017.5, 803515.0, -2.09171e6]
     elif k == 1: #rho 2
@@ -290,9 +290,9 @@ def PN_coeffs(eta,x1,x2,i):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     q : float
         The mass ratio m1/m2, m1<=m2
     i : int
@@ -300,7 +300,7 @@ def PN_coeffs(eta,x1,x2,i):
 
     Notes
     -----
-    Coefficients in appendix B (eqns B14-B20) of arXiv:1508.07253
+    Coefficients in appendix B (eqns B14-B20) of <https://arxiv.org/abs/1508.07253>
 
     """
     delta = np.sqrt(1.0-4.0*eta)
@@ -329,7 +329,7 @@ def PN_coeffs(eta,x1,x2,i):
 
 
 def Calc_f_peak(f_RD,f_damp,Gammas):
-    """ Calculates the frequency at the peak of the merger
+    """Calculates the frequency at the peak of the merger
 
     Parameters
     ----------
@@ -343,7 +343,7 @@ def Calc_f_peak(f_RD,f_damp,Gammas):
     Notes
     -----
     There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1 
-        so if gamma2 >= 1 then set the square root term to zero.
+    so if gamma2 >= 1 then set the square root term to zero.
 
     """
     if Gammas[1] <= 1:
@@ -382,9 +382,9 @@ def a_final(x1,x2,q,eta):
     Parameters
     ----------
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
     q : float
         The mass ratio m1/m2, m1<=m2
     eta : float
@@ -392,7 +392,7 @@ def a_final(x1,x2,q,eta):
 
     Notes
     -----
-    Uses eq. 3 in https://arxiv.org/pdf/0904.2577.pdf, changed to match our q convention
+    Uses eq. 3 in <https://arxiv.org/abs/0904.2577>, changed to match our q convention
     a=J/M**2 where J = x1*m1**2 + x2*m2**2
 
     """
@@ -413,13 +413,13 @@ def chi_PN(eta,x1,x2):
     eta : float
         The reduced mass ratio
     x1 : float
-        The dimensionless spin parameter |a/m| for black hole m1.
+        The dimensionless spin parameter abs(a/m) for black hole m1.
     x2 : float
-        The dimensionless spin parameter |a/m| for black hole m2.
+        The dimensionless spin parameter abs(a/m) for black hole m2.
 
     Notes
     -----
-    See Eq 5.9 in http://arxiv.org/pdf/1107.1267v2.pdf
+    See Eq 5.9 in <https://arxiv.org/abs/1107.1267v2>
 
     """
     delta = np.sqrt(1.0-4.0*eta)

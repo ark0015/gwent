@@ -14,13 +14,13 @@ def make_quant(param, default_unit):
     -------
         an astropy quantity
     
-    Example
+    Examples
     -------
         self.f0 = make_quant(f0,'MHz')
 
     Notes
     -----
-    Taken from https://github.com/Hazboun6/hasasia/blob/master/hasasia/sensitivity.py#L834
+    Taken from <https://github.com/Hazboun6/hasasia/blob/master/hasasia/sensitivity.py#L834>
 
     """
     default_unit = u.core.Unit(default_unit)
@@ -54,12 +54,11 @@ def Get_Var_Dict(obj,value):
     the last two are optional and contain the variable min and max
 
     Examples
-    -------
+    --------
     obj.var_dict = ['M',value]
-    where obj is in this case an instance of a BinaryBlackHole
+        where obj is in this case an instance of a BinaryBlackHole
 
     """
-
     if not hasattr(obj,'var_dict'):
             obj._var_dict = {}
     if isinstance(value,list):
