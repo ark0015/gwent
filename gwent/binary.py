@@ -11,7 +11,7 @@ from .waveform import Get_Waveform
 from . import utils
 
 current_path = os.path.abspath(gwent.__path__[0])
-load_directory = os.path.join(current_path,'gwent','LoadFiles/')
+load_directory = os.path.join(current_path,'LoadFiles/')
 
 class BinaryBlackHole:
     """Base Class for frequency domain strains from Binary Black Holes.
@@ -152,7 +152,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         if not hasattr(self,'nfreqs'):
             self.nfreqs = int(1e3)
         if not hasattr(self,'f_low'):
-            self.f_low = 1e-5*u.Hz
+            self.f_low = 1e-5
 
         self.Get_Fitcoeffs()
 

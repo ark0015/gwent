@@ -13,7 +13,7 @@ import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
 
 current_path = os.path.abspath(gwent.__path__[0])
-load_directory = os.path.join(current_path,'gwent','LoadFiles/')
+load_directory = os.path.join(current_path,'LoadFiles/')
 
 class PTA:
     """
@@ -531,7 +531,7 @@ class SpaceBased(Interferometer):
 
     def Load_Transfer_Function(self):
         #Numerical transfer function
-        Numerical_Transfer_Function_filedirectory = os.path.join(load_directory,'/NumericalTransferFunction/transfer.dat')
+        Numerical_Transfer_Function_filedirectory = os.path.join(load_directory,'NumericalTransferFunction/transfer.dat')
         Numerical_Transfer_Function_data = np.loadtxt(Numerical_Transfer_Function_filedirectory)
         self._transferfunctiondata = Numerical_Transfer_Function_data
 

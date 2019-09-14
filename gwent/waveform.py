@@ -21,7 +21,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
         the waveform strain in geometrized units (G=c=1)
 
     """
-    f_low = source.f_low.value
+    f_low = source.f_low
     N = source.nfreqs
     q = source.q
     x1 = source.chi1
@@ -66,7 +66,7 @@ def Get_Waveform(source,pct_of_peak=0.01):
 
     #If lowest frequency is lower than cutoffFreq, then set to lower frequency, alternatively should raise error?
     if f_low <= cutoffFreq:
-        f_low = 1e-5
+        f_low = 1e-9
         #raise ValueError('Lower frequency bound must be lower than that of the merger ringdown.')
     
     Mf = np.logspace(np.log10(f_low),np.log10(cutoffFreq),N)
