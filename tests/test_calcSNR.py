@@ -5,12 +5,13 @@ import numpy as np
 import os
 import astropy.units as u
 
+import gwent
 import gwent.binary as binary
 import gwent.detector as detector
 import gwent.snr as snr
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-load_directory = os.path.join(current_path,'../docs/LoadFiles/InstrumentFiles/')
+current_path = os.path.abspath(gwent.__path__[0])
+load_directory = os.path.join(current_path,'LoadFiles/InstrumentFiles/')
 
 # Constants and Initial Parameters
 
@@ -208,32 +209,12 @@ def Get_Instrument(model):
 
     return instrument
 
-
-# # Setting Up SNR Calculation
-# Uses the variables given and the data range to sample the space either
-# logrithmically or linearly based on the
-# selection of variables. Then it computes the SNR for each value.
-# Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample1Xsample2
-#
-
-model = 2
-instrument = Get_Instrument(model)
-source = Get_Source(model)
-[sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,                                                 var_x,sampleRate_x,var_y,sampleRate_y)
-
-
-
 #Whole Hog Creation of SNR Matrices and Samples
 
 models = [0,1,2,3,4,5]
 for model in models:
     instrument = Get_Instrument(model)
     source = Get_Source(model)
-    start = time.time()
     [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,var_x,
                                                        sampleRate_x,var_y,
                                                        sampleRate_y)
-    end = time.time()
-    #snr.Save_SNR(sample_x,sample_y,SNRMatrix,save_location,SNR_save_name,Sample_save_name)
-
-    print('Model: ',instrument.name,',',' done. t = : ',end-start)
