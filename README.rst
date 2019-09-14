@@ -14,11 +14,12 @@ gwent
         :alt: Documentation Status
 
 
-
-
 Gravitational Wave dEtector desigN Toolkit.
 
 Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
+
+.. image:: https://github.com/ark0015/gwent/blob/master/docs/waterfall_plot_tutorial_files/waterfall_plot_tutorial_26_0.png
+        :alt: gwent Waterfall Plots
 
 * Free software: MIT license
 * Documentation: https://gwent.readthedocs.io.
