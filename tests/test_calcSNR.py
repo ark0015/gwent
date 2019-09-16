@@ -12,7 +12,6 @@ import gwent.snr as snr
 
 current_path = os.path.abspath(gwent.__path__[0])
 load_directory = os.path.join(current_path,'LoadFiles/InstrumentFiles/')
-
 # Constants and Initial Parameters
 
 '''

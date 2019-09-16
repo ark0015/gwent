@@ -6,22 +6,14 @@
 
 .. _strain_plot_tutorial:
 
-
-
-.. parsed-literal::
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
-
-
 .. code:: python
 
     import numpy as np
+    
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotlib.colors as colors
     from matplotlib import cm
-    from matplotlib import rc
-    import os, sys
     
     import astropy.constants as const
     import astropy.units as u
@@ -32,25 +24,21 @@
     import hasasia.sensitivity as hassens
     import hasasia.sim as hassim
     import hasasia.skymap as hassky
+    
+    import gwent
+    import gwent.detector as detector
+    import gwent.binary as binary
 
 .. code:: python
 
-    rc('text',usetex=True)
-    rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})#,'weight':'bold'})
+    mpl.rcParams['figure.dpi'] = 300
+    mpl.rcParams['figure.figsize'] = [5,3]
+    mpl.rcParams['text.usetex'] = True
+    mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
 
 .. code:: python
 
-    current_path = os.getcwd()
-    splt_path = current_path.split("/")
-    top_path_idx = splt_path.index('gwent')
-    top_directory = "/".join(splt_path[0:top_path_idx+1])
-    
-    load_directory = top_directory + '/docs/LoadFiles/InstrumentFiles/'
-    
-    sys.path.insert(0,top_directory + '/gwent')
-    
-    import detector
-    import binary
+    load_directory = gwent.__path__[0] + '/LoadFiles'
 
 .. code:: python
 
@@ -74,7 +62,7 @@ aLIGO
 .. code:: python
 
     #aLIGO
-    aLIGO_filedirectory = load_directory + 'aLIGO/StrainFiles/'
+    aLIGO_filedirectory = load_directory + '/InstrumentFiles/aLIGO/StrainFiles/'
     aLIGO_filename = 'aLIGODesign.txt'
     aLIGO_filelocation = aLIGO_filedirectory + aLIGO_filename
     
@@ -86,7 +74,7 @@ Einstein Telescope
 .. code:: python
 
     #Einstein Telescope
-    ET_filedirectory = load_directory + 'EinsteinTelescope/StrainFiles/'
+    ET_filedirectory = load_directory + '/InstrumentFiles/EinsteinTelescope/StrainFiles/'
     ET_filename = 'ET_B_data.txt'
     ET_filelocation = ET_filedirectory + ET_filename
     
@@ -107,7 +95,7 @@ Plots of Ground Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_12_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_11_0.png
 
 
 LISA Martin data
@@ -120,7 +108,7 @@ LISA Martin data
 .. code:: python
 
     #Martin data
-    LISA_Other_filedirectory = load_directory + 'LISA_Other/StrainFiles/'
+    LISA_Other_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/StrainFiles/'
     LISA_Martin_filename = 'LISA_Allocation_S_h_tot.txt'
     LISA_Martin_filelocation = LISA_Other_filedirectory + LISA_Martin_filename
     
@@ -133,7 +121,7 @@ LISA Neil Cornish data
 .. code:: python
 
     #Neil Cornish data
-    LISA_Neil_filedirectory = load_directory + 'LISA_Neil/StrainFiles/'
+    LISA_Neil_filedirectory = load_directory + '/InstrumentFiles/LISA_Neil/StrainFiles/'
     LISA_Neil_filename = 'LISA_sensitivity.txt'
     LISA_Neil_filelocation = LISA_Neil_filedirectory + LISA_Neil_filename
     
@@ -165,7 +153,7 @@ LISA Larson Sensitivity Curve
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_20_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_19_0.png
 
 
 NANOGrav continuous wave sensitivity
@@ -173,7 +161,7 @@ NANOGrav continuous wave sensitivity
 
 .. code:: python
 
-    NANOGrav_filedirectory = load_directory + 'NANOGrav/StrainFiles/' 
+    NANOGrav_filedirectory = load_directory + '/InstrumentFiles/NANOGrav/StrainFiles/' 
 
 .. code:: python
 
@@ -281,7 +269,7 @@ NANOGrav 11.5yr parameters https://arxiv.org/abs/1801.01837
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_36_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_35_0.png
 
 
 Calculate LISA amplitude spectral densities for various models
@@ -345,7 +333,7 @@ Plots of Space-Based Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_44_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_43_0.png
 
 
 BBH strain calculation
@@ -368,26 +356,26 @@ BBH strain calculation
 
 .. code:: python
 
-    source_1 = binary.BBHFrequencyDomain(M[0],q[0],x1[0],x2[0],z[0],inc,instrument=ESA_LISA)
+    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],inc,instrument=ESA_LISA)
 
 .. code:: python
 
-    source_2 = binary.BBHFrequencyDomain(M[1],q[1],x1[1],x2[1],z[1],inc,instrument=aLIGO)
+    source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],inc,instrument=aLIGO)
 
 .. code:: python
 
-    source_3 = binary.BBHFrequencyDomain(M[2],q[2],x1[2],x2[2],z[2],inc,instrument=SKA_Hazboun)
+    source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],inc,instrument=SKA_Hazboun)
 
 .. code:: python
 
-    source_4 = binary.BBHFrequencyDomain(M[1],q[0],x1[1],x2[1],z[1],inc,instrument=ET)
+    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],inc,instrument=ET)
 
 Numerical Relativity from EOB subtraction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    EOBdiff_filedirectory = top_directory + '/docs/LoadFiles/DiffStrain/EOBdiff/'
+    EOBdiff_filedirectory = load_directory + '/DiffStrain/EOBdiff/'
     diff0002 = binary.BBHTimeDomain(M[1],q[0],z[1],load_location=EOBdiff_filedirectory+'diff0002.dat')
     diff0114 = binary.BBHTimeDomain(M[1],q[0],z[1],load_location=EOBdiff_filedirectory+'diff0114.dat')
     diff0178 = binary.BBHTimeDomain(M[1],q[0],z[1],load_location=EOBdiff_filedirectory+'diff0178.dat')
@@ -410,7 +398,7 @@ Numerical Relativity from EOB subtraction
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_53_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_52_0.png
 
 
 .. code:: python
@@ -448,5 +436,5 @@ Numerical Relativity from EOB subtraction
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_54_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_53_0.png
 
