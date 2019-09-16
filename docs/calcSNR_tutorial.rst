@@ -6,39 +6,32 @@
 
 .. _calcSNR_tutorial:
 
-
 .. code:: python
 
     import numpy as np
     import matplotlib.pyplot as plt
-    from matplotlib import rc
+    import matplotlib as mpl
     import astropy.constants as const
     import os, sys, time
     import astropy.units as u
     from fractions import Fraction
+    
+    import gwent
+    import gwent.binary as binary
+    import gwent.detector as detector
+    import gwent.snr as snr
+    import gwent.snrplot as snrplot
 
 .. code:: python
 
-    rc('text',usetex=True)
-    rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})#,'weight':'bold'})
-
-Directory Names
-===============
+    load_directory = gwent.__path__[0] + '/LoadFiles/InstrumentFiles/'
 
 .. code:: python
 
-    current_path = os.getcwd()
-    splt_path = current_path.split("/")
-    top_path_idx = splt_path.index('gwent')
-    top_directory = "/".join(splt_path[0:top_path_idx+1])
-    
-    load_directory = top_directory + '/docs/LoadFiles/InstrumentFiles/'
-    
-    sys.path.insert(0,top_directory + '/gwent')
-    import binary
-    import detector
-    import snr
-    import snrplot
+    mpl.rcParams['figure.dpi'] = 300
+    mpl.rcParams['figure.figsize'] = [5,3]
+    mpl.rcParams['text.usetex'] = True
+    mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
 
 Constants and Initial Parameters
 ================================
@@ -70,11 +63,11 @@ Constants and Initial Parameters
     
     var_y = 'z' #Variable on y-axis
     
-    sampleRate_y = 50 #Number of SNRMatrix rows
+    sampleRate_y = 100 #Number of SNRMatrix rows
     
     var_x = 'M' #Variable on x-axis
     
-    sampleRate_x = 50 #Number of SNRMatrix columns
+    sampleRate_x = 100 #Number of SNRMatrix columns
 
 .. code:: python
 
@@ -147,6 +140,7 @@ Model Selection
         if model == 0: #Einstein Telescope
             load_name = 'ET_D_data.txt'
             load_location = load_directory + 'EinsteinTelescope/StrainFiles/' + load_name
+            print(load_location)
             
             T_obs = 4*u.yr #Observing time in years
             T_obs_min = 1*u.yr
@@ -261,15 +255,14 @@ the sample1Xsample2
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,\
-                                                     var_x,sampleRate_x,var_y,sampleRate_y)
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y)
     end = time.time()
     print(end-start)
 
 
 .. parsed-literal::
 
-    13.84812593460083
+    25.585025787353516
 
 
 .. code:: python
@@ -278,7 +271,7 @@ the sample1Xsample2
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_12_0.png
 
 
 Whole Hog Creation of SNR Matrices and Samples
@@ -299,56 +292,61 @@ Whole Hog Creation of SNR Matrices and Samples
         print('Model: ',instrument.name,',',' done. t = : ',end-start)
 
 
+.. parsed-literal::
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_0.png
+    /home/andrew/anaconda3/envs/gwent/lib/python3.7/site-packages/gwent/LoadFiles/InstrumentFiles/EinsteinTelescope/StrainFiles/ET_D_data.txt
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_1.png
 
 
 .. parsed-literal::
 
-    Model:  ET ,  done. t = :  16.091941833496094
+    Model:  ET ,  done. t = :  38.10015559196472
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_2.png
-
-
-.. parsed-literal::
-
-    Model:  aLIGO ,  done. t = :  16.612098693847656
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_4.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_3.png
 
 
 .. parsed-literal::
 
-    Model:  NANOGrav ,  done. t = :  14.794465065002441
+    Model:  aLIGO ,  done. t = :  53.10788178443909
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_6.png
-
-
-.. parsed-literal::
-
-    Model:  SKA ,  done. t = :  21.330587148666382
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_8.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_5.png
 
 
 .. parsed-literal::
 
-    Model:  Neil_LISA ,  done. t = :  17.32237696647644
+    Model:  NANOGrav ,  done. t = :  25.013616800308228
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_16_10.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_7.png
 
 
 .. parsed-literal::
 
-    Model:  LISA_ESA ,  done. t = :  17.09630513191223
+    Model:  SKA ,  done. t = :  29.558005809783936
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_9.png
+
+
+.. parsed-literal::
+
+    Model:  Neil_LISA ,  done. t = :  40.26609396934509
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_11.png
+
+
+.. parsed-literal::
+
+    Model:  LISA_ESA ,  done. t = :  40.41043186187744
 
