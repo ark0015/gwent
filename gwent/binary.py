@@ -36,10 +36,10 @@ class BinaryBlackHole:
     def __init__(self,*args,**kwargs):
         if len(args) == 3:
             [M,q,z] = args
-        elif len(args) == 6:
-            [M,q,z,_,_,_] = args
+        elif len(args) == 5:
+            [M,q,z,_,_] = args
         else:
-            raise ValueError('args must be a list of 3 ([M,q,z]) or 6 ([M,q,z,chi1,chi2,inc')
+            raise ValueError('args must be a list of 3 ([M,q,z]) or 6 ([M,q,z,chi1,chi2])')
         self.M = M
         self.q = q
         self.z = z
@@ -119,8 +119,6 @@ class BBHFrequencyDomain(BinaryBlackHole):
         The dimensionless spin parameter abs(a/m) for black hole m1.
     chi2 : float
         The dimensionless spin parameter abs(a/m) for black hole m2
-    inc : float
-        The inclination of the BBH
 
     f_low : float, optional
         The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
@@ -134,10 +132,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
     """
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        [_,_,_,chi1,chi2,inc] = args
+        [_,_,_,chi1,chi2] = args
         self.chi1 = chi1
         self.chi2 = chi2
-        self.inc = inc
 
         for keys,value in kwargs.items():
             if keys == 'f_low':
@@ -171,14 +168,6 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def chi2(self,value):
         self.var_dict = ['chi2',value]
         self._chi2 = self._return_value
-
-    @property
-    def inc(self):
-        return self._inc
-    @inc.setter
-    def inc(self,value):
-        self.var_dict = ['inc',value]
-        self._inc = self._return_value
 
     @property
     def instrument(self):
@@ -505,9 +494,8 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
     ----------
     f_gw : float
         The source frequency of the gravitational wave.
-    strain_const : {'Averaged','UseInc','Optimal'}, optional
+    strain_const : {'Averaged','Optimal'}, optional
         'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
-        'UseInc' uses the source inclination value from Rosado, Sesana, and Gair (2015) <https://arxiv.org/abs/1503.04803>, will be innacurate because nothing else accounts for inclination
         'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
 
     Returns
@@ -528,17 +516,16 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
         M_redshifted_time = source.M.to('kg')*(1+source.z)*m_conv
         M_chirp = eta**(3/5)*M_redshifted_time
 
-        if strain_const == 'UseInc':
-            a = 1+np.cos(source.inc)**2
-            b = -2*np.cos(source.inc)
+        if strain_const == 'Optimal':
+            inc = 0.0
+            a = 1+np.cos(inc)**2
+            b = -2*np.cos(inc)
             const_val = 2*np.sqrt(.5*(a**2+b**2))
-        elif strain_const == 'Optimal':
-            const_val = 4.
         elif strain_const == 'Averaged':
             const_val = 8/np.sqrt(5)
         else:
-            raise ValueError('Can only use "UseInc", "Averaged", or "Optimal" monochromatic strain calculation.')
+            raise ValueError('Can only use "Averaged", or "Optimal" monochromatic strain calculation.')
 
         return const_val*(const.c/DL)*(np.pi*f_gw)**(2./3.)*M_chirp**(5./3.)
     else:
-        raise ValueError('Can only use "UseInc", "Averaged", or "Optimal" monochromatic strain calculation.')
+        raise ValueError('Can only use "Averaged", or "Optimal" monochromatic strain calculation.')

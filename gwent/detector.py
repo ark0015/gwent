@@ -246,9 +246,11 @@ class Interferometer:
 
     load_location : string, optional
         If you want to load an instrument curve from a file, it's the file path
-    I_type : string, optional
-        Type of input data; can be the effective strain spectral density $S_{n}(f)$ ('ENSD'),
-        the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'), or the characteristic strain $h_{n}(f)$ ('h')
+    I_type : string, {'E','A','h'}
+        Sets the type of input data.
+        'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
+        'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
+        'h' is the characteristic strain $h_{n}(f)$ ('h')
 
     """
     def __init__(self,name,T_obs,**kwargs):
@@ -391,10 +393,10 @@ class SpaceBased(Interferometer):
     A_IFO : float
         the amplitude of the interferometer
 
-    T_Function_Type : string, optional
+    T_type : string, {'N','A'}
         Picks the transfer function generation method
-        To use the numerically approximated method in Robson, Cornish, and Liu, 2019, input "N"
-        To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A"
+        'N' uses the numerically approximated method in Robson, Cornish, and Liu, 2019
+        'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
     Background : Boolean
         Add in a Galactic Binary Confusion Noise
     f_low : float
@@ -409,14 +411,14 @@ class SpaceBased(Interferometer):
         super().__init__(name,T_obs,**kwargs)
         self.name = name
         for keys,value in kwargs.items():
-            if keys == 'T_Function_Type':
-                self.Set_T_Function_Type(value)
+            if keys == 'T_type':
+                self.T_type = value
             elif keys == 'Background':
                 self.Background = value
             elif keys == 'f_low':
-                self.f_low = value
+                self.f_low = utils.make_quant(value,'Hz')
             elif keys == 'f_high':
-                self.f_high = value
+                self.f_high = utils.make_quant(value,'Hz')
             elif keys == 'nfreqs':
                 self.nfreqs = value
 
@@ -438,8 +440,10 @@ class SpaceBased(Interferometer):
             self.A_IFO = utils.make_quant(A_IFO,'m')
             self.f_IMS_break = utils.make_quant(f_IMS_break,'Hz')
 
-        if not hasattr(self,'_T_Function_Type') and not hasattr(self,'load_location'):
-            self.Set_T_Function_Type('N')
+        if not hasattr(self,'load_location'):
+            if not hasattr(self,'T_type'):
+                self.T_type = 'N'
+            self.Set_T_Function_Type()
 
     @property
     def L(self):
@@ -552,30 +556,27 @@ class SpaceBased(Interferometer):
 
     def Get_Analytic_Transfer_Function(self):
         #Response function approximation from Calculation described by Cornish, Robson, Liu 2019
-        if isinstance(self.f_low,u.Quantity) and isinstance(self.f_low,u.Quantity):
-            self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
-        else:
-            self.fT = np.logspace(np.log10(self.f_low),np.log10(self.f_high),self.nfreqs)*u.Hz
+        self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
         f_L = const.c/2/np.pi/self.L #Transfer frequency
         #3/10 is normalization 2/5sin(openingangle)
         R_f = 3/10/(1+0.6*(self.fT/f_L)**2)
         self.transferfunction = np.sqrt(R_f)
 
-    def Set_T_Function_Type(self,calc_type):
-        if calc_type == 'n' or calc_type == 'N':
-            self._T_Function_Type = 'numeric'
-        elif calc_type == 'a' or calc_type == 'A':
-            self._T_Function_Type = 'analytic'
+    def Set_T_Function_Type(self):
+        if self.T_type == 'n' or self.T_type == 'N':
+            self._T_type = 'numeric'
+        elif self.T_type == 'a' or self.T_type == 'A':
+            self._T_type = 'analytic'
         else:
             print('\nYou can get the transfer function via 2 methods:')
             print(' *To use the numerically approximated method in Robson, Cornish, and Liu, 2019, input "N".')
             print(' *To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A".')
             calc_type = input('Please select the calculation type: ')
             self.Set_T_Function_Type(calc_type)
-        if hasattr(self,'_T_Function_Type'):
-            if self._T_Function_Type == 'numeric':
+        if hasattr(self,'_T_type'):
+            if self._T_type == 'numeric':
                 self.Get_Numeric_Transfer_Function()
-            if self._T_Function_Type == 'analytic':
+            if self._T_type == 'analytic':
                 self.Get_Analytic_Transfer_Function()
 
 
