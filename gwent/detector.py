@@ -562,7 +562,7 @@ class SpaceBased(Interferometer):
         R_f = 3/10/(1+0.6*(self.fT/f_L)**2)
         self.transferfunction = np.sqrt(R_f)
 
-    def Set_T_Function_Type(self,calc_type):
+    def Set_T_Function_Type(self):
         if self.T_type == 'n' or self.T_type == 'N':
             self._T_type = 'numeric'
         elif self.T_type == 'a' or self.T_type == 'A':
