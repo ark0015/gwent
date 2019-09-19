@@ -49,28 +49,45 @@ We need to get the file directories to load in the instrument files.
 Declaring x and y variables and Sample Rates
 --------------------------------------------
 
-The variables for either axis in the SNR calculation can be: \* GLOBAL:
-\* ‘T_obs’ - Detector Observation Time \* SOURCE: \* ‘M’ - Mass (Solar
-Units) \* ‘q’ - Mass Ratio \* ‘chi1’ - Dimensionless Spin of Black Hole
-1 \* ‘chi2’ - Dimensionless Spin of Black Hole 2 \* ‘z’ - Redshift \*
-LISA ONLY: \* ‘L’ - Detector Armlength \* ‘A_acc’ - Detector
-Acceleration Noise \* ‘A_IMS’ - Detector Optical Metrology Noise \*
-‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency \*
-‘f_acc_break_high’ - The High Acceleration Noise Break Frequency \*
-‘f_IMS_break’ - The Optical Metrology Noise Break Frequency \* PTAs
-ONLY: \* ‘N_p’ - Number of Pulsars \* ‘sigma’ - Root-Mean-Squared Timing
-Error \* ‘cadence’ - Observation Cadence
+The variables for either axis in the SNR calculation can be:
+
+-  GLOBAL:
+
+   -  ‘T_obs’ - Detector Observation Time
+
+-  SOURCE:
+
+   -  ‘M’ - Mass (Solar Units)
+   -  ‘q’ - Mass Ratio
+   -  ‘chi1’ - Dimensionless Spin of Black Hole 1
+   -  ‘chi2’ - Dimensionless Spin of Black Hole 2
+   -  ‘z’ - Redshift
+
+-  LISA ONLY:
+
+   -  ‘L’ - Detector Armlength
+   -  ‘A_acc’ - Detector Acceleration Noise
+   -  ‘A_IMS’ - Detector Optical Metrology Noise
+   -  ‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency
+   -  ‘f_acc_break_high’ - The High Acceleration Noise Break Frequency
+   -  ‘f_IMS_break’ - The Optical Metrology Noise Break Frequency
+
+-  PTAs ONLY:
+
+   -  ‘N_p’ - Number of Pulsars
+   -  ‘sigma’ - Root-Mean-Squared Timing Error
+   -  ‘cadence’ - Observation Cadence
 
 .. code:: python
 
     #Variable on y-axis
     var_y = 'z'
     #Number of SNRMatrix rows
-    sampleRate_y = 100
+    sampleRate_y = 50
     #Variable on x-axis
     var_x = 'M'
     #Number of SNRMatrix columns
-    sampleRate_x = 100
+    sampleRate_x = 50
 
 Source Selection Function
 -------------------------
@@ -116,18 +133,12 @@ needs to set the minima and maxima of the selected SNR axes variables.
         z_min = 1e-2
         z_max = 1e3
         
-        #Doesn't Really work yet
-        inc = 0.0
-        inc_min = 0.0
-        inc_max = 0.0
-        
-        source = binary.BBHFrequencyDomain(M,q,z,chi1,chi2,inc)
+        source = binary.BBHFrequencyDomain(M,q,z,chi1,chi2)
         source.M = [M,M_min,M_max]
         source.q = [q,q_min,q_max]
         source.chi1 = [chi1,chi_min,chi_max]
         source.chi2 = [chi2,chi_min,chi_max]
         source.z = [z,z_min,z_max]
-        source.inc = [inc,inc_min,inc_max]
     
         return source
 
@@ -220,10 +231,11 @@ variables and Sample Rates).
             f_acc_break_low = .4*u.mHz.to('Hz')*u.Hz
             f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
             Background = False
+            T_type = 'A'
             
             instrument = detector.SpaceBased('Alt_LISA',\
                                            T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                                           Background=Background)
+                                           Background=Background,T_type=T_type)
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             instrument.L = [L,L_min,L_max]
             
@@ -243,10 +255,11 @@ variables and Sample Rates).
             A_acc = 3e-15*u.m/u.s/u.s
             A_IMS = 10e-12*u.m
             Background = False
+            T_type = 'N'
             
             instrument = detector.SpaceBased('LISA_ESA',\
                                            T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                                           Background=Background)
+                                           Background=Background,T_type=T_type)
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             instrument.L = [L,L_min,L_max]
             
@@ -281,7 +294,7 @@ returns the SNRs with size of the ``sampleRate1``\ X\ ``sampleRate2``
 
 .. parsed-literal::
 
-    47.121991872787476
+    8.620705842971802
 
 
 Plot the SNR using the initial variables and the returns from
@@ -320,7 +333,7 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  ET ,  done. t = :  62.684426069259644
+    Model:  ET ,  done. t = :  8.529491424560547
 
 
 
@@ -329,7 +342,7 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  aLIGO ,  done. t = :  63.27045702934265
+    Model:  aLIGO ,  done. t = :  8.728248834609985
 
 
 
@@ -338,7 +351,7 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  NANOGrav ,  done. t = :  45.956143856048584
+    Model:  NANOGrav ,  done. t = :  7.7294206619262695
 
 
 
@@ -347,7 +360,7 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  SKA ,  done. t = :  53.798473834991455
+    Model:  SKA ,  done. t = :  11.327939748764038
 
 
 
@@ -356,7 +369,7 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  Alt_LISA ,  done. t = :  72.71657276153564
+    Model:  Alt_LISA ,  done. t = :  7.860916614532471
 
 
 
@@ -365,6 +378,6 @@ Create of SNR Matrices and Samples for all models
 
 .. parsed-literal::
 
-    Model:  LISA_ESA ,  done. t = :  72.5990080833435
+    Model:  LISA_ESA ,  done. t = :  9.925052165985107
 
 

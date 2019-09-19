@@ -421,7 +421,7 @@ Approximation within.
         
     LISA_prop2 = detector.SpaceBased('LISA Approximate',\
                                LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                               Background=Background)
+                               Background=Background,T_type='A')
 
 Plots of Generated LISA Detectors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -456,35 +456,34 @@ Husa, et al. 2016 https://arxiv.org/abs/1508.07250
     x1 = [0.95,0.0,-0.95]
     x2 = [0.95,0.0,-0.95]
     z = [3.0,0.093,20.0]
-    inc = 0.0 #Doesn't really work 
 
 Uses the first parameter values and the ``LISA_prop1`` detector model
 for calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],inc,instrument=LISA_prop1)
+    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],instrument=LISA_prop1)
 
 Uses the first parameter values and the ``aLIGO`` detector model for
 calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],inc,instrument=aLIGO)
+    source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],instrument=aLIGO)
 
 Uses the first parameter values and the ``SKA_WN`` detector model for
 calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],inc,instrument=SKA_WN)
+    source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],instrument=SKA_WN)
 
 Uses the first parameter values and the ``ET`` detector model for
 calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],inc,instrument=ET)
+    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],instrument=ET)
 
 Generate Frequency Data from Given Time Domain
 ----------------------------------------------
