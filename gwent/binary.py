@@ -39,7 +39,7 @@ class BinaryBlackHole:
         elif len(args) == 5:
             [M,q,z,_,_] = args
         else:
-            raise ValueError('args must be a list of 3 ([M,q,z]) or 6 ([M,q,z,chi1,chi2])')
+            raise ValueError('args must be a list of 3 ([M,q,z]) or 5 ([M,q,z,chi1,chi2])')
         self.M = M
         self.q = q
         self.z = z
@@ -494,7 +494,7 @@ def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
     ----------
     f_gw : float
         The source frequency of the gravitational wave.
-    strain_const : {'Averaged','Optimal'}, optional
+    strain_const : {'Averaged','Optimal'}
         'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
         'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
 
