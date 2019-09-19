@@ -88,18 +88,12 @@ def Get_Source(model):
     z_min = 1e-2
     z_max = 1e3
 
-    #Doesn't Really work yet
-    inc = 0.0
-    inc_min = 0.0
-    inc_max = 0.0
-
-    source = binary.BBHFrequencyDomain(M,q,chi1,chi2,z,inc)
+    source = binary.BBHFrequencyDomain(M,q,chi1,chi2,z)
     source.M = [M,M_min,M_max]
     source.q = [q,q_min,q_max]
     source.chi1 = [chi1,chi_min,chi_max]
     source.chi2 = [chi2,chi_min,chi_max]
     source.z = [z,z_min,z_max]
-    source.inc = [inc,inc_min,inc_max]
 
     return source
 
@@ -178,10 +172,10 @@ def Get_Instrument(model):
         f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
         Background = False
 
-        instrument = detector.SpaceBased('Neil_LISA',
+        instrument = detector.SpaceBased('LISA_Alt',
                                          T_obs,L,A_acc,f_acc_break_low,
                                          f_acc_break_high,A_IMS,f_IMS_break,
-                                         Background=Background)
+                                         Background=Background,T_type='A')
         instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
         instrument.L = [L,L_min,L_max]
 
@@ -202,7 +196,10 @@ def Get_Instrument(model):
         A_IMS = 10e-12*u.m
         Background = False
 
-        instrument = detector.SpaceBased('LISA_ESA',                                       T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,                                       Background=Background)
+        instrument = detector.SpaceBased('LISA_ESA',
+            T_obs,L,A_acc,f_acc_break_low,
+            f_acc_break_high,A_IMS,f_IMS_break,
+            Background=Background,T_type='N')
         instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
         instrument.L = [L,L_min,L_max]
 
