@@ -6,49 +6,35 @@
 
 .. _waterfall_plot_tutorial:
 
-
-
-.. parsed-literal::
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
-
-
 .. code:: python
 
     import numpy as np
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotlib.colors as colors
-    from matplotlib import rc
-    from matplotlib.image import NonUniformImage
-    
-    import os,sys
     
     import astropy.units as u
     from astropy.cosmology import z_at_value
     from astropy.cosmology import WMAP9 as cosmo
+    
+    import gwent
 
 .. code:: python
 
-    rc('text',usetex=True)
-    rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})#,'weight':'bold'})
+    mpl.rcParams['figure.dpi'] = 300
+    mpl.rcParams['figure.figsize'] = [5,3]
+    mpl.rcParams['text.usetex'] = True
+    mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
 
-Directory Names
-===============
+Load Directory
+==============
 
 .. code:: python
 
-    current_path = os.getcwd()
-    splt_path = current_path.split("/")
-    top_path_idx = splt_path.index('gwent')
-    top_directory = "/".join(splt_path[0:top_path_idx+1])
+    load_directory = gwent.__path__[0] + '/LoadFiles/InstrumentFiles/'
 
 Load Data Files
 ===============
-
-.. code:: python
-
-    load_directory = top_directory + '/docs/LoadFiles/InstrumentFiles/'
 
 ESA LISA
 ^^^^^^^^
@@ -295,5 +281,5 @@ Make Waterfall Plots
 
 
 
-.. image:: waterfall_plot_tutorial_files/waterfall_plot_tutorial_26_0.png
+.. image:: waterfall_plot_tutorial_files/waterfall_plot_tutorial_24_0.png
 
