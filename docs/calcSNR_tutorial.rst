@@ -22,7 +22,7 @@ First, we import important modules.
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import astropy.constants as const
-    import os, sys, time
+    import time
     import astropy.units as u
     
     import gwent
