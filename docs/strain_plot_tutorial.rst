@@ -6,6 +6,16 @@
 
 .. _strain_plot_tutorial:
 
+Using ``gwent`` to Generate Characteristic Strain Curves
+========================================================
+
+Here we show examples of using the different classes in ``gwent`` for
+various detectors, both loading in from a file and generating with
+``gwent``, and binary black holes, both in the frequency and time
+domain.
+
+First, we load important packages
+
 .. code:: python
 
     import numpy as np
@@ -19,15 +29,12 @@
     import astropy.units as u
     from astropy.cosmology import z_at_value
     from astropy.cosmology import WMAP9 as cosmo
-    from fractions import Fraction
-    
-    import hasasia.sensitivity as hassens
-    import hasasia.sim as hassim
-    import hasasia.skymap as hassky
     
     import gwent
     import gwent.detector as detector
     import gwent.binary as binary
+
+Setting matplotlib and plotting preferences
 
 .. code:: python
 
@@ -35,25 +42,35 @@
     mpl.rcParams['figure.figsize'] = [5,3]
     mpl.rcParams['text.usetex'] = True
     mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
+    
+    axissize = 6
+    labelsize = 8
+    legendsize = 10
+    colornorm = colors.Normalize(vmin=0.0, vmax=5.0)
+    linesize = 2
+
+We need to get the file directories to load in the instrument files.
 
 .. code:: python
 
     load_directory = gwent.__path__[0] + '/LoadFiles'
 
-.. code:: python
-
-    axissize = 14
-    labelsize = 16
-    legendsize = 12
-    figsize = (10,8)
-    colornorm = colors.Normalize(vmin=0.0, vmax=5.0)
-    linesize = 3
-
 Initialize different instruments
-================================
+--------------------------------
+
+If loading a detector, the file should be frequency in the first column
+and either strain, effective strain noise spectral density, or amplitude
+spectral density in the second column.
+
+For generating a detector, one must assign a value to each of the
+different instrument parameters (see the section on Declaring x and y
+variables and Sample Rates).
+
+Load ground instruments from files
+----------------------------------
 
 aLIGO
-~~~~~
+^^^^^
 
 .. code:: python
 
@@ -69,7 +86,7 @@ aLIGO
     aLIGO = detector.GroundBased('aLIGO',Ground_T_obs,load_location=aLIGO_filelocation,I_type='A')
 
 Einstein Telescope
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
@@ -85,21 +102,28 @@ Plots of Ground Detectors
 
 .. code:: python
 
-    fig = plt.figure(figsize=(10,5))
-    plt.loglog(ET.fT,ET.h_n_f,label='Einsteing Telescope B')
-    plt.loglog(aLIGO.fT,aLIGO.h_n_f,label='Advanced LIGO')
+    fig = plt.figure()
+    plt.loglog(ET.fT,ET.h_n_f,label='Einstein Telescope B', linewidth = linesize)
+    plt.loglog(aLIGO.fT,aLIGO.h_n_f,label='Advanced LIGO', linewidth = linesize)
     plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
-    plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend()
+    plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.legend(fontsize = legendsize)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_11_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_14_0.png
 
 
-LISA Martin data
-~~~~~~~~~~~~~~~~
+Load LISA Instruments from File
+-------------------------------
+
+LISA Example 1
+^^^^^^^^^^^^^^
+
+Modelled off of the Science Requirements document from
+https://lisa.nasa.gov/documentsReference.html.
 
 .. code:: python
 
@@ -107,57 +131,69 @@ LISA Martin data
 
 .. code:: python
 
-    #Martin data
     LISA_Other_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/StrainFiles/'
-    LISA_Martin_filename = 'LISA_Allocation_S_h_tot.txt'
-    LISA_Martin_filelocation = LISA_Other_filedirectory + LISA_Martin_filename
+    LISA_ex1_filename = 'LISA_Allocation_S_h_tot.txt'
+    LISA_ex1_filelocation = LISA_Other_filedirectory + LISA_ex1_filename
     
-    #Should be ENSD
-    LISA_Martin = detector.SpaceBased('LISA_Martin',SpaceBased_T_obs,load_location=LISA_Martin_filelocation,I_type='E')
+    #`I_type` should be Effective Noise Spectral Density
+    LISA_ex1 = detector.SpaceBased('LISA Example 1',SpaceBased_T_obs,load_location=LISA_ex1_filelocation,I_type='E')
 
-LISA Neil Cornish data
-~~~~~~~~~~~~~~~~~~~~~~
+LISA Example 2
+^^^^^^^^^^^^^^
+
+Modelled off of Robson,Cornish,and Liu 2018, LISA
+(https://arxiv.org/abs/1803.01944).
 
 .. code:: python
 
-    #Neil Cornish data
-    LISA_Neil_filedirectory = load_directory + '/InstrumentFiles/LISA_Neil/StrainFiles/'
-    LISA_Neil_filename = 'LISA_sensitivity.txt'
-    LISA_Neil_filelocation = LISA_Neil_filedirectory + LISA_Neil_filename
+    LISA_ex2_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/StrainFiles/'
+    LISA_ex2_filename = 'LISA_sensitivity.txt'
+    LISA_ex2_filelocation = LISA_ex2_filedirectory + LISA_ex2_filename
     
-    #Should be ENSD
-    LISA_Neil = detector.SpaceBased('LISA_Neil',SpaceBased_T_obs,load_location=LISA_Neil_filelocation,I_type='E')
+    #`I_type` should be Effective Noise Spectral Density
+    LISA_ex2 = detector.SpaceBased('LISA Example 2',SpaceBased_T_obs,load_location=LISA_ex2_filelocation,I_type='E')
 
-LISA Larson Sensitivity Curve
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LISA Example 3
+^^^^^^^^^^^^^^
+
+Generated by http://www.srl.caltech.edu/~shane/sensitivity/
 
 .. code:: python
 
-    #Larson Sensitivity Curve
-    LISA_Larson_filename = 'scg_6981.dat'
-    LISA_Larson_filelocation = LISA_Other_filedirectory + LISA_Larson_filename
+    LISA_ex3_filename = 'scg_6981.dat'
+    LISA_ex3_filelocation = LISA_Other_filedirectory + LISA_ex3_filename
     
-    #Should be ASD
-    LISA_Larson = detector.SpaceBased('LISA_Larson',SpaceBased_T_obs,load_location=LISA_Larson_filelocation,I_type='A')
+    #`I_type` should be Amplitude Spectral Density
+    LISA_ex3 = detector.SpaceBased('LISA Example 3',SpaceBased_T_obs,load_location=LISA_ex3_filelocation,I_type='A')
+
+Plots of loaded LISA examples.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    fig = plt.figure(figsize=(10,5))
-    plt.loglog(LISA_Martin.fT,LISA_Martin.h_n_f,label='LISA Martin file')
-    plt.loglog(LISA_Neil.fT,LISA_Neil.h_n_f,label='LISA Neil file')
-    plt.loglog(LISA_Larson.fT,LISA_Larson.h_n_f,label='LISA Larson file')
+    fig = plt.figure()
+    plt.loglog(LISA_ex1.fT,LISA_ex1.h_n_f,label=LISA_ex1.name,linewidth=linesize)
+    plt.loglog(LISA_ex2.fT,LISA_ex2.h_n_f,label=LISA_ex2.name,linewidth=linesize)
+    plt.loglog(LISA_ex3.fT,LISA_ex3.h_n_f,label=LISA_ex3.name,linewidth=linesize)
     plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
-    plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend()
+    plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.legend(fontsize = labelsize)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_19_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_23_0.png
 
 
-NANOGrav continuous wave sensitivity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Loading PTA Detection Curves and Upper Limits
+---------------------------------------------
+
+Simulated NANOGrav Continuous Wave Detection Sensitivity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
+of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 
 .. code:: python
 
@@ -175,7 +211,7 @@ NANOGrav continuous wave sensitivity
                         + '_fap_' + str(NANOGrav_fap) + '_T_' + str(NANOGrav_Tobs) + '.txt'
     NANOGrav_filelocation = NANOGrav_filedirectory + NANOGrav_filename
     
-    NANOGrav_Mingarelli_no_GWB = detector.PTA('NANOGrav_Mingarelli_no_GWB',load_location=NANOGrav_filelocation)
+    NANOGrav_cw_no_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation)
 
 .. code:: python
 
@@ -189,37 +225,88 @@ NANOGrav continuous wave sensitivity
                         + '_fap_' + str(NANOGrav_fap_2) + '_T_' + str(NANOGrav_Tobs_2) + '.txt'
     NANOGrav_filelocation_2 = NANOGrav_filedirectory + NANOGrav_filename_2
     
-    NANOGrav_Mingarelli_GWB = detector.PTA('NANOGrav_Mingarelli_GWB',load_location=NANOGrav_filelocation_2)
+    NANOGrav_cw_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation_2)
 
-SKA parameters and methods from arXiv:0804.4476 section 7.1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NANOGrav Continuous Wave 11yr Upper Limit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
+the NANOGrav 11yr continuous wave upper limit.
 
 .. code:: python
 
-    ###############################################
-    #SKA calculation using parameters and methods from arXiv:0804.4476 section 7.1
+    NANOGrav_cw_ul_file = NANOGrav_filedirectory + 'smoothed_11yr.txt'
+    NANOGrav_cw_ul = detector.PTA('NANOGrav CW Upper Limit',load_location=NANOGrav_cw_ul_file)
+
+Plots of the loaded PTAs
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    fig = plt.figure()
+    plt.loglog(NANOGrav_cw_GWB.fT,NANOGrav_cw_GWB.h_n_f, linewidth = linesize,\
+               label = NANOGrav_cw_GWB.name)
+    plt.loglog(NANOGrav_cw_no_GWB.fT,NANOGrav_cw_no_GWB.h_n_f, linewidth = linesize,\
+               label = NANOGrav_cw_no_GWB.name)
+    plt.loglog(NANOGrav_cw_ul.fT,NANOGrav_cw_ul.h_n_f, linewidth = linesize,\
+               label = NANOGrav_cw_ul.name)
+    
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.ylim([1e-15,1e-12])
+    plt.xlim([1e-9,5e-7])
+    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.ylabel('Characteristic Strain',fontsize = labelsize)
+    plt.legend(loc='lower right', fontsize = labelsize)
+    plt.show()
+
+
+
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_31_0.png
+
+
+Generating PTAs with ``gwent``
+------------------------------
+
+Generated using the code ``hasasia``
+(https://hasasia.readthedocs.io/en/latest/) via the methods of Hazboun,
+Romano, and Smith, 2019 (https://arxiv.org/abs/1907.04341)
+
+SKA-esque Detector
+^^^^^^^^^^^^^^^^^^
+
+Fiducial parameter estimates from Sesana, Vecchio, and Colacino, 2008
+(https://arxiv.org/abs/0804.4476) section 7.1.
+
+.. code:: python
+
     sigma_SKA = 10*u.ns.to('s')*u.s #sigma_rms timing residuals in nanoseconds to seconds
     T_SKA = 15*u.yr #Observing time in years
     N_p_SKA = 20 #Number of pulsars
     cadence_SKA = 1/(u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every week in [number/yr]
 
-.. code:: python
-
-    SKA_Hazboun = detector.PTA('SKA_Hazboun',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA)
+SKA with White noise only
 
 .. code:: python
 
-    SKA_Hazboun_wRN = detector.PTA('SKA_Hazboun_wRN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+    SKA_WN = detector.PTA('SKA, WN Only',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA)
+
+SKA with White and Varied Red Noise
 
 .. code:: python
 
-    SKA_Hazboun_wGWB = detector.PTA('SKA_Hazboun_wGWB',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_GWB=4e-16)
+    SKA_WN_RN = detector.PTA('SKA, WN and RN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
 
-Using Jeff's Methods/code https://arxiv.org/abs/1907.04341
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SKA with White Noise and a Stochastic Gravitational Wave Background
 
-NANOGrav 11.5yr parameters https://arxiv.org/abs/1801.01837
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+    SKA_WN_GWB = detector.PTA('SKA, WN and GWB',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_GWB=4e-16)
+
+NANOGrav-esque Detector
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Fiducial 11yr parameter estimates from Arzoumanian, et al., 2018
+https://arxiv.org/abs/1801.01837
 
 .. code:: python
 
@@ -230,50 +317,62 @@ NANOGrav 11.5yr parameters https://arxiv.org/abs/1801.01837
     N_p_nano = 18 #Number of pulsars
     cadence_nano = 1/(2*u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every 2 weeks in number/year
 
-.. code:: python
-
-    NANOGrav_Hazboun = detector.PTA('NANOGrav_Hazboun',T_nano,N_p_nano,sigma_nano,cadence_nano)
+NANOGrav with White Noise only
 
 .. code:: python
 
-    NANOGrav_Hazboun_wRN = detector.PTA('NANOGrav_Hazboun_wRN',T_nano,N_p_nano,sigma_nano,cadence_nano,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+    NANOGrav_WN = detector.PTA('NANOGrav, WN Only',T_nano,N_p_nano,sigma_nano,cadence_nano)
+
+NANOGrav with White and Varied Red Noise
 
 .. code:: python
 
-    NANOGrav_Hazboun_wGWB = detector.PTA('NANOGrav_Hazboun_wGWB',T_nano,N_p_nano,sigma_nano,cadence_nano,A_GWB=4e-16)
+    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_nano,N_p_nano,sigma_nano,cadence_nano,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+
+NANOGrav with White Noise and a Stochastic Gravitational Wave Background
 
 .. code:: python
 
-    fig = plt.figure(figsize=(10,8))
-    plt.loglog(NANOGrav_Hazboun.fT,NANOGrav_Hazboun.h_n_f, linewidth = linesize,label = r'NANOGrav')
-    plt.loglog(NANOGrav_Hazboun_wGWB.fT,NANOGrav_Hazboun_wGWB.h_n_f, linewidth = linesize,label = r'NANOGrav w/GWB')
-    plt.loglog(NANOGrav_Hazboun_wRN.fT,NANOGrav_Hazboun_wRN.h_n_f, linewidth = linesize,label = r'NANOGrav w/RN')
+    NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',T_nano,N_p_nano,sigma_nano,cadence_nano,A_GWB=4e-16)
+
+Plots for Simulated PTAs
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    fig = plt.figure()
+    plt.loglog(NANOGrav_WN.fT,NANOGrav_WN.h_n_f,\
+               linewidth=linesize,label=NANOGrav_WN.name)
+    plt.loglog(NANOGrav_WN_GWB.fT,NANOGrav_WN_GWB.h_n_f,\
+               linewidth=linesize,linestyle=':',label=NANOGrav_WN_GWB.name)
+    plt.loglog(NANOGrav_WN_RN.fT,NANOGrav_WN_RN.h_n_f,\
+               linewidth=linesize,linestyle='-.',label=NANOGrav_WN_RN.name)
     
-    plt.loglog(SKA_Hazboun.fT,SKA_Hazboun.h_n_f, linewidth = linesize,label = r'SKA')
-    plt.loglog(SKA_Hazboun_wGWB.fT,SKA_Hazboun_wGWB.h_n_f, linewidth = linesize,label = r'SKA w/GWB')
-    plt.loglog(SKA_Hazboun_wRN.fT,SKA_Hazboun_wRN.h_n_f, linewidth = linesize,label = r'SKA w/RN')
-    
-    plt.loglog(NANOGrav_Mingarelli_GWB.fT,NANOGrav_Mingarelli_GWB.h_n_f,linestyle = ':', linewidth = linesize,\
-               label = r'Mingarelli, et al. (2017) with GWB')
-    plt.loglog(NANOGrav_Mingarelli_no_GWB.fT,NANOGrav_Mingarelli_no_GWB.h_n_f,linestyle = ':', linewidth = linesize,\
-               label = r'Mingarelli, et al. (2017) w/o GWB')
+    plt.loglog(SKA_WN.fT,SKA_WN.h_n_f, linewidth = linesize,\
+               label = SKA_WN.name)
+    plt.loglog(SKA_WN_GWB.fT,SKA_WN_GWB.h_n_f, linewidth = linesize,linestyle=':',\
+               label = SKA_WN_GWB.name)
+    plt.loglog(SKA_WN_RN.fT,SKA_WN_RN.h_n_f, linewidth = linesize,linestyle='-.',\
+               label = SKA_WN_RN.name)
     
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.ylim([5e-19,1e-11])
     plt.xlim([3e-10,1e-6])
-    #plt.title('NANOGrav (15yr)',fontsize=labelsize)
+    
     plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
     plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend(loc='lower right', fontsize = 12)
+    plt.legend(loc='lower right', fontsize = legendsize-4)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_35_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_49_0.png
 
 
-Calculate LISA amplitude spectral densities for various models
-==============================================================
+Generating LISA designs with ``gwent``
+--------------------------------------
+
+First we set a fiducial armlength and observation time-length
 
 .. code:: python
 
@@ -281,8 +380,11 @@ Calculate LISA amplitude spectral densities for various models
     L = L.to('m')
     LISA_T_obs = 4*u.yr
 
-LISA Calculation from https://arxiv.org/pdf/1702.00786.pdf (Amaro-Seaone 2017)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LISA Proposal 1
+^^^^^^^^^^^^^^^
+
+Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017
+(https://arxiv.org/abs/1702.00786)
 
 .. code:: python
 
@@ -294,16 +396,19 @@ LISA Calculation from https://arxiv.org/pdf/1702.00786.pdf (Amaro-Seaone 2017)
     
     Background = False
     
-    ESA_LISA = detector.SpaceBased('ESA_LISA',\
+    LISA_prop1 = detector.SpaceBased('LISA',\
                               LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
                               Background=Background)
 
-Neil Calculation from https://arxiv.org/pdf/1803.01944.pdf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LISA Proposal 2
+^^^^^^^^^^^^^^^
+
+Values from Robson, Cornish, and Liu 2019
+https://arxiv.org/abs/1803.01944 using the Transfer Function
+Approximation within.
 
 .. code:: python
 
-    #Neil Calculation from https://arxiv.org/pdf/1803.01944.pdf
     f_acc_break_low = .4*u.mHz.to('Hz')*u.Hz
     f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
     f_IMS_break = 2.*u.mHz.to('Hz')*u.Hz
@@ -311,67 +416,78 @@ Neil Calculation from https://arxiv.org/pdf/1803.01944.pdf
     A_IMS = 1.5e-11*u.m
     Background = False
         
-    Neil_LISA = detector.SpaceBased('Neil_LISA',\
+    LISA_prop2 = detector.SpaceBased('LISA Approximate',\
                                LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                               Background=Background)
+                               Background=Background,T_type='A')
 
-Plots of Space-Based Detectors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Plots of Generated LISA Detectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    fig = plt.figure(figsize=(10,5))
-    plt.loglog(ESA_LISA.fT,ESA_LISA.h_n_f,label='ESA LISA')
-    plt.loglog(Neil_LISA.fT,Neil_LISA.h_n_f,label='Neil LISA')
-    #plt.loglog(LISA_Martin.fT,LISA_Martin.h_n_f,label='LISA Martin file')
-    #plt.loglog(LISA_Neil.fT,LISA_Neil.h_n_f,label='LISA Neil file')
-    #plt.loglog(LISA_Larson.fT,LISA_Larson.h_n_f,label='LISA Larson file')
+    fig = plt.figure()
+    plt.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,label=LISA_prop1.name)
+    plt.loglog(LISA_prop2.fT,LISA_prop2.h_n_f,label=LISA_prop2.name)
     plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
-    plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend()
+    plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.legend(fontsize = legendsize)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_43_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_57_0.png
 
 
-BBH strain calculation
-======================
+Generating Binary Black Holes with ``gwent`` in the Frequency Domain
+--------------------------------------------------------------------
+
+We start with BBH parameters that exemplify the range of IMRPhenomD’s
+waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
+Husa, et al. 2016 https://arxiv.org/abs/1508.07250
 
 .. code:: python
 
-    #Vars = [M,q,chi1,chi2,z]
     M = [1e6,65.0,1e10]
     q = [1.0,18.0,1.0]
     x1 = [0.95,0.0,-0.95]
     x2 = [0.95,0.0,-0.95]
     z = [3.0,0.093,20.0]
-    inc = 0.0 #Doesn't really work...
-    
-    Vars1 = [M[0],q[0],x1[0],x2[0],z[0]]
-    Vars2 = [M[1],q[1],x1[1],x2[1],z[1]]
-    Vars3 = [M[2],q[2],x1[2],x2[2],z[2]]
-    Vars4 = [M[1],q[0],x1[1],x2[1],z[1]]
+
+Uses the first parameter values and the ``LISA_prop1`` detector model
+for calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],inc,instrument=ESA_LISA)
+    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],instrument=LISA_prop1)
+
+Uses the first parameter values and the ``aLIGO`` detector model for
+calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],inc,instrument=aLIGO)
+    source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],instrument=aLIGO)
+
+Uses the first parameter values and the ``SKA_WN`` detector model for
+calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],inc,instrument=SKA_Hazboun)
+    source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],instrument=SKA_WN)
+
+Uses the first parameter values and the ``ET`` detector model for
+calculation of the monochromatic strain.
 
 .. code:: python
 
-    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],inc,instrument=ET)
+    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],instrument=ET)
 
-Numerical Relativity from EOB subtraction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Generate Frequency Data from Given Time Domain
+----------------------------------------------
+
+Uses waveforms that are the difference between Effective One Body
+waveforms subtracted from Numerical Relativity waveforms for different
+harmonics.
 
 .. code:: python
 
@@ -384,8 +500,8 @@ Numerical Relativity from EOB subtraction
 
 .. code:: python
 
-    fig,ax = plt.subplots(figsize = figsize)
-    plt.loglog(ET.fT,ET.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(1.75)),label = 'ET')
+    fig,ax = plt.subplots()
+    plt.loglog(ET.fT,ET.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(1.75)),label = ET.name)
     plt.loglog(diff0002.f,binary.Get_Char_Strain(diff0002),label = 'diff0002')
     plt.loglog(diff0114.f,binary.Get_Char_Strain(diff0114),label = 'diff0114')
     plt.loglog(diff0178.f,binary.Get_Char_Strain(diff0178),label = 'diff0178')
@@ -393,22 +509,34 @@ Numerical Relativity from EOB subtraction
     plt.loglog(diff0303.f,binary.Get_Char_Strain(diff0303),label = 'diff0303')
     plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
     plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend()
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.legend(fontsize = legendsize)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_52_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_70_0.png
 
+
+Plots of Entire GW Band
+-----------------------
+
+Displays only generated detectors: WN only PTAs, ESA L3 proposal LISA,
+aLIGO, and Einstein Telescope.
+
+Displays three sources’ waveform along with their monochromatic strain
+if they were observed by the initialized instrument at the detector’s
+most sensitive frequency throughout its observing run (from left to
+right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
 .. code:: python
 
-    fig,ax = plt.subplots(figsize = figsize)
-    #plt.loglog(NANOGrav_f,NANOGrav_h_f)
-    ax.loglog(SKA_Hazboun.fT,SKA_Hazboun.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(0.0)),label = 'IPTA ~2030s')
-    ax.loglog(NANOGrav_Hazboun.fT,NANOGrav_Hazboun.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(0.5)),\
+    fig,ax = plt.subplots()
+    
+    ax.loglog(SKA_WN.fT,SKA_WN.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(0.0)),label = 'IPTA ~2030s')
+    ax.loglog(NANOGrav_WN.fT,NANOGrav_WN.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(0.5)),\
               label = 'NANOGrav (15yr)')
-    ax.loglog(ESA_LISA.fT,ESA_LISA.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(1.75)),label = 'LISA')
+    ax.loglog(LISA_prop1.fT,LISA_prop1.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(1.75)),label = 'LISA')
     ax.loglog(aLIGO.fT,aLIGO.h_n_f,color = cm.hsv(colornorm(2.8)),label = 'aLIGO')
     ax.loglog(ET.fT,ET.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(2.5)),label = 'Einstein Telescope')
     
@@ -431,10 +559,11 @@ Numerical Relativity from EOB subtraction
     
     ax.set_xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
     ax.set_ylabel('Characteristic Strain',fontsize = labelsize)
-    ax.legend(loc='upper right', fontsize = legendsize)
+    ax.legend(loc='upper right', fontsize = legendsize-5)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_53_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_72_0.png
+
 

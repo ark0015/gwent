@@ -6,15 +6,24 @@
 
 .. _calcSNR_tutorial:
 
+Using ``gwent`` to Calculate Signal-to-Noise Ratios
+===================================================
+
+Here we present a tutorial on how to use ``gwent`` to calculate SNRs for
+the instrument models currently implemented (LISA, PTAs, aLIGO, and
+Einstein Telescope) with the signal being an array of coalescing Binary
+Black Holes.
+
+First, we import important modules.
+
 .. code:: python
 
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import astropy.constants as const
-    import os, sys, time
+    import time
     import astropy.units as u
-    from fractions import Fraction
     
     import gwent
     import gwent.binary as binary
@@ -22,9 +31,7 @@
     import gwent.snr as snr
     import gwent.snrplot as snrplot
 
-.. code:: python
-
-    load_directory = gwent.__path__[0] + '/LoadFiles/InstrumentFiles/'
+Setting matplotlib preferences
 
 .. code:: python
 
@@ -33,54 +40,64 @@
     mpl.rcParams['text.usetex'] = True
     mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
 
-Constants and Initial Parameters
-================================
+We need to get the file directories to load in the instrument files.
 
 .. code:: python
 
-    '''
-    Variables: 
-        GLOBAL:
-            'T_obs' - Observation Time
-        SOURCE:
-            'M' - Mass (Solar Units)
-            'q' - Mass Ratio
-            'chi1' - Spin1
-            'chi2' - Spin2
-            'z' - Redshift
-        LISA ONLY:
-            'L' - Armlength
-            'A_acc' - Acceleration Noise
-            'A_IMS' - Optical Metrology
-            'f_acc_break_low'
-            'f_acc_break_high'
-            'f_IMS_break'
-        PTAs ONLY:
-            'N_p' - Number of Pulsars
-            'sigma' - Timing Error RMS
-            'cadence' - cadence
-    '''
-    
-    var_y = 'z' #Variable on y-axis
-    
-    sampleRate_y = 100 #Number of SNRMatrix rows
-    
-    var_x = 'M' #Variable on x-axis
-    
-    sampleRate_x = 100 #Number of SNRMatrix columns
+    load_directory = gwent.__path__[0] + '/LoadFiles/InstrumentFiles/'
+
+Declaring x and y variables and Sample Rates
+--------------------------------------------
+
+The variables for either axis in the SNR calculation can be:
+
+-  GLOBAL:
+
+   -  ‘T_obs’ - Detector Observation Time
+
+-  SOURCE:
+
+   -  ‘M’ - Mass (Solar Units)
+   -  ‘q’ - Mass Ratio
+   -  ‘chi1’ - Dimensionless Spin of Black Hole 1
+   -  ‘chi2’ - Dimensionless Spin of Black Hole 2
+   -  ‘z’ - Redshift
+
+-  LISA ONLY:
+
+   -  ‘L’ - Detector Armlength
+   -  ‘A_acc’ - Detector Acceleration Noise
+   -  ‘A_IMS’ - Detector Optical Metrology Noise
+   -  ‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency
+   -  ‘f_acc_break_high’ - The High Acceleration Noise Break Frequency
+   -  ‘f_IMS_break’ - The Optical Metrology Noise Break Frequency
+
+-  PTAs ONLY:
+
+   -  ‘N_p’ - Number of Pulsars
+   -  ‘sigma’ - Root-Mean-Squared Timing Error
+   -  ‘cadence’ - Observation Cadence
 
 .. code:: python
 
-    #Selects which noise curve:
-    #							0 is Einstein Telescope, 
-    #							1 is aLIGO, 
-    #							2 is NANOGrav 15yr,
-    #							3 is SKA (2030s),
-    #							4 is Neil Cornish's,
-    #							anything else is the L3 proposal
+    #Variable on y-axis
+    var_y = 'z'
+    #Number of SNRMatrix rows
+    sampleRate_y = 50
+    #Variable on x-axis
+    var_x = 'M'
+    #Number of SNRMatrix columns
+    sampleRate_x = 50
 
-Source Selection
-================
+Source Selection Function
+-------------------------
+
+Takes in a an instrument model that dictates reasonable mass ranges for
+the particular detector mass regime and instantiates a source with the
+variable ranges limited by the waveform calibration region.
+
+The source parameters must be set (ie. M,q,z,chi1,chi2), but one only
+needs to set the minima and maxima of the selected SNR axes variables.
 
 .. code:: python
 
@@ -116,31 +133,38 @@ Source Selection
         z_min = 1e-2
         z_max = 1e3
         
-        #Doesn't Really work yet
-        inc = 0.0
-        inc_min = 0.0
-        inc_max = 0.0
-        
-        source = binary.BBHFrequencyDomain(M,q,chi1,chi2,z,inc)
+        source = binary.BBHFrequencyDomain(M,q,z,chi1,chi2)
         source.M = [M,M_min,M_max]
         source.q = [q,q_min,q_max]
         source.chi1 = [chi1,chi_min,chi_max]
         source.chi2 = [chi2,chi_min,chi_max]
         source.z = [z,z_min,z_max]
-        source.inc = [inc,inc_min,inc_max]
     
         return source
 
-Model Selection
-===============
+Instrument Selection Function
+-----------------------------
+
+Takes in an instrument model then assigns the fiducial noise and
+detector values. The model only assigns ranges of calculation for quick
+variable calculations, but one only needs to set the minima and maxima
+if they wish to use other selected SNR axes variables.
+
+If loading a detector, the file should be frequency in the first column
+and either strain, effective strain noise spectral density, or amplitude
+spectral density in the second column.
+
+For generating a detector, one must assign a value to each of the
+different instrument parameters (see the section on Declaring x and y
+variables and Sample Rates).
 
 .. code:: python
 
     def Get_Instrument(model):
         if model == 0: #Einstein Telescope
+            #Loaded from http://www.et-gw.eu/index.php/etsensitivities
             load_name = 'ET_D_data.txt'
             load_location = load_directory + 'EinsteinTelescope/StrainFiles/' + load_name
-            print(load_location)
             
             T_obs = 4*u.yr #Observing time in years
             T_obs_min = 1*u.yr
@@ -150,6 +174,7 @@ Model Selection
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
     
         elif model == 1: #aLIGO
+            #Loaded from https://dcc.ligo.org/T1800044/public
             load_name = 'aLIGODesign.txt'
             load_location = load_directory + 'aLIGO/StrainFiles/' + load_name
             
@@ -161,7 +186,6 @@ Model Selection
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
     
         elif model == 2: #NANOGrav 15 yr
-            ###############################################
             #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
             T_obs = 15*u.yr #Observing time in years
             T_obs_min = 10*u.yr
@@ -178,8 +202,7 @@ Model Selection
     
             
         elif model == 3: #SKA (2030s)
-            ###############################################
-            #SKA calculation using parameters and methods from arXiv:0804.4476 section 7.1
+            #SKA calculation using parameters and methods from https://arxiv.org/abs/0804.4476 section 7.1
             T_obs = 15*u.yr #Observing time (years)
             T_obs_min = 10*u.yr
             T_obs_max = 30*u.yr
@@ -193,7 +216,7 @@ Model Selection
             instrument = detector.PTA('SKA',T_obs,N_p,sigma,cadence)
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             
-        elif model == 4: #Robson,Cornish,and Liu 2018, LISA (https://arxiv.org/pdf/1803.01944.pdf)
+        elif model == 4: #Robson,Cornish,and Liu 2019, LISA (https://arxiv.org/abs/1803.01944)
             T_obs = 4*u.yr #Observing time in years
             T_obs_min = 1*u.yr
             T_obs_max = 10*u.yr
@@ -208,15 +231,16 @@ Model Selection
             f_acc_break_low = .4*u.mHz.to('Hz')*u.Hz
             f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
             Background = False
+            T_type = 'A'
             
-            instrument = detector.SpaceBased('Neil_LISA',\
+            instrument = detector.SpaceBased('Alt_LISA',\
                                            T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                                           Background=Background)
+                                           Background=Background,T_type=T_type)
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             instrument.L = [L,L_min,L_max]
             
         else: #L3 proposal
-            #Default Params!
+            #Default Params from https://arxiv.org/abs/1702.00786
             T_obs = 4*u.yr #Observing time in years
             T_obs_min = 1*u.yr
             T_obs_max = 10*u.yr
@@ -231,29 +255,37 @@ Model Selection
             A_acc = 3e-15*u.m/u.s/u.s
             A_IMS = 10e-12*u.m
             Background = False
+            T_type = 'N'
             
             instrument = detector.SpaceBased('LISA_ESA',\
                                            T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                                           Background=Background)
+                                           Background=Background,T_type=T_type)
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             instrument.L = [L,L_min,L_max]
             
         return instrument
 
-Setting Up SNR Calculation
-==========================
+SNR Calculation
+---------------
 
-Uses the variables given and the data range to sample the space either
-logrithmically or linearly based on the selection of variables. Then it
-computes the SNR for each value. Returns the variable ranges used to
-calculate the SNR for each matrix, then returns the SNRs with size of
-the sample1Xsample2
+Based on the selected model, we use ``Get_Instrument`` and
+``Get_Source`` to instantiate both the instrument and the model for the
+SNR Calculation.
 
 .. code:: python
 
     model = 2
     instrument = Get_Instrument(model)
     source = Get_Source(model)
+
+We now use ``Get_SNR_Matrix`` with the variables given and the data
+range to sample the space either logrithmically or linearly based on the
+selection of variables. It computes the SNR for each value, then returns
+the variable ranges used to calculate the SNR for each matrix, then
+returns the SNRs with size of the ``sampleRate1``\ X\ ``sampleRate2``
+
+.. code:: python
+
     start = time.time()
     [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y)
     end = time.time()
@@ -262,8 +294,11 @@ the sample1Xsample2
 
 .. parsed-literal::
 
-    25.585025787353516
+    8.620705842971802
 
+
+Plot the SNR using the initial variables and the returns from
+``Get_SNR_Matrix``
 
 .. code:: python
 
@@ -271,11 +306,11 @@ the sample1Xsample2
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_12_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_23_0.png
 
 
-Whole Hog Creation of SNR Matrices and Samples
-==============================================
+Create of SNR Matrices and Samples for all models
+-------------------------------------------------
 
 .. code:: python
 
@@ -292,61 +327,57 @@ Whole Hog Creation of SNR Matrices and Samples
         print('Model: ',instrument.name,',',' done. t = : ',end-start)
 
 
-.. parsed-literal::
 
-    /home/andrew/anaconda3/envs/gwent/lib/python3.7/site-packages/gwent/LoadFiles/InstrumentFiles/EinsteinTelescope/StrainFiles/ET_D_data.txt
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_1.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_0.png
 
 
 .. parsed-literal::
 
-    Model:  ET ,  done. t = :  38.10015559196472
+    Model:  ET ,  done. t = :  8.529491424560547
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_3.png
-
-
-.. parsed-literal::
-
-    Model:  aLIGO ,  done. t = :  53.10788178443909
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_5.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_2.png
 
 
 .. parsed-literal::
 
-    Model:  NANOGrav ,  done. t = :  25.013616800308228
+    Model:  aLIGO ,  done. t = :  8.728248834609985
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_7.png
-
-
-.. parsed-literal::
-
-    Model:  SKA ,  done. t = :  29.558005809783936
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_9.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_4.png
 
 
 .. parsed-literal::
 
-    Model:  Neil_LISA ,  done. t = :  40.26609396934509
+    Model:  NANOGrav ,  done. t = :  7.7294206619262695
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_14_11.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_6.png
 
 
 .. parsed-literal::
 
-    Model:  LISA_ESA ,  done. t = :  40.41043186187744
+    Model:  SKA ,  done. t = :  11.327939748764038
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_8.png
+
+
+.. parsed-literal::
+
+    Model:  Alt_LISA ,  done. t = :  7.860916614532471
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_25_10.png
+
+
+.. parsed-literal::
+
+    Model:  LISA_ESA ,  done. t = :  9.925052165985107
+
 
