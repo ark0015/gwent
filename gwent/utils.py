@@ -13,7 +13,7 @@ def make_quant(param, default_unit):
     Returns
     -------
         an astropy quantity
-    
+
     Examples
     --------
         self.f0 = make_quant(f0,'MHz')
