@@ -36,6 +36,11 @@ class PTA:
 
     load_location : string, optional
         If you want to load a PTA curve from a file, it's the file path
+    I_type : string, {'E','A','h'}
+        Sets the type of input data.
+        'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
+        'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
+        'h' is the characteristic strain $h_{n}(f)$ ('h')
     A_GWB : float, optional
         Amplitude of the gravitational wave background added as red noise
     alpha_GWB : float, optional
@@ -56,7 +61,9 @@ class PTA:
         self.name = name
         for keys,value in kwargs.items():
             if keys == 'load_location':
-                self.Load_Data(value)
+                self.load_location = value
+            elif keys == 'I_type':
+                self.I_type = value
             elif keys == 'A_GWB':
                 self.A_GWB = value
             elif keys == 'alpha_GWB':
@@ -76,6 +83,8 @@ class PTA:
 
         if not hasattr(self,'nfreqs'):
             self.nfreqs = int(1e3)
+        if hasattr(self,'load_location'):
+            Load_Data(self)
         if hasattr(self,'f_low') and hasattr(self,'f_high'):
             self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
 
@@ -180,11 +189,6 @@ class PTA:
             self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
-    def Load_Data(self,load_location):
-        self._I_data = np.loadtxt(load_location)
-        self.fT = self._I_data[:,0]
-        self.h_n_f = self._I_data[:,1]
-
     def Init_PTA(self):
         """Initializes a PTA in hasasia
 
@@ -264,7 +268,7 @@ class Interferometer:
                 self.I_type = value
 
         if hasattr(self,'load_location'):
-            self.Load_Data()
+            Load_Data(self)
 
     @property
     def T_obs(self):
@@ -327,33 +331,6 @@ class Interferometer:
             else:
                 self._h_n_f = np.sqrt(self.fT*self.S_n_f)
         return self._h_n_f
-
-    def Load_Data(self):
-        if not hasattr(self,'I_type'):
-            print('Is the data:')
-            print(' *Effective Noise Spectral Density - "E"')
-            print(' *Amplitude Spectral Density- "A"')
-            print(' *Effective Strain - "h"')
-            self.I_type = input('Please enter one of the answers in quotations: ')
-            self.Load_Data()
-
-        if self.I_type == 'E' or self.I_type == 'e':
-            self._I_Type = 'ENSD'
-        elif self.I_type == 'A' or self.I_type == 'a':
-            self._I_Type = 'ASD'
-        elif self.I_type == 'h' or self.I_type == 'H':
-            self._I_Type = 'h'
-        else:
-            print('Is the data:')
-            print(' *Effective Noise Spectral Density - "E"')
-            print(' *Amplitude Spectral Density- "A"')
-            print(' *Effective Strain - "h"')
-            self.I_type = input('Please enter one of the answers in quotations: ')
-            self.Load_Data()
-
-        self._I_data = np.loadtxt(self.load_location)
-        self.fT = self._I_data[:,0]
-        self.fT = utils.make_quant(self.fT,'Hz')
 
 
 class GroundBased(Interferometer):
@@ -603,3 +580,30 @@ class SpaceBased(Interferometer):
         f = self.fT.value
         return A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
                 *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f))) #White Dwarf Background Noise
+
+def Load_Data(detector):
+    if not hasattr(detector,'I_type'):
+        print('Is the data:')
+        print(' *Effective Noise Spectral Density - "E"')
+        print(' *Amplitude Spectral Density- "A"')
+        print(' *Effective Strain - "h"')
+        detector.I_type = input('Please enter one of the answers in quotations: ')
+        Load_Data(detector)
+
+    if detector.I_type == 'E' or detector.I_type == 'e':
+        detector._I_Type = 'ENSD'
+    elif detector.I_type == 'A' or detector.I_type == 'a':
+        detector._I_Type = 'ASD'
+    elif detector.I_type == 'h' or detector.I_type == 'H':
+        detector._I_Type = 'h'
+    else:
+        print('Is the data:')
+        print(' *Effective Noise Spectral Density - "E"')
+        print(' *Amplitude Spectral Density- "A"')
+        print(' *Effective Strain - "h"')
+        detector.I_type = input('Please enter one of the answers in quotations: ')
+        Load_Data(detector)
+
+    detector._I_data = np.loadtxt(detector.load_location)
+    detector.fT = detector._I_data[:,0]
+    detector.fT = utils.make_quant(detector.fT,'Hz')
