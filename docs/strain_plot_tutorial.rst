@@ -16,9 +16,18 @@ domain.
 
 First, we load important packages
 
+
+
+.. parsed-literal::
+
+    The autoreload extension is already loaded. To reload it, use:
+      %reload_ext autoreload
+
+
 .. code:: python
 
     import numpy as np
+    import os,sys
     
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -29,6 +38,13 @@ First, we load important packages
     import astropy.units as u
     from astropy.cosmology import z_at_value
     from astropy.cosmology import WMAP9 as cosmo
+    
+    current_path = os.getcwd()
+    splt_path = current_path.split("/")
+    top_path_idx = splt_path.index('gwent')
+    top_directory = "/".join(splt_path[0:top_path_idx+1])
+    
+    sys.path.insert(0,top_directory)
     
     import gwent
     import gwent.detector as detector
@@ -113,7 +129,7 @@ Plots of Ground Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_14_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_15_0.png
 
 
 Load LISA Instruments from File
@@ -183,7 +199,7 @@ Plots of loaded LISA examples.
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_23_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_24_0.png
 
 
 Loading PTA Detection Curves and Upper Limits
@@ -192,7 +208,7 @@ Loading PTA Detection Curves and Upper Limits
 Simulated NANOGrav Continuous Wave Detection Sensitivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
+Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
 of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 
 .. code:: python
@@ -211,7 +227,7 @@ of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
                         + '_fap_' + str(NANOGrav_fap) + '_T_' + str(NANOGrav_Tobs) + '.txt'
     NANOGrav_filelocation = NANOGrav_filedirectory + NANOGrav_filename
     
-    NANOGrav_cw_no_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation)
+    NANOGrav_cw_no_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation,I_type='h')
 
 .. code:: python
 
@@ -225,18 +241,28 @@ of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
                         + '_fap_' + str(NANOGrav_fap_2) + '_T_' + str(NANOGrav_Tobs_2) + '.txt'
     NANOGrav_filelocation_2 = NANOGrav_filedirectory + NANOGrav_filename_2
     
-    NANOGrav_cw_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation_2)
+    NANOGrav_cw_GWB = detector.PTA('NANOGrav CW Detection no GWB',load_location=NANOGrav_filelocation_2,I_type='h')
 
 NANOGrav Continuous Wave 11yr Upper Limit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
+Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
 the NANOGrav 11yr continuous wave upper limit.
 
 .. code:: python
 
     NANOGrav_cw_ul_file = NANOGrav_filedirectory + 'smoothed_11yr.txt'
-    NANOGrav_cw_ul = detector.PTA('NANOGrav CW Upper Limit',load_location=NANOGrav_cw_ul_file)
+    NANOGrav_cw_ul = detector.PTA('NANOGrav CW Upper Limit',load_location=NANOGrav_cw_ul_file,I_type='h')
+
+NANOGrav 11yr Characteristic Strain
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using real NANOGrav 11yr data put through ``hasasia``
+
+.. code:: python
+
+    NANOGrav_11yr_hasasia_file = NANOGrav_filedirectory + 'NANOGrav_11yr_S_eff.txt'
+    NANOGrav_11yr_hasasia = detector.PTA('NANOGrav 11yr',load_location=NANOGrav_11yr_hasasia_file,I_type='E')
 
 Plots of the loaded PTAs
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,6 +276,8 @@ Plots of the loaded PTAs
                label = NANOGrav_cw_no_GWB.name)
     plt.loglog(NANOGrav_cw_ul.fT,NANOGrav_cw_ul.h_n_f, linewidth = linesize,\
                label = NANOGrav_cw_ul.name)
+    plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f, linewidth = linesize,\
+               label = NANOGrav_11yr_hasasia.name)
     
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.ylim([1e-15,1e-12])
@@ -261,7 +289,7 @@ Plots of the loaded PTAs
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_31_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_34_0.png
 
 
 Generating PTAs with ``gwent``
@@ -294,7 +322,7 @@ SKA with White and Varied Red Noise
 
 .. code:: python
 
-    SKA_WN_RN = detector.PTA('SKA, WN and RN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+    SKA_WN_RN = detector.PTA('SKA, WN and RN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_rn=[1e-16,1e-12],alpha_rn=[-1/2,1.25])
 
 SKA with White Noise and a Stochastic Gravitational Wave Background
 
@@ -327,7 +355,7 @@ NANOGrav with White and Varied Red Noise
 
 .. code:: python
 
-    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_nano,N_p_nano,sigma_nano,cadence_nano,A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_nano,N_p_nano,sigma_nano,cadence_nano,A_rn=[1e-16,1e-12],alpha_rn=[-1/2,1.25])
 
 NANOGrav with White Noise and a Stochastic Gravitational Wave Background
 
@@ -366,7 +394,7 @@ Plots for Simulated PTAs
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_49_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_52_0.png
 
 
 Generating LISA designs with ``gwent``
@@ -436,15 +464,15 @@ Plots of Generated LISA Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_57_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_60_0.png
 
 
 Generating Binary Black Holes with ``gwent`` in the Frequency Domain
 --------------------------------------------------------------------
 
-We start with BBH parameters that exemplify the range of IMRPhenomD’s
-waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
-Husa, et al. 2016 https://arxiv.org/abs/1508.07250
+We start with BBH parameters that exemplify the range of IMRPhenomD's
+waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
+Husa, et al. 2016 https://arxiv.org/abs/1508.07250
 
 .. code:: python
 
@@ -515,7 +543,7 @@ harmonics.
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_70_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_73_0.png
 
 
 Plots of Entire GW Band
@@ -524,8 +552,8 @@ Plots of Entire GW Band
 Displays only generated detectors: WN only PTAs, ESA L3 proposal LISA,
 aLIGO, and Einstein Telescope.
 
-Displays three sources’ waveform along with their monochromatic strain
-if they were observed by the initialized instrument at the detector’s
+Displays three sources' waveform along with their monochromatic strain
+if they were observed by the initialized instrument at the detector's
 most sensitive frequency throughout its observing run (from left to
 right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
@@ -564,6 +592,6 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_72_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_75_0.png
 
 
