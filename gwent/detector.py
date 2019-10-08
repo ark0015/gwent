@@ -155,9 +155,18 @@ class PTA:
     def h_n_f(self):
         """Effective Strain Noise Amplitude"""
         if not hasattr(self,'_h_n_f'):
-            if not hasattr(self,'_sensitivitycurve'):
-                self.Init_PTA()
-            self._h_n_f = self._sensitivitycurve.h_c
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'h':
+                    self._h_n_f = self._I_data[:,1]
+                elif self._I_Type == 'ENSD':
+                    self._h_n_f = np.sqrt(self.S_n_f*self.fT)
+                elif self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._h_n_f = S_n_f_sqrt*np.sqrt(self.fT.value)
+            else:
+                if not hasattr(self,'_sensitivitycurve'):
+                    self.Init_PTA()
+                self._h_n_f = self._sensitivitycurve.h_c
         return self._h_n_f
     @h_n_f.setter
     def h_n_f(self,value):
@@ -170,10 +179,19 @@ class PTA:
     def S_n_f(self):
         #Effective noise power amplitude
         if not hasattr(self,'_S_n_f'):
-            if not hasattr(self,'_sensitivitycurve'):
-                self.Init_PTA()
-            self._S_n_f = self._sensitivitycurve.S_eff
-            self._S_n_f = utils.make_quant(self._S_n_f,'1/Hz')
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._S_n_f = S_n_f_sqrt**2/u.Hz
+                elif self._I_Type == 'ENSD':
+                    self._S_n_f = self._I_data[:,1]/u.Hz
+                elif self._I_Type == 'h':
+                    self._S_n_f = self.h_n_f**2/self.fT
+            else:
+                if not hasattr(self,'_sensitivitycurve'):
+                    self.Init_PTA()
+                self._S_n_f = self._sensitivitycurve.S_eff
+                self._S_n_f = utils.make_quant(self._S_n_f,'1/Hz')
         return self._S_n_f
     @S_n_f.setter
     def S_n_f(self,value):
