@@ -600,6 +600,15 @@ class SpaceBased(Interferometer):
                 *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f))) #White Dwarf Background Noise
 
 def Load_Data(detector):
+    """
+    Function to load in a file to initialize any detector.
+
+    Parameters
+    ----------
+    detector : object
+        Instance of a detector class
+        
+    """
     if not hasattr(detector,'I_type'):
         print('Is the data:')
         print(' *Effective Noise Spectral Density - "E"')
