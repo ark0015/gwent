@@ -101,6 +101,8 @@ class PTA:
     @T_obs.setter
     def T_obs(self,value):
         self.var_dict = ['T_obs',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'yr')
         self._T_obs = self._return_value
 
     @property
@@ -117,15 +119,18 @@ class PTA:
     @cadence.setter
     def cadence(self,value):
         self.var_dict = ['cadence',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'1/yr')
         self._cadence = self._return_value
 
     @property
     def sigma(self):
-        self._sigma = utils.make_quant(self._sigma,'s')
         return self._sigma
     @sigma.setter
     def sigma(self,value):
         self.var_dict = ['sigma',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'s')
         self._sigma = self._return_value
 
     @property
@@ -290,11 +295,12 @@ class Interferometer:
 
     @property
     def T_obs(self):
-        self._T_obs = utils.make_quant(self._T_obs,'yr')
         return self._T_obs
     @T_obs.setter
     def T_obs(self,value):
         self.var_dict = ['T_obs',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'yr')
         self._T_obs = self._return_value
 
     @property
@@ -307,11 +313,17 @@ class Interferometer:
     @property
     def fT(self):
         if not hasattr(self,'_fT'):
-            raise NotImplementedError('Interferometer frequency must be defined inside SpaceBased or GroundBased classes.')
+            if hasattr(self,'_I_data'):
+                self._fT = self._I_data[:,0]*u.Hz
+            if isinstance(self,SpaceBased):
+                self.Set_T_Function_Type()
         return self._fT
     @fT.setter
     def fT(self,value):
         self._fT = value
+    @fT.deleter
+    def fT(self):
+        del self._fT
 
     @property
     def f_opt(self):
@@ -339,6 +351,9 @@ class Interferometer:
             else:
                 raise NotImplementedError('Effective Noise Power Spectral Density method must be defined inside SpaceBased or GroundBased classes.')
         return self._S_n_f
+    @S_n_f.deleter
+    def S_n_f(self):
+        del self._S_n_f
 
     @property
     def h_n_f(self):
@@ -349,6 +364,9 @@ class Interferometer:
             else:
                 self._h_n_f = np.sqrt(self.fT*self.S_n_f)
         return self._h_n_f
+    @h_n_f.deleter
+    def h_n_f(self):
+        del self._h_n_f
 
 
 class GroundBased(Interferometer):
@@ -364,10 +382,7 @@ class GroundBased(Interferometer):
     @property
     def P_n_f(self):
         """Power Spectral Density. """
-        raise NotImplementedError('Power Spectral Density method must be defined inside SpaceBased or GroundBased classes.')
-    @P_n_f.deleter
-    def P_n_f(self):
-        del self._P_n_f
+        raise NotImplementedError('Uhhh, can only load from a file for right now....')
 
 
 
@@ -446,6 +461,8 @@ class SpaceBased(Interferometer):
     @L.setter
     def L(self,value):
         self.var_dict = ['L',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m')
         self._L = self._return_value
 
     @property
@@ -454,6 +471,8 @@ class SpaceBased(Interferometer):
     @A_acc.setter
     def A_acc(self,value):
         self.var_dict = ['A_acc',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m/s/s')
         self._A_acc = self._return_value
 
     @property
@@ -462,6 +481,8 @@ class SpaceBased(Interferometer):
     @f_acc_break_low.setter
     def f_acc_break_low(self,value):
         self.var_dict = ['f_acc_break_low',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
         self._f_acc_break_low = self._return_value
 
     @property
@@ -470,6 +491,8 @@ class SpaceBased(Interferometer):
     @f_acc_break_high.setter
     def f_acc_break_high(self,value):
         self.var_dict = ['f_acc_break_high',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
         self._f_acc_break_high = self._return_value
 
     @property
@@ -478,6 +501,8 @@ class SpaceBased(Interferometer):
     @A_IFO.setter
     def A_IFO(self,value):
         self.var_dict = ['A_IFO',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m')
         self._A_IFO = self._return_value
 
     @property
@@ -486,6 +511,8 @@ class SpaceBased(Interferometer):
     @f_IMS_break.setter
     def f_IMS_break(self,value):
         self.var_dict = ['f_IMS_break',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
         self._f_IMS_break = self._return_value
 
     @property

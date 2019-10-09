@@ -54,7 +54,6 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     SNRMatrix = np.zeros((sampleSize_y,sampleSize_x))
 
     for i in range(sampleSize_x):
-        print(sample_x[i])
         if recalculate_noise in ['x','both']:
             #Update Attribute (also updates dictionary)
             setattr(instrument,var_x,sample_x[i])
@@ -64,7 +63,6 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             setattr(source,var_x,sample_x[i])
 
         for j in range(sampleSize_y):
-            print(sample_y[j])
             if recalculate_noise in ['x','neither']:
                 #Update Attribute (also updates dictionary)
                 setattr(source,var_y, sample_y[j])
@@ -205,14 +203,16 @@ def Recalculate_Noise(source,instrument):
     """
     if hasattr(instrument,'I_type') or hasattr(instrument,'load_location'):
         raise ValueError("Cannot vary a loaded instrument's parameters")
-    if hasattr(instrument,'fT'):
-        del instrument.fT
+
     if hasattr(instrument,'P_n_f'):
         del instrument.P_n_f
-    if hasattr(instrument,'h_n_f'):
-        del instrument.h_n_f
     if hasattr(instrument,'S_n_f'):
         del instrument.S_n_f
+    if hasattr(instrument,'h_n_f'):
+        del instrument.h_n_f
+    if hasattr(instrument,'fT'):
+        del instrument.fT
+    
     if isinstance(instrument,detector.PTA) and hasattr(instrument,'_sensitivitycurve'):
         del instrument._sensitivitycurve
     if hasattr(source,'instrument'):
