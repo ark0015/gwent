@@ -50,36 +50,27 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
 
     sampleSize_x = len(sample_x)
     sampleSize_y = len(sample_y)
-    SNRMatrix = np.zeros((sampleSize_x,sampleSize_y))
+    SNRMatrix = np.zeros((sampleSize_y,sampleSize_x))
 
+    prev_i = -1
+    prev_j = -1
     for i in range(sampleSize_x):
+        if recalculate_noise in ['x','both']:
+            #Update Attribute (also updates dictionary)
+            setattr(instrument,var_x,sample_x[i])
+            Recalculate_Noise(instrument)
+        elif recalculate_noise in ['y','neither']:
+            #Update Attribute (also updates dictionary)
+            setattr(source,var_x,sample_x[i])
+
         for j in range(sampleSize_y):
-
-            if recalculate_noise == 'x':
+            if recalculate_noise in ['x','neither']:
                 #Update Attribute (also updates dictionary)
-                setattr(instrument,var_x,sample_x[i])
                 setattr(source,var_y, sample_y[j])
-            elif recalculate_noise == 'y':
+            elif recalculate_noise in ['y','both']:
                 #Update Attribute (also updates dictionary)
-                setattr(source,var_x,sample_x[i])
                 setattr(instrument,var_y, sample_y[j])
-            elif recalculate_noise == 'both':
-                #Update Attribute (also updates dictionary)
-                setattr(instrument,var_x,sample_x[i])
-                setattr(instrument,var_y, sample_y[j])
-            elif recalculate_noise == 'neither':
-                #Update Attribute (also updates dictionary)
-                setattr(source,var_x,sample_x[i])
-                setattr(source,var_y, sample_y[j])
-
-            if recalculate_noise != 'neither':
-                #Recalculate noise curves if something is varied
-                if hasattr(instrument,'fT'):
-                    del instrument.fT
-                if hasattr(instrument,'P_n_f'):
-                    del instrument.P_n_f
-                if isinstance(instrument,detector.PTA) and hasattr(instrument,'_sensitivitycurve'):
-                    del instrument._sensitivitycurve
+                Recalculate_Noise(instrument)
 
             source.Check_Freq_Evol()
             if source.ismono: #Monochromatic Source and not diff EOB SNR
@@ -167,6 +158,9 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             T_obs_min = make_quant(var_x_dict['min'],'s')
             T_obs_max = make_quant(var_x_dict['max'],'s')
             sample_x = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_x)
+        elif var_x == 'N_p':
+            #sample in integer steps
+            sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
         else:
             #Sample in log space for any other variables
             #Need exception for astropy variables
@@ -185,6 +179,9 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             T_obs_min = make_quant(var_y_dict['min'],'s')
             T_obs_max = make_quant(var_y_dict['max'],'s')
             sample_y = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_y)
+        elif var_y == 'N_p':
+            #sample in integer steps
+            sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
         else:
             #Sample in log space for any other variables
             #Need exception for astropy variables
@@ -194,6 +191,31 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sample_rate_y)
 
     return sample_x,sample_y,recalculate_strain,recalculate_noise
+
+def Recalculate_Noise(source,instrument):
+    """Recalculate noise curves if something is varied
+
+    Parameters
+    ----------
+    source : object
+        Instance of a gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+    """
+    if hasattr(instrument,'I_type') or hasattr(instrument,'load_location'):
+        raise ValueError("Cannot vary a loaded instrument's parameters")
+    if hasattr(instrument,'fT'):
+        del instrument.fT
+    if hasattr(instrument,'P_n_f'):
+        del instrument.P_n_f
+    if hasattr(instrument,'h_n_f'):
+        del instrument.h_n_f
+    if hasattr(instrument,'S_n_f'):
+        del instrument.S_n_f
+    if isinstance(instrument,detector.PTA) and hasattr(instrument,'_sensitivitycurve'):
+        del instrument._sensitivitycurve
+    if hasattr(source,'instrument'):
+                source.instrument = instrument
 
 def Calc_Mono_SNR(source,instrument):
     """Calculates the SNR for a monochromatic source

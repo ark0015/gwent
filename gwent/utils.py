@@ -1,4 +1,5 @@
 import astropy.units as u
+import numpy as np
 
 def make_quant(param, default_unit):
     """Convenience function to intialize a parameter as an astropy quantity.
@@ -60,7 +61,7 @@ def Get_Var_Dict(obj,value):
 
     """
     if not hasattr(obj,'var_dict'):
-            obj._var_dict = {}
+        obj._var_dict = {}
     if isinstance(value,list):
         if len(value) == 2 and isinstance(value[0],str):
             var_name = value[0]
@@ -73,15 +74,14 @@ def Get_Var_Dict(obj,value):
                     obj._var_dict[var_name] = {'val':vals[0],'min':vals[1],'max':vals[2]}
                 else:
                     raise ValueError(DictError_3())
-            elif isinstance(vals,(float,int,u.Quantity)):
-                if isinstance(vals,(float,int,u.Quantity)):
-                    if var_name in obj._var_dict.keys():
-                        obj._var_dict[var_name]['val'] = vals
-                    else:
-                        obj.var_dict[var_name] = {'val':vals,'min':None,'max':None}
-                    obj._return_value = vals
+            elif isinstance(vals,(float,int,np.int64,u.Quantity)):
+                if var_name in obj._var_dict.keys():
+                    obj._var_dict[var_name]['val'] = vals
                 else:
-                    raise ValueError(DictError_2())
+                    obj.var_dict[var_name] = {'val':vals,'min':None,'max':None}
+                obj._return_value = vals
+            else:
+                raise ValueError(DictError_2())
         else:
             raise ValueError(DictError_Full())
     else:

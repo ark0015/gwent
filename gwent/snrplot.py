@@ -107,12 +107,12 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         sample_y = sample_y.value
 
     #Set whether log or linearly spaced axes
-    if var_x == 'q' or var_x == 'chi1' or var_x == 'chi2':
+    if var_x in ['q', 'chi1','chi2','N_p']:
         xaxis_type = 'lin'
     else:
         xaxis_type = 'log'
 
-    if var_y == 'q' or var_y == 'chi1' or var_y == 'chi2':
+    if var_y in ['q', 'chi1','chi2','N_p']:
         yaxis_type = 'lin'
     else:
         yaxis_type = 'log'

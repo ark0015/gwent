@@ -607,7 +607,7 @@ def Load_Data(detector):
     ----------
     detector : object
         Instance of a detector class
-        
+
     """
     if not hasattr(detector,'I_type'):
         print('Is the data:')
@@ -632,5 +632,4 @@ def Load_Data(detector):
         Load_Data(detector)
 
     detector._I_data = np.loadtxt(detector.load_location)
-    detector.fT = detector._I_data[:,0]
-    detector.fT = utils.make_quant(detector.fT,'Hz')
+    detector.fT = detector._I_data[:,0]*u.Hz
