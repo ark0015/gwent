@@ -48,29 +48,30 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     #Get Samples for variables
     [sample_x,sample_y,recalculate_strain,recalculate_noise] = Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y)
 
+
     sampleSize_x = len(sample_x)
     sampleSize_y = len(sample_y)
     SNRMatrix = np.zeros((sampleSize_y,sampleSize_x))
 
-    prev_i = -1
-    prev_j = -1
     for i in range(sampleSize_x):
+        print(sample_x[i])
         if recalculate_noise in ['x','both']:
             #Update Attribute (also updates dictionary)
             setattr(instrument,var_x,sample_x[i])
-            Recalculate_Noise(instrument)
+            Recalculate_Noise(source,instrument)
         elif recalculate_noise in ['y','neither']:
             #Update Attribute (also updates dictionary)
             setattr(source,var_x,sample_x[i])
 
         for j in range(sampleSize_y):
+            print(sample_y[j])
             if recalculate_noise in ['x','neither']:
                 #Update Attribute (also updates dictionary)
                 setattr(source,var_y, sample_y[j])
             elif recalculate_noise in ['y','both']:
                 #Update Attribute (also updates dictionary)
                 setattr(instrument,var_y, sample_y[j])
-                Recalculate_Noise(instrument)
+                Recalculate_Noise(source,instrument)
 
             source.Check_Freq_Evol()
             if source.ismono: #Monochromatic Source and not diff EOB SNR
@@ -215,7 +216,7 @@ def Recalculate_Noise(source,instrument):
     if isinstance(instrument,detector.PTA) and hasattr(instrument,'_sensitivitycurve'):
         del instrument._sensitivitycurve
     if hasattr(source,'instrument'):
-                source.instrument = instrument
+        source.instrument = instrument
 
 def Calc_Mono_SNR(source,instrument):
     """Calculates the SNR for a monochromatic source
