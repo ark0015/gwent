@@ -74,9 +74,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         else:
             xlabel_min = instrument.var_dict[var_x]['min']
             xlabel_max = instrument.var_dict[var_x]['max']
-        if var_x == 'T_obs':
-            xlabel_min = xlabel_min*u.yr.to('s')
-            xlabel_max = xlabel_max*u.yr.to('s')
     else:
         raise ValueError(var_x + ' is not a variable in the source or the instrument.')
 
@@ -94,9 +91,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         else:
             ylabel_min = instrument.var_dict[var_y]['min']
             ylabel_max = instrument.var_dict[var_y]['max']
-        if var_y == 'T_obs':
-            ylabel_min = ylabel_min*u.yr.to('s')
-            ylabel_max = ylabel_max*u.yr.to('s')
     else:
         raise ValueError(var_y + ' is not a variable in the source or the instrument.')
 
@@ -107,12 +101,12 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         sample_y = sample_y.value
 
     #Set whether log or linearly spaced axes
-    if var_x in ['q', 'chi1','chi2','N_p']:
+    if var_x in ['q', 'chi1','chi2','N_p','T_obs']:
         xaxis_type = 'lin'
     else:
         xaxis_type = 'log'
 
-    if var_y in ['q', 'chi1','chi2','N_p']:
+    if var_y in ['q', 'chi1','chi2','N_p','T_obs']:
         yaxis_type = 'lin'
     else:
         yaxis_type = 'log'
@@ -174,7 +168,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xticklabels([r'$10^{%i}$' %x if int(x) > 1 else r'$%i$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
     elif var_x == 'T_obs':
         ax1.set_xlabel(r'${\rm T_{obs}}$ $[yr]$',fontsize = labelsize)
-        ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels/u.yr.to('s')],fontsize = axissize)
+        ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
 
     if var_y == 'M':
         ax1.set_ylabel(r'$M_{\rm tot}$ $[M_{\odot}]$',fontsize = labelsize)
@@ -198,7 +192,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.legend(loc='lower right')
     elif var_y == 'T_obs':
         ax1.set_ylabel(r'${\rm T_{obs}}$ $[yr]$',fontsize = labelsize)
-        ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels/u.yr.to('s')],fontsize = axissize)
+        ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
 
     ax1.yaxis.set_label_coords(-.10,.5)
 

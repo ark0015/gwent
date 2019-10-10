@@ -48,6 +48,20 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     #Get Samples for variables
     [sample_x,sample_y,recalculate_strain,recalculate_noise] = Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y)
 
+    switch = False
+    if recalculate_noise == 'y':
+        """Calculation runs much faster when it doesn't recalculate 
+        the noise every time."""
+        switch = True
+        recalculate_noise = 'x'
+        original_sample_x = sample_x
+        original_sample_y = sample_y
+        original_var_x = var_x
+        original_var_y = var_y
+        var_x = original_var_y
+        var_y = original_var_x
+        sample_x = original_sample_y
+        sample_y = original_sample_x
 
     sampleSize_x = len(sample_x)
     sampleSize_y = len(sample_y)
@@ -58,7 +72,7 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             #Update Attribute (also updates dictionary)
             setattr(instrument,var_x,sample_x[i])
             Recalculate_Noise(source,instrument)
-        elif recalculate_noise in ['y','neither']:
+        elif recalculate_noise in ['neither']:
             #Update Attribute (also updates dictionary)
             setattr(source,var_x,sample_x[i])
 
@@ -66,7 +80,7 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             if recalculate_noise in ['x','neither']:
                 #Update Attribute (also updates dictionary)
                 setattr(source,var_y, sample_y[j])
-            elif recalculate_noise in ['y','both']:
+            elif recalculate_noise in ['both']:
                 #Update Attribute (also updates dictionary)
                 setattr(instrument,var_y, sample_y[j])
                 Recalculate_Noise(source,instrument)
@@ -88,8 +102,11 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 if hasattr(source,'h_f'):
                     del source.h_f
                 SNRMatrix[j,i] = Calc_Chirp_SNR(source,instrument)
-
-    return [sample_x,sample_y,SNRMatrix]
+        print(i)
+    if switch:
+        return [original_sample_x,original_sample_y,SNRMatrix.T]
+    else:
+        return [sample_x,sample_y,SNRMatrix]
 
 def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     """Gets the x and y-axis samples
@@ -154,8 +171,8 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             recalculate_strain = True #Must recalculate the waveform at each point
         elif var_x == 'T_obs':
             #sample in linear space for instrument variables
-            T_obs_min = make_quant(var_x_dict['min'],'s')
-            T_obs_max = make_quant(var_x_dict['max'],'s')
+            T_obs_min = make_quant(var_x_dict['min'],'yr')
+            T_obs_max = make_quant(var_x_dict['max'],'yr')
             sample_x = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_x)
         elif var_x == 'N_p':
             #sample in integer steps
@@ -175,8 +192,8 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
             recalculate_strain = True #Must recalculate the waveform at each point
         elif var_y == 'T_obs':
             #sample in linear space for instrument variables
-            T_obs_min = make_quant(var_y_dict['min'],'s')
-            T_obs_max = make_quant(var_y_dict['max'],'s')
+            T_obs_min = make_quant(var_y_dict['min'],'yr')
+            T_obs_max = make_quant(var_y_dict['max'],'yr')
             sample_y = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_y)
         elif var_y == 'N_p':
             #sample in integer steps
