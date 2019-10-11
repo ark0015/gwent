@@ -89,11 +89,15 @@ class PTA:
             self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
 
         if len(args) != 0:
-            [T_obs,N_p,sigma,cadence] = args
-            self.T_obs = utils.make_quant(T_obs,'yr')
-            self.N_p = N_p
-            self.sigma = utils.make_quant(sigma,'s')
-            self.cadence = utils.make_quant(cadence,'1/yr')
+            if len(args) == 1:
+                T_obs = args[0]
+                self.T_obs = utils.make_quant(T_obs,'yr')
+            else:
+                [T_obs,N_p,sigma,cadence] = args
+                self.T_obs = utils.make_quant(T_obs,'yr')
+                self.N_p = N_p
+                self.sigma = utils.make_quant(sigma,'s')
+                self.cadence = utils.make_quant(cadence,'1/yr')
 
     @property
     def T_obs(self):
@@ -442,13 +446,13 @@ class SpaceBased(Interferometer):
             self.Background = False
 
         if len(args) != 0:
-            [L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IMS_break] = args
+            [L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break] = args
             self.L = utils.make_quant(L,'m')
             self.A_acc = utils.make_quant(A_acc,'m/(s*s)')
             self.f_acc_break_low = utils.make_quant(f_acc_break_low,'Hz')
             self.f_acc_break_high = utils.make_quant(f_acc_break_high,'Hz')
             self.A_IFO = utils.make_quant(A_IFO,'m')
-            self.f_IMS_break = utils.make_quant(f_IMS_break,'Hz')
+            self.f_IFO_break = utils.make_quant(f_IFO_break,'Hz')
 
         if not hasattr(self,'load_location'):
             if not hasattr(self,'T_type'):
@@ -472,7 +476,7 @@ class SpaceBased(Interferometer):
     def A_acc(self,value):
         self.var_dict = ['A_acc',value]
         if not isinstance(self._return_value,u.Quantity):
-            self._return_value = utils.make_quant(self._return_value,'m/s/s')
+            self._return_value = utils.make_quant(self._return_value,'m/s2')
         self._A_acc = self._return_value
 
     @property
@@ -506,14 +510,14 @@ class SpaceBased(Interferometer):
         self._A_IFO = self._return_value
 
     @property
-    def f_IMS_break(self):
-        return self._f_IMS_break
-    @f_IMS_break.setter
-    def f_IMS_break(self,value):
-        self.var_dict = ['f_IMS_break',value]
+    def f_IFO_break(self):
+        return self._f_IFO_break
+    @f_IFO_break.setter
+    def f_IFO_break(self,value):
+        self.var_dict = ['f_IFO_break',value]
         if not isinstance(self._return_value,u.Quantity):
             self._return_value = utils.make_quant(self._return_value,'Hz')
-        self._f_IMS_break = self._return_value
+        self._f_IFO_break = self._return_value
 
     @property
     def P_n_f(self):
@@ -523,7 +527,7 @@ class SpaceBased(Interferometer):
                 self.Set_T_Function_Type()
 
             P_acc = self.A_acc**2*(1+(self.f_acc_break_low/self.fT)**2)*(1+(self.fT/(self.f_acc_break_high))**4)/(2*np.pi*self.fT)**4 #Acceleration Noise
-            P_IMS = self.A_IFO**2*(1+(self.f_IMS_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM
+            P_IMS = self.A_IFO**2*(1+(self.f_IFO_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM
 
             f_trans = const.c/2/np.pi/self.L #Transfer frequency
             self._P_n_f = (P_IMS + 2*(1+np.cos(self.fT.value/f_trans.value)**2)*P_acc)/self.L**2/u.Hz

@@ -102,7 +102,7 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 if hasattr(source,'h_f'):
                     del source.h_f
                 SNRMatrix[j,i] = Calc_Chirp_SNR(source,instrument)
-        print(i)
+
     if switch:
         return [original_sample_x,original_sample_y,SNRMatrix.T]
     else:
@@ -136,7 +136,7 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     Notes
     -----
         The function uses that to create a
-        sample space for the variable either in linear space (for q,x1,or x2) or logspace
+        sample space for the variable either in linear space or logspace for M,z,L,A_acc
         for everything else.
 
     """
@@ -164,47 +164,50 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     else:
         raise ValueError(var_y + ' is not a variable in the source nor the instrument.')
 
+    if var_x in ['q','chi1','chi2'] or var_y in ['q','chi1','chi2']:
+        recalculate_strain = True #Must recalculate the waveform at each point
+
     if var_x_dict['min'] != None and var_x_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
-        if var_x == 'q' or var_x == 'chi1' or var_x == 'chi2':
-            #Sample in linear space for mass ratio and spins
-            sample_x = np.linspace(var_x_dict['min'],var_x_dict['max'],sample_rate_x)
-            recalculate_strain = True #Must recalculate the waveform at each point
-        elif var_x == 'T_obs':
-            #sample in linear space for instrument variables
-            T_obs_min = make_quant(var_x_dict['min'],'yr')
-            T_obs_max = make_quant(var_x_dict['max'],'yr')
-            sample_x = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_x)
-        elif var_x == 'N_p':
-            #sample in integer steps
-            sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
-        else:
-            #Sample in log space for any other variables
+        if var_x in ['M','z','L','A_acc']:
+            #Sample in log space
             #Need exception for astropy variables
             if isinstance(var_x_dict['min'],u.Quantity) and isinstance(var_x_dict['max'],u.Quantity):
                 sample_x = np.logspace(np.log10(var_x_dict['min'].value),np.log10(var_x_dict['max'].value),sample_rate_x)
             else:
                 sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sample_rate_x)
+        elif var_x == 'N_p':
+            #sample in integer steps
+            sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
+        else:
+            #Sample linearly for any other variables
+            #Need exception for astropy variables
+            if isinstance(var_x_dict['min'],u.Quantity) or isinstance(var_x_dict['max'],u.Quantity):
+                sample_x = np.linspace(var_x_dict['min'].value,var_x_dict['max'].value,sample_rate_x)
+            else:
+                sample_x = np.linspace(var_x_dict['min'],var_x_dict['max'],sample_rate_x)
+    else:
+        raise ValueError(var_x + ' does not have an assigned min and/or max.')
 
     if var_y_dict['min'] != None and var_y_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
-        if var_y == 'q' or var_y == 'chi1' or var_y == 'chi2':
-            #Sample in linear space for mass ratio and spins
-            sample_y = np.linspace(var_y_dict['min'],var_y_dict['max'],sample_rate_y)
-            recalculate_strain = True #Must recalculate the waveform at each point
-        elif var_y == 'T_obs':
-            #sample in linear space for instrument variables
-            T_obs_min = make_quant(var_y_dict['min'],'yr')
-            T_obs_max = make_quant(var_y_dict['max'],'yr')
-            sample_y = np.linspace(T_obs_min.value,T_obs_max.value,sample_rate_y)
-        elif var_y == 'N_p':
-            #sample in integer steps
-            sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
-        else:
-            #Sample in log space for any other variables
+        if var_y in ['M','z','L','A_acc']:
+            #Sample in log space
             #Need exception for astropy variables
             if isinstance(var_y_dict['min'],u.Quantity) and isinstance(var_y_dict['max'],u.Quantity):
                 sample_y = np.logspace(np.log10(var_y_dict['min'].value),np.log10(var_y_dict['max'].value),sample_rate_y)
             else:
                 sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sample_rate_y)
+        elif var_y == 'N_p':
+            #sample in integer steps
+            sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
+        else:
+            #Sample linearly for any other variables
+            #Need exception for astropy variables
+            if isinstance(var_y_dict['min'],u.Quantity) and isinstance(var_y_dict['max'],u.Quantity):
+                sample_y = np.linspace(var_y_dict['min'].value,var_y_dict['max'].value,sample_rate_y)
+            else:
+                sample_y = np.linspace(var_y_dict['min'],var_y_dict['max'],sample_rate_y)
+    else:
+        raise ValueError(var_y + ' does not have an assigned min and/or max value.')
 
     return sample_x,sample_y,recalculate_strain,recalculate_noise
 

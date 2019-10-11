@@ -54,6 +54,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
 
     logLevels_min = np.log10(np.array([5]))
     logLevels_max = np.ceil(np.amax(logSNR))
+    if logLevels_max < logLevels_min:
+        raise ValueError('All SNRs are lower than 5.')
     print_logLevels = np.append(logLevels_min,np.arange(1,logLevels_max+1))
     if smooth_contours:
         logLevels = np.linspace(logLevels_min,logLevels_max,100)[:,0]
@@ -101,26 +103,24 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         sample_y = sample_y.value
 
     #Set whether log or linearly spaced axes
-    if var_x in ['q', 'chi1','chi2','N_p','T_obs']:
-        xaxis_type = 'lin'
-    else:
+    if var_x in ['M','z','L','A_acc']:
         xaxis_type = 'log'
-
-    if var_y in ['q', 'chi1','chi2','N_p','T_obs']:
-        yaxis_type = 'lin'
     else:
+        xaxis_type = 'lin'
+
+    if var_y in ['M','z','L','A_acc']:
         yaxis_type = 'log'
+    else:
+        yaxis_type = 'lin'
 
     #########################
     #Make the Contour Plots
     fig, ax1 = plt.subplots(figsize=figsize)
-    #Set other side y-axis for lookback time scalings
-    ax2 = ax1.twinx()
 
     #Set axis scales based on what data sampling we used 
     if yaxis_type == 'lin' and xaxis_type == 'log':
         CS1 = ax1.contourf(np.log10(sample_x),sample_y,logSNR,logLevels,cmap = colormap)
-        ax2.contour(np.log10(sample_x),sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        ax1.contour(np.log10(sample_x),sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(ylabel_min,ylabel_max)
         x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
@@ -129,7 +129,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xticks(np.log10(x_labels))
     elif yaxis_type == 'log' and xaxis_type == 'lin':
         CS1 = ax1.contourf(sample_x,np.log10(sample_y),logSNR,logLevels,cmap = colormap)
-        ax2.contour(sample_x,np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        ax1.contour(sample_x,np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(xlabel_min,xlabel_max)
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
         x_labels = np.linspace(xlabel_min,xlabel_max,xlabel_max-xlabel_min+1)
@@ -138,7 +138,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_yticks(np.log10(y_labels))
     else:
         CS1 = ax1.contourf(np.log10(sample_x),np.log10(sample_y),logSNR,logLevels,cmap = colormap)
-        ax2.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        ax1.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
         x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
@@ -148,56 +148,165 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
 
     #Set axes labels and whether log or linearly spaced
     if var_x == 'M':
-        ax1.set_xlabel(r'$M_{\rm tot}$ $[M_{\odot}]$',fontsize = labelsize)
+        ax1.set_xlabel(r'$M_{\rm tot}$ $[\mathrm{M_{\odot}}]$',fontsize = labelsize)
         ax1.set_xticklabels([r'$10^{%i}$' %x if int(x) > 1 else r'$%i$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
     elif var_x == 'q':
-        ax1.set_xlabel(r'$q$',fontsize = labelsize)
-        ax1.set_xticklabels(x_labels,fontsize = axissize,rotation=45)
-    elif var_x == 'z':
-        ax1.set_xlabel(r'${\rm Redshift}$',fontsize = labelsize)
-        ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
-    elif var_x == 'chi1' or var_x == 'chi2':
-        x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
+        x_labels = x_labels[::2]
         ax1.set_xticks(x_labels)
-        ax1.set_xlabel(r'${\rm Spin}$',fontsize = labelsize)
-        ax1.set_xticklabels(x_labels,fontsize = axissize,rotation=45)
-        ax1.legend(loc='lower right')
+        ax1.set_xlabel(r'$\mathrm{Mass Ratio}$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
+    elif var_x == 'z':
+        ax1.set_xlabel(r'$\mathrm{ Redshift}$',fontsize = labelsize)
+        ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
+    elif var_x in ['chi1','chi2']:
+        x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
+        x_labels = x_labels[::2]
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$\mathrm{Spin}$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%.1f$' %x for x in x_labels],fontsize = axissize)
     elif var_x == 'L':
         ax1.axvline(x=np.log10(2.5*u.Gm.to('m')),linestyle='--',color='k',label='Proposed arm length')
-        ax1.set_xlabel(r'${\rm Armlength}$ $[m]$',fontsize = labelsize)
+        ax1.set_xlabel(r'${\rm Armlength}$ $[\mathrm{m}]$',fontsize = labelsize)
         ax1.set_xticklabels([r'$10^{%i}$' %x if int(x) > 1 else r'$%i$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
+        ax1.legend(loc='lower right')
+    elif var_x == 'A_acc':
+        ax1.axvline(x=np.log10(3e-15),linestyle='--',color='k',label='Proposed Acceleration Noise Amplitude')
+        ax1.set_xlabel(r'$\mathrm{Acceleration~Noise~Amplitude}$ $[\mathrm{m~s^{-2}}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x for x in np.log10(x_labels)],fontsize = axissize)
+        ax1.legend(loc='lower left')
+    elif var_x == 'A_IFO':
+        ax1.axvline(x=np.log10(10e-12),linestyle='--',color='k',label='Proposed Optical Metrology Noise Amplitude')
+        ax1.set_xlabel(r'$\mathrm{Optical~Metrology~Noise~Amplitude}~[\mathrm{m}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x for x in np.log10(x_labels)],fontsize = axissize)
+        ax1.legend(loc='lower left')
+    elif var_x == 'f_acc_break_low':
+        scale = 10**round(np.log10(xlabel_min))
+        x_labels = np.arange(round(xlabel_min/scale),round(xlabel_max/scale)+1,1)*scale
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$f_{\mathrm{acc,low}}$ $[\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%.1f$' %x for x in x_labels*1e3],fontsize = axissize)
+    elif var_x == 'f_acc_break_high':
+        scale = 10**round(np.log10(xlabel_min))
+        x_labels = np.arange(round(xlabel_min/scale),round(xlabel_max/scale)+1,1)*scale
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$f_{\mathrm{acc,high}}$ $[\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%.1f$' %x for x in x_labels*1e3],fontsize = axissize)
+    elif var_x == 'f_IFO_break':
+        scale = 10**round(np.log10(xlabel_min))
+        x_labels = np.arange(round(xlabel_min/scale),round(xlabel_max/scale)+1,1)*scale
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%.1f$' %x for x in x_labels*1e3],fontsize = axissize)
+    elif var_x == 'N_p':
+        x_labels = x_labels[::2]
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$\mathrm{Number~of~Pulsars}$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
+    elif var_x == 'cadence': 
+        x_labels = np.arange(round(xlabel_min),round(xlabel_max)+1,5)
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$\mathrm{Observation~Cadence}$ $[\mathrm{yr}^{-1}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
+    elif var_x == 'sigma':
+        scale = 10**round(np.log10(xlabel_min))
+        x_labels = np.arange(round(xlabel_min/scale),round(xlabel_max/scale)+1,1)*scale
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'$\mathrm{Pulsar~Timing~RMS}$ $[\mathrm{ns}]$',fontsize = labelsize)
+        ax1.set_xticklabels([r'$%.0f$' %x for x in x_labels*1e9],fontsize = axissize)
     elif var_x == 'T_obs':
-        ax1.set_xlabel(r'${\rm T_{obs}}$ $[yr]$',fontsize = labelsize)
+        x_labels = x_labels[::2]
+        ax1.set_xticks(x_labels)
+        ax1.set_xlabel(r'${\rm T_{obs}}$ $[\mathrm{yr}]$',fontsize = labelsize)
         ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
 
+
     if var_y == 'M':
-        ax1.set_ylabel(r'$M_{\rm tot}$ $[M_{\odot}]$',fontsize = labelsize)
+        ax1.set_ylabel(r'$M_{\rm tot}$ $[\mathrm{M_{\odot}}]$',fontsize = labelsize)
         ax1.set_yticklabels([r'$10^{%i}$' %y if int(y) > 1 else r'$%i$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
     elif var_y == 'q':
-        ax1.set_ylabel(r'$q$',fontsize = labelsize)
-        ax1.set_yticklabels(y_labels,fontsize = axissize,rotation=45)
+        y_labels = y_labels[::2]
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$\mathrm{Mass Ratio}$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
     elif var_y == 'z':
-        ax1.set_ylabel(r'${\rm Redshift}$',fontsize = labelsize)
+        ax1.set_ylabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
         ax1.set_yticklabels([y if int(y) < 1 else int(y) for y in y_labels],\
             fontsize = axissize)
-    elif var_y == 'chi1' or var_y == 'chi2':
+    elif var_y in ['chi1','chi2']:
         y_labels = np.arange(round(ylabel_min*10),round(ylabel_max*10)+1,1)/10
+        y_labels = y_labels[::2]
         ax1.set_yticks(y_labels)
-        ax1.set_ylabel(r'${\rm Spin}$',fontsize = labelsize)
-        ax1.set_yticklabels(y_labels,fontsize = axissize,rotation=45)
+        ax1.set_ylabel(r'$\mathrm{Spin}$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%.1f$' %y for y in y_labels],fontsize = axissize)
     elif var_y == 'L':
         ax1.axhline(y=np.log10(2.5*u.Gm.to('m')),linestyle='--',color='k',label='Proposed arm length')
-        ax1.set_ylabel(r'${\rm Armlength}$ $[m]$',fontsize = labelsize)
+        ax1.set_ylabel(r'${\rm Armlength}$ $[\mathrm{m}]$',fontsize = labelsize)
         ax1.set_yticklabels([r'$10^{%i}$' %y if int(y) > 1 else r'$%i$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
         ax1.legend(loc='lower right')
+    elif var_y == 'A_acc':
+        ax1.axhline(y=np.log10(3e-15),linestyle='--',color='k',label='Proposed Acceleration Noise Amplitude')
+        ax1.set_ylabel(r'$\mathrm{Acceleration~Noise~Amplitude}$ $[\mathrm{m~s^{-2}}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$10^{%.0f}$' %y for y in np.log10(y_labels)],fontsize = axissize)
+        ax1.legend(loc='lower left')
+    elif var_y == 'A_IFO':
+        ax1.axhline(y=np.log10(10e-12),linestyle='--',color='k',label='Proposed Optical Metrology Noise Amplitude')
+        ax1.set_ylabel(r'$\mathrm{Optical~Metrology~Noise~Amplitude}~[\mathrm{m}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$10^{%.0f}$' %y for y in np.log10(y_labels)],fontsize = axissize)
+        ax1.legend(loc='lower left')
+    elif var_y == 'f_acc_break_low':
+        scale = 10**round(np.log10(ylabel_min))
+        y_labels = np.arange(round(ylabel_min/scale),round(ylabel_max/scale)+1,1)*scale
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$f_{\mathrm{acc,low}} [\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%.1f$' %y for y in y_labels*1e3],fontsize = axissize)
+    elif var_y == 'f_acc_break_high':
+        scale = 10**round(np.log10(ylabel_min))
+        y_labels = np.arange(round(ylabel_min/scale),round(ylabel_max/scale)+1,1)*scale
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$f_{\mathrm{acc,high}} [\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%.1f$' %y for y in y_labels*1e3],fontsize = axissize)
+    elif var_y == 'f_IFO_break':
+        scale = 10**round(np.log10(ylabel_min))
+        y_labels = np.arange(round(ylabel_min/scale),round(ylabel_max/scale)+1,1)*scale
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$f_{\mathrm{IFO,break}} [\mathrm{mHz}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%.1f$' %y for y in y_labels*1e3],fontsize = axissize)
+    elif var_y == 'N_p':
+        y_labels = y_labels[::2]
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$\mathrm{Number~of~Pulsars}$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
+    elif var_y == 'cadence': 
+        y_labels = np.arange(round(ylabel_min),round(ylabel_max)+1,5)
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$\mathrm{Observation~Cadence}$ $[\mathrm{yr}^{-1}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
+    elif var_y == 'sigma':
+        scale = 10**round(np.log10(ylabel_min))
+        y_labels = np.arange(round(ylabel_min/scale),round(ylabel_max/scale)+1,1)*scale
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'$\mathrm{Pulsar~Timing~RMS}$ $[\mathrm{ns}]$',fontsize = labelsize)
+        ax1.set_yticklabels([r'$%.0f$' %y for y in y_labels*1e9],fontsize = axissize)
     elif var_y == 'T_obs':
-        ax1.set_ylabel(r'${\rm T_{obs}}$ $[yr]$',fontsize = labelsize)
+        y_labels = y_labels[::2]
+        ax1.set_yticks(y_labels)
+        ax1.set_ylabel(r'${\rm T_{obs}}$ $[\mathrm{yr}]$',fontsize = labelsize)
         ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
 
     ax1.yaxis.set_label_coords(-.10,.5)
 
     #If true, display luminosity distance on right side of plot
     if dl_axis:
+        #Set other side y-axis for lookback time scalings
+        ax2 = ax1.twinx()
+        #Set axis scales based on what data sampling we used 
+        if yaxis_type == 'lin' and xaxis_type == 'log':
+            ax2.contour(np.log10(sample_x),sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        elif yaxis_type == 'log' and xaxis_type == 'lin':
+            ax2.contour(sample_x,np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        else:
+            ax2.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
+
         dists_min = cosmo.luminosity_distance(source.var_dict['z']['min']).to('Gpc')
         dists_min = np.ceil(np.log10(dists_min.value))
         dists_max = cosmo.luminosity_distance(source.var_dict['z']['max']).to('Gpc')
@@ -215,8 +324,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     else:
         #Make colorbar
         cbar = fig.colorbar(CS1,ticks=print_logLevels)
-        #Remove y-axis labels
-        ax2.tick_params(axis='y',right=False,labelright=False)
+
     cbar.set_label(r'$SNR$',fontsize = labelsize)
     cbar.ax.tick_params(labelsize = axissize)
     cbar.ax.set_yticklabels([r'$10^{%i}$' %x if int(x) > 1 else r'$%i$' %(10**x) for x in print_logLevels])
