@@ -4,8 +4,8 @@ python:
 - 3.6
 - 3.5
 - 3.4
-install: travis_wait 30 pip install -U tox-travis
-script: tox
+install: pip install -U tox-travis
+script: travis_wait 30 tox
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
