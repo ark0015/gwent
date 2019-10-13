@@ -4,7 +4,7 @@ python:
 - 3.6
 - 3.5
 - 3.4
-install: travis_wait pip install -U tox-travis
+install: travis_wait 30 pip install -U tox-travis
 script: tox
 deploy:
   provider: pypi
