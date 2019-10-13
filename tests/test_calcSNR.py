@@ -87,7 +87,7 @@ sigma_max = 500*u.ns.to('s')*u.s
 
 N_p = 18 #Number of pulsars
 N_p_min = 18
-N_p_max = 40
+N_p_max = 22
 
 cadence = 1/(2*u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every 2 weeks in num/year
 cadence_min = 2/u.yr
