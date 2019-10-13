@@ -5,6 +5,7 @@ python:
 - 3.5
 - 3.4
 install: pip install -U tox-travis
+install: travis_wait mvn install
 script: tox
 deploy:
   provider: pypi
