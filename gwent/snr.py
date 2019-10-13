@@ -2,6 +2,8 @@ import numpy as np
 import scipy.interpolate as interp
 import scipy.integrate as integrate
 
+import time
+
 import astropy.units as u
 
 from . import detector
@@ -67,7 +69,9 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     sampleSize_y = len(sample_y)
     SNRMatrix = np.zeros((sampleSize_y,sampleSize_x))
 
+    start = time.time()
     for i in range(sampleSize_x):
+        
         if recalculate_noise in ['x','both']:
             #Update Attribute (also updates dictionary)
             setattr(instrument,var_x,sample_x[i])
@@ -102,6 +106,9 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 if hasattr(source,'h_f'):
                     del source.h_f
                 SNRMatrix[j,i] = Calc_Chirp_SNR(source,instrument)
+        end = time.time()
+        if end-start > 300.:
+            print('This is taking awhile...')
 
     if switch:
         return [original_sample_x,original_sample_y,SNRMatrix.T]
