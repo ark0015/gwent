@@ -99,7 +99,7 @@ NANOGrav_filelocation = NANOGrav_filedirectory + NANOGrav_filename
 
 def test_pta_NANOGrav_cw_no_GWB():
     NANOGrav_cw_no_GWB = detector.PTA('NANOGrav CW Detection no GWB',
-        load_location=NANOGrav_filelocation)
+        load_location=NANOGrav_filelocation,I_type='h')
 
 #NANOGrav continuous wave sensitivity
 NANOGrav_background_2 = 0 # Unsubtracted GWB amplitude: 0,4e-16
@@ -115,14 +115,21 @@ NANOGrav_filelocation_2 = NANOGrav_filedirectory + NANOGrav_filename_2
 
 def test_pta_NANOGrav_cw_GWB():
     NANOGrav_cw_GWB = detector.PTA('NANOGrav CW Detection no GWB',
-        load_location=NANOGrav_filelocation_2)
+        load_location=NANOGrav_filelocation_2,I_type='h')
 
 #### NANOGrav Continuous Wave 11yr Upper Limit
 #Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of the NANOGrav 11yr continuous wave upper limit.
 def test_pta_NANOGrav_cw_ul_file():
     NANOGrav_cw_ul_file = NANOGrav_filedirectory + 'smoothed_11yr.txt'
     NANOGrav_cw_ul = detector.PTA('NANOGrav CW Upper Limit',
-        load_location=NANOGrav_cw_ul_file)
+        load_location=NANOGrav_cw_ul_file,I_type='h')
+
+#### NANOGrav 11yr Characteristic Strain
+#Using real NANOGrav 11yr data put through `hasasia`
+def test_pta_NANOGrav_11yr_hasasia():
+    NANOGrav_11yr_hasasia_file = NANOGrav_filedirectory + 'NANOGrav_11yr_S_eff.txt'
+    NANOGrav_11yr_hasasia = detector.PTA('NANOGrav 11yr',
+        load_location=NANOGrav_11yr_hasasia_file,I_type='E')
 
 #### SKA-esque Detector
 #Fiducial parameter estimates from Sesana, Vecchio, and Colacino, 2008 (https://arxiv.org/abs/0804.4476) section 7.1.

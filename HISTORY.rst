@@ -2,6 +2,11 @@
 History
 =======
 
+0.1.12 (2019-10-8)
+-------------------
+* Adding New Files for NANOGrav
+* Updating Loading from files for Detectors
+
 0.1.11 (2019-09-19)
 -------------------
 * Fixing bugs and removing empty functionality

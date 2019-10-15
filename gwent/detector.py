@@ -36,6 +36,11 @@ class PTA:
 
     load_location : string, optional
         If you want to load a PTA curve from a file, it's the file path
+    I_type : string, {'E','A','h'}
+        Sets the type of input data.
+        'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
+        'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
+        'h' is the characteristic strain $h_{n}(f)$ ('h')
     A_GWB : float, optional
         Amplitude of the gravitational wave background added as red noise
     alpha_GWB : float, optional
@@ -56,7 +61,9 @@ class PTA:
         self.name = name
         for keys,value in kwargs.items():
             if keys == 'load_location':
-                self.Load_Data(value)
+                self.load_location = value
+            elif keys == 'I_type':
+                self.I_type = value
             elif keys == 'A_GWB':
                 self.A_GWB = value
             elif keys == 'alpha_GWB':
@@ -76,15 +83,21 @@ class PTA:
 
         if not hasattr(self,'nfreqs'):
             self.nfreqs = int(1e3)
+        if hasattr(self,'load_location'):
+            Load_Data(self)
         if hasattr(self,'f_low') and hasattr(self,'f_high'):
             self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
 
         if len(args) != 0:
-            [T_obs,N_p,sigma,cadence] = args
-            self.T_obs = utils.make_quant(T_obs,'yr')
-            self.N_p = N_p
-            self.sigma = utils.make_quant(sigma,'s')
-            self.cadence = utils.make_quant(cadence,'1/yr')
+            if len(args) == 1:
+                T_obs = args[0]
+                self.T_obs = utils.make_quant(T_obs,'yr')
+            else:
+                [T_obs,N_p,sigma,cadence] = args
+                self.T_obs = utils.make_quant(T_obs,'yr')
+                self.N_p = N_p
+                self.sigma = utils.make_quant(sigma,'s')
+                self.cadence = utils.make_quant(cadence,'1/yr')
 
     @property
     def T_obs(self):
@@ -92,6 +105,8 @@ class PTA:
     @T_obs.setter
     def T_obs(self,value):
         self.var_dict = ['T_obs',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'yr')
         self._T_obs = self._return_value
 
     @property
@@ -108,15 +123,18 @@ class PTA:
     @cadence.setter
     def cadence(self,value):
         self.var_dict = ['cadence',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'1/yr')
         self._cadence = self._return_value
 
     @property
     def sigma(self):
-        self._sigma = utils.make_quant(self._sigma,'s')
         return self._sigma
     @sigma.setter
     def sigma(self,value):
         self.var_dict = ['sigma',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'s')
         self._sigma = self._return_value
 
     @property
@@ -146,9 +164,18 @@ class PTA:
     def h_n_f(self):
         """Effective Strain Noise Amplitude"""
         if not hasattr(self,'_h_n_f'):
-            if not hasattr(self,'_sensitivitycurve'):
-                self.Init_PTA()
-            self._h_n_f = self._sensitivitycurve.h_c
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'h':
+                    self._h_n_f = self._I_data[:,1]
+                elif self._I_Type == 'ENSD':
+                    self._h_n_f = np.sqrt(self.S_n_f*self.fT)
+                elif self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._h_n_f = S_n_f_sqrt*np.sqrt(self.fT.value)
+            else:
+                if not hasattr(self,'_sensitivitycurve'):
+                    self.Init_PTA()
+                self._h_n_f = self._sensitivitycurve.h_c
         return self._h_n_f
     @h_n_f.setter
     def h_n_f(self,value):
@@ -161,10 +188,19 @@ class PTA:
     def S_n_f(self):
         #Effective noise power amplitude
         if not hasattr(self,'_S_n_f'):
-            if not hasattr(self,'_sensitivitycurve'):
-                self.Init_PTA()
-            self._S_n_f = self._sensitivitycurve.S_eff
-            self._S_n_f = utils.make_quant(self._S_n_f,'1/Hz')
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._S_n_f = S_n_f_sqrt**2/u.Hz
+                elif self._I_Type == 'ENSD':
+                    self._S_n_f = self._I_data[:,1]/u.Hz
+                elif self._I_Type == 'h':
+                    self._S_n_f = self.h_n_f**2/self.fT
+            else:
+                if not hasattr(self,'_sensitivitycurve'):
+                    self.Init_PTA()
+                self._S_n_f = self._sensitivitycurve.S_eff
+                self._S_n_f = utils.make_quant(self._S_n_f,'1/Hz')
         return self._S_n_f
     @S_n_f.setter
     def S_n_f(self,value):
@@ -179,11 +215,6 @@ class PTA:
         if not hasattr(self,'_f_opt'):
             self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
-
-    def Load_Data(self,load_location):
-        self._I_data = np.loadtxt(load_location)
-        self.fT = self._I_data[:,0]
-        self.h_n_f = self._I_data[:,1]
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
@@ -264,15 +295,16 @@ class Interferometer:
                 self.I_type = value
 
         if hasattr(self,'load_location'):
-            self.Load_Data()
+            Load_Data(self)
 
     @property
     def T_obs(self):
-        self._T_obs = utils.make_quant(self._T_obs,'yr')
         return self._T_obs
     @T_obs.setter
     def T_obs(self,value):
         self.var_dict = ['T_obs',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'yr')
         self._T_obs = self._return_value
 
     @property
@@ -285,11 +317,17 @@ class Interferometer:
     @property
     def fT(self):
         if not hasattr(self,'_fT'):
-            raise NotImplementedError('Interferometer frequency must be defined inside SpaceBased or GroundBased classes.')
+            if hasattr(self,'_I_data'):
+                self._fT = self._I_data[:,0]*u.Hz
+            if isinstance(self,SpaceBased):
+                self.Set_T_Function_Type()
         return self._fT
     @fT.setter
     def fT(self,value):
         self._fT = value
+    @fT.deleter
+    def fT(self):
+        del self._fT
 
     @property
     def f_opt(self):
@@ -317,6 +355,9 @@ class Interferometer:
             else:
                 raise NotImplementedError('Effective Noise Power Spectral Density method must be defined inside SpaceBased or GroundBased classes.')
         return self._S_n_f
+    @S_n_f.deleter
+    def S_n_f(self):
+        del self._S_n_f
 
     @property
     def h_n_f(self):
@@ -327,33 +368,9 @@ class Interferometer:
             else:
                 self._h_n_f = np.sqrt(self.fT*self.S_n_f)
         return self._h_n_f
-
-    def Load_Data(self):
-        if not hasattr(self,'I_type'):
-            print('Is the data:')
-            print(' *Effective Noise Spectral Density - "E"')
-            print(' *Amplitude Spectral Density- "A"')
-            print(' *Effective Strain - "h"')
-            self.I_type = input('Please enter one of the answers in quotations: ')
-            self.Load_Data()
-
-        if self.I_type == 'E' or self.I_type == 'e':
-            self._I_Type = 'ENSD'
-        elif self.I_type == 'A' or self.I_type == 'a':
-            self._I_Type = 'ASD'
-        elif self.I_type == 'h' or self.I_type == 'H':
-            self._I_Type = 'h'
-        else:
-            print('Is the data:')
-            print(' *Effective Noise Spectral Density - "E"')
-            print(' *Amplitude Spectral Density- "A"')
-            print(' *Effective Strain - "h"')
-            self.I_type = input('Please enter one of the answers in quotations: ')
-            self.Load_Data()
-
-        self._I_data = np.loadtxt(self.load_location)
-        self.fT = self._I_data[:,0]
-        self.fT = utils.make_quant(self.fT,'Hz')
+    @h_n_f.deleter
+    def h_n_f(self):
+        del self._h_n_f
 
 
 class GroundBased(Interferometer):
@@ -369,10 +386,7 @@ class GroundBased(Interferometer):
     @property
     def P_n_f(self):
         """Power Spectral Density. """
-        raise NotImplementedError('Power Spectral Density method must be defined inside SpaceBased or GroundBased classes.')
-    @P_n_f.deleter
-    def P_n_f(self):
-        del self._P_n_f
+        raise NotImplementedError('Uhhh, can only load from a file for right now....')
 
 
 
@@ -432,13 +446,13 @@ class SpaceBased(Interferometer):
             self.Background = False
 
         if len(args) != 0:
-            [L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IMS_break] = args
+            [L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break] = args
             self.L = utils.make_quant(L,'m')
             self.A_acc = utils.make_quant(A_acc,'m/(s*s)')
             self.f_acc_break_low = utils.make_quant(f_acc_break_low,'Hz')
             self.f_acc_break_high = utils.make_quant(f_acc_break_high,'Hz')
             self.A_IFO = utils.make_quant(A_IFO,'m')
-            self.f_IMS_break = utils.make_quant(f_IMS_break,'Hz')
+            self.f_IFO_break = utils.make_quant(f_IFO_break,'Hz')
 
         if not hasattr(self,'load_location'):
             if not hasattr(self,'T_type'):
@@ -451,6 +465,8 @@ class SpaceBased(Interferometer):
     @L.setter
     def L(self,value):
         self.var_dict = ['L',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m')
         self._L = self._return_value
 
     @property
@@ -459,6 +475,8 @@ class SpaceBased(Interferometer):
     @A_acc.setter
     def A_acc(self,value):
         self.var_dict = ['A_acc',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m/s2')
         self._A_acc = self._return_value
 
     @property
@@ -467,6 +485,8 @@ class SpaceBased(Interferometer):
     @f_acc_break_low.setter
     def f_acc_break_low(self,value):
         self.var_dict = ['f_acc_break_low',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
         self._f_acc_break_low = self._return_value
 
     @property
@@ -475,6 +495,8 @@ class SpaceBased(Interferometer):
     @f_acc_break_high.setter
     def f_acc_break_high(self,value):
         self.var_dict = ['f_acc_break_high',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
         self._f_acc_break_high = self._return_value
 
     @property
@@ -483,15 +505,19 @@ class SpaceBased(Interferometer):
     @A_IFO.setter
     def A_IFO(self,value):
         self.var_dict = ['A_IFO',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'m')
         self._A_IFO = self._return_value
 
     @property
-    def f_IMS_break(self):
-        return self._f_IMS_break
-    @f_IMS_break.setter
-    def f_IMS_break(self,value):
-        self.var_dict = ['f_IMS_break',value]
-        self._f_IMS_break = self._return_value
+    def f_IFO_break(self):
+        return self._f_IFO_break
+    @f_IFO_break.setter
+    def f_IFO_break(self,value):
+        self.var_dict = ['f_IFO_break',value]
+        if not isinstance(self._return_value,u.Quantity):
+            self._return_value = utils.make_quant(self._return_value,'Hz')
+        self._f_IFO_break = self._return_value
 
     @property
     def P_n_f(self):
@@ -501,7 +527,7 @@ class SpaceBased(Interferometer):
                 self.Set_T_Function_Type()
 
             P_acc = self.A_acc**2*(1+(self.f_acc_break_low/self.fT)**2)*(1+(self.fT/(self.f_acc_break_high))**4)/(2*np.pi*self.fT)**4 #Acceleration Noise
-            P_IMS = self.A_IFO**2*(1+(self.f_IMS_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM
+            P_IMS = self.A_IFO**2*(1+(self.f_IFO_break/self.fT)**4) #Displacement noise of the interferometric TM--to-TM
 
             f_trans = const.c/2/np.pi/self.L #Transfer frequency
             self._P_n_f = (P_IMS + 2*(1+np.cos(self.fT.value/f_trans.value)**2)*P_acc)/self.L**2/u.Hz
@@ -603,3 +629,38 @@ class SpaceBased(Interferometer):
         f = self.fT.value
         return A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
                 *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f))) #White Dwarf Background Noise
+
+def Load_Data(detector):
+    """
+    Function to load in a file to initialize any detector.
+
+    Parameters
+    ----------
+    detector : object
+        Instance of a detector class
+
+    """
+    if not hasattr(detector,'I_type'):
+        print('Is the data:')
+        print(' *Effective Noise Spectral Density - "E"')
+        print(' *Amplitude Spectral Density- "A"')
+        print(' *Effective Strain - "h"')
+        detector.I_type = input('Please enter one of the answers in quotations: ')
+        Load_Data(detector)
+
+    if detector.I_type == 'E' or detector.I_type == 'e':
+        detector._I_Type = 'ENSD'
+    elif detector.I_type == 'A' or detector.I_type == 'a':
+        detector._I_Type = 'ASD'
+    elif detector.I_type == 'h' or detector.I_type == 'H':
+        detector._I_Type = 'h'
+    else:
+        print('Is the data:')
+        print(' *Effective Noise Spectral Density - "E"')
+        print(' *Amplitude Spectral Density- "A"')
+        print(' *Effective Strain - "h"')
+        detector.I_type = input('Please enter one of the answers in quotations: ')
+        Load_Data(detector)
+
+    detector._I_data = np.loadtxt(detector.load_location)
+    detector.fT = detector._I_data[:,0]*u.Hz
