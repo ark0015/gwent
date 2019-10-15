@@ -153,10 +153,10 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     elif var_x == 'q':
         x_labels = x_labels[::2]
         ax1.set_xticks(x_labels)
-        ax1.set_xlabel(r'$\mathrm{Mass Ratio}$',fontsize = labelsize)
+        ax1.set_xlabel(r'$\mathrm{Mass~Ratio}$',fontsize = labelsize)
         ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
     elif var_x == 'z':
-        ax1.set_xlabel(r'$\mathrm{ Redshift}$',fontsize = labelsize)
+        ax1.set_xlabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
         ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
     elif var_x in ['chi1','chi2']:
         x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
@@ -226,7 +226,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     elif var_y == 'q':
         y_labels = y_labels[::2]
         ax1.set_yticks(y_labels)
-        ax1.set_ylabel(r'$\mathrm{Mass Ratio}$',fontsize = labelsize)
+        ax1.set_ylabel(r'$\mathrm{Mass~Ratio}$',fontsize = labelsize)
         ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
     elif var_y == 'z':
         ax1.set_ylabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
