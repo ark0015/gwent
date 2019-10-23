@@ -178,7 +178,14 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sample_rate_x)
         elif var_x == 'N_p':
             #sample in integer steps
-            sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
+            sample_range = var_x_dict['max']-var_x_dict['min']
+            if sample_range > 10:
+                sample_rate = max(2,int(sample_range/10))
+                sample_x = np.arange(var_x_dict['min'],var_x_dict['max'],sample_rate)
+                if var_x_dict['max'] not in sample_x:
+                    sample_x = np.append(sample_x,var_x_dict['max'])
+            else:
+                sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
         else:
             #Sample linearly for any other variables
             #Need exception for astropy variables
@@ -199,7 +206,14 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sample_rate_y)
         elif var_y == 'N_p':
             #sample in integer steps
-            sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
+            sample_range = var_y_dict['max']-var_y_dict['min']
+            if sample_range > 10:
+                sample_rate = max(2,int(sample_range/10))
+                sample_y = np.arange(var_y_dict['min'],var_y_dict['max'],sample_rate)
+                if var_y_dict['max'] not in sample_y:
+                    sample_y = np.append(sample_y,var_y_dict['max'])
+            else:
+                sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
         else:
             #Sample linearly for any other variables
             #Need exception for astropy variables
