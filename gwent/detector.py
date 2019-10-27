@@ -98,12 +98,14 @@ class PTA:
             self.nfreqs = int(1e3)
         if hasattr(self,'load_location'):
             Load_Data(self)
-        if not hasattr(self,'use_11yr'):
-            self.use_11yr = False
+
         if hasattr(self,'use_11yr'):
             self.realistic_noise = True
-        if not hasattr(self,'realistic_noise'):
-            self.realistic_noise = False
+        else:
+            self.use_11yr = False
+            if not hasattr(self,'realistic_noise'):
+                self.realistic_noise = False
+
         if hasattr(self,'f_low') and hasattr(self,'f_high'):
             self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
 
@@ -328,11 +330,20 @@ class PTA:
             psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=sigmas,\
                 phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
         else:
-            #Random Sky Locations of Pulsars
-            phis = np.random.uniform(0, 2*np.pi,size=self.N_p)
-            cos_theta = np.random.uniform(-1,1,size=self.N_p)
-            thetas = np.arccos(cos_theta)
+            if self.N_p < 33:
+                NANOGrav_11yr_params_filedirectory = os.path.join(load_directory,'InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt')
+                self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
+                [phis,thetas,_,_,_] = self._NANOGrav_11yr_params
+                thetas = thetas[:self.N_p]
+                phis = phis[:self.N_p]
+            else:
+                #Random Sky Locations of Pulsars
+                phis = np.random.uniform(0, 2*np.pi,size=self.N_p)
+                cos_theta = np.random.uniform(-1,1,size=self.N_p)
+                thetas = np.arccos(cos_theta)
 
+            print(phis)
+            print(thetas)
             if hasattr(self,'GWB_amp'):
                 if not hasattr(self,'GWB_alpha'):
                     self.GWB_alpha = -2/3.

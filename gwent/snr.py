@@ -333,7 +333,7 @@ def Calc_Chirp_SNR(source,instrument):
     return np.sqrt(SNRsqrd)
 
 
-def saveSNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filename):
+def Save_SNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filename):
     """Saves SNR Matrix
 
     Parameters
@@ -353,4 +353,4 @@ def saveSNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filena
 
     """
     np.savetxt(save_location+SNR_filename,SNRMatrix)
-    np.savetxt(save_location+sample_filename,[sample_x,sample_y])
+    np.savetxt(save_location+sample_filename,np.transpose([sample_x,sample_y]),fmt=fmts)
