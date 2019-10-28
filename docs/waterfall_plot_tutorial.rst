@@ -10,7 +10,7 @@ Loading ``gwent`` SNR Outputs to Generate Comparison Waterfall Plots
 ====================================================================
 
 Here we present a tutorial on how to use ``gwent`` output from
-``Get_SNR_Matrix`` to simultaneously plot Mass vs. Redshift SNRs for the
+``Get_SNR_Matrix`` to simultaneously plot Mass vs. Redshift SNRs for the
 instrument models currently implemented (LISA, PTAs, aLIGO, and Einstein
 Telescope) with the signal being an coalescing Binary Black Holes.
 
@@ -27,11 +27,6 @@ First, we import the necessary packages.
     from astropy.cosmology import z_at_value
     from astropy.cosmology import WMAP9 as cosmo
     
-    import os,sys
-    gwent_path = '/Users/andrewkaiser/Documents/GradSchool/Research/gwent'
-    load_directory = gwent_path + '/LoadFiles/'
-    
-    sys.path.insert(0,gwent_path)
     import gwent
     from gwent import binary
     from gwent import detector

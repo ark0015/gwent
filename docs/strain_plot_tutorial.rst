@@ -16,11 +16,9 @@ domain.
 
 First, we load important packages
 
-
 .. code:: python
 
     import numpy as np
-    import os,sys
     
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -31,13 +29,6 @@ First, we load important packages
     import astropy.units as u
     from astropy.cosmology import z_at_value
     from astropy.cosmology import WMAP9 as cosmo
-    
-    current_path = os.getcwd()
-    splt_path = current_path.split("/")
-    top_path_idx = splt_path.index('gwent')
-    top_directory = "/".join(splt_path[0:top_path_idx+1])
-    
-    sys.path.insert(0,top_directory)
     
     import gwent
     import gwent.detector as detector
@@ -122,7 +113,7 @@ Plots of Ground Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_15_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_14_0.png
 
 
 Load LISA Instruments from File
@@ -192,7 +183,7 @@ Plots of loaded LISA examples.
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_24_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_23_0.png
 
 
 Loading PTA Detection Curves and Upper Limits
@@ -201,7 +192,7 @@ Loading PTA Detection Curves and Upper Limits
 Simulated NANOGrav Continuous Wave Detection Sensitivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
+Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
 of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 
 .. code:: python
@@ -239,7 +230,7 @@ of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 NANOGrav Continuous Wave 11yr Upper Limit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
+Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
 the NANOGrav 11yr continuous wave upper limit.
 
 .. code:: python
@@ -282,7 +273,7 @@ Plots of the loaded PTAs
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_34_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_33_0.png
 
 
 Generating PTAs with ``gwent``
@@ -356,7 +347,7 @@ Plots for Simulated SKA PTAs
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_46_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_45_0.png
 
 
 NANOGrav-esque Detector
@@ -428,7 +419,7 @@ Plots for Simulated NANOGrav PTAs
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_58_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_57_0.png
 
 
 Generating LISA designs with ``gwent``
@@ -499,15 +490,15 @@ Plots of Generated LISA Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_66_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_65_0.png
 
 
 Generating Binary Black Holes with ``gwent`` in the Frequency Domain
 --------------------------------------------------------------------
 
-We start with BBH parameters that exemplify the range of IMRPhenomD’s
-waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
-Husa, et al. 2016 https://arxiv.org/abs/1508.07250
+We start with BBH parameters that exemplify the range of IMRPhenomD's
+waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
+Husa, et al. 2016 https://arxiv.org/abs/1508.07250
 
 .. code:: python
 
@@ -578,7 +569,7 @@ harmonics.
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_79_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_78_0.png
 
 
 Plots of Entire GW Band
@@ -587,8 +578,8 @@ Plots of Entire GW Band
 Displays only generated detectors: WN only PTAs, ESA L3 proposal LISA,
 aLIGO, and Einstein Telescope.
 
-Displays three sources’ waveform along with their monochromatic strain
-if they were observed by the initialized instrument at the detector’s
+Displays three sources' waveform along with their monochromatic strain
+if they were observed by the initialized instrument at the detector's
 most sensitive frequency throughout its observing run (from left to
 right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
@@ -645,6 +636,6 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_81_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_80_0.png
 
 

@@ -16,7 +16,6 @@ Black Holes.
 
 First, we import important modules.
 
-
 .. code:: python
 
     import numpy as np
@@ -26,13 +25,6 @@ First, we import important modules.
     import time
     import astropy.units as u
     
-    import os,sys
-    current_path = os.getcwd()
-    splt_path = current_path.split("/")
-    top_path_idx = splt_path.index('gwent')
-    top_directory = "/".join(splt_path[0:top_path_idx+1])
-    
-    sys.path.insert(0,top_directory)
     import gwent
     import gwent.binary as binary
     import gwent.detector as detector
@@ -257,30 +249,31 @@ The variables for either axis in the SNR calculation can be:
 
 -  GLOBAL:
 
-   -  ‘T_obs’ - Detector Observation Time
+   -  'T\_obs' - Detector Observation Time
 
 -  SOURCE:
 
-   -  ‘M’ - Mass (Solar Units)
-   -  ‘q’ - Mass Ratio
-   -  ‘chi1’ - Dimensionless Spin of Black Hole 1
-   -  ‘chi2’ - Dimensionless Spin of Black Hole 2
-   -  ‘z’ - Redshift
+   -  'M' - Mass (Solar Units)
+   -  'q' - Mass Ratio
+   -  'chi1' - Dimensionless Spin of Black Hole 1
+   -  'chi2' - Dimensionless Spin of Black Hole 2
+   -  'z' - Redshift
 
 -  LISA ONLY:
 
-   -  ‘L’ - Detector Armlength
-   -  ‘A_acc’ - Detector Acceleration Noise
-   -  ‘A_IMS’ - Detector Optical Metrology Noise
-   -  ‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency
-   -  ‘f_acc_break_high’ - The High Acceleration Noise Break Frequency
-   -  ‘f_IMS_break’ - The Optical Metrology Noise Break Frequency
+   -  'L' - Detector Armlength
+   -  'A\_acc' - Detector Acceleration Noise
+   -  'A\_IMS' - Detector Optical Metrology Noise
+   -  'f\_acc\_break\_low' - The Low Acceleration Noise Break Frequency
+   -  'f\_acc\_break\_high' - The High Acceleration Noise Break
+      Frequency
+   -  'f\_IMS\_break' - The Optical Metrology Noise Break Frequency
 
 -  PTAs ONLY:
 
-   -  ‘N_p’ - Number of Pulsars
-   -  ‘sigma’ - Root-Mean-Squared Timing Error
-   -  ‘cadence’ - Observation Cadence
+   -  'N\_p' - Number of Pulsars
+   -  'sigma' - Root-Mean-Squared Timing Error
+   -  'cadence' - Observation Cadence
 
 SNR Calculation
 ---------------
@@ -332,7 +325,7 @@ Plot the SNR using the initial variables and the returns from
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_23_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_22_0.png
 
 
 Create SNR Matrices and Samples for a Few Examples
@@ -373,7 +366,7 @@ Einstein Telescope
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_28_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_0.png
 
 
 .. parsed-literal::
@@ -382,7 +375,7 @@ Einstein Telescope
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_28_2.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_2.png
 
 
 .. parsed-literal::
@@ -392,7 +385,7 @@ Einstein Telescope
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_28_4.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_4.png
 
 
 .. parsed-literal::
@@ -421,7 +414,7 @@ aLIGO
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_0.png
 
 
 .. parsed-literal::
@@ -430,7 +423,7 @@ aLIGO
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_2.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_2.png
 
 
 .. parsed-literal::
@@ -440,7 +433,7 @@ aLIGO
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_4.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_4.png
 
 
 .. parsed-literal::
@@ -485,7 +478,7 @@ NANOGrav WN only
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_34_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_33_0.png
 
 
 .. parsed-literal::
@@ -520,7 +513,7 @@ NANOGrav Realistic Noise
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_37_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_36_0.png
 
 
 .. parsed-literal::
@@ -559,7 +552,7 @@ NANOGrav 11yr Data
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_40_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_39_0.png
 
 
 .. parsed-literal::
@@ -598,7 +591,7 @@ SKA WN Only
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_43_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_42_0.png
 
 
 .. parsed-literal::
@@ -633,7 +626,7 @@ SKA Realistic Noise
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_46_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_45_0.png
 
 
 .. parsed-literal::
@@ -676,7 +669,7 @@ LISA
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_49_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_0.png
 
 
 .. parsed-literal::
@@ -685,7 +678,7 @@ LISA
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_49_2.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_2.png
 
 
 .. parsed-literal::
@@ -695,7 +688,7 @@ LISA
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_49_4.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_4.png
 
 
 .. parsed-literal::
@@ -704,7 +697,7 @@ LISA
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_49_6.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_6.png
 
 
 .. parsed-literal::
@@ -713,7 +706,7 @@ LISA
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_49_8.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_8.png
 
 
 .. parsed-literal::
