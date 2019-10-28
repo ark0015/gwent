@@ -105,7 +105,17 @@ def NANOGrav_WN():
 @pytest.fixture
 def NANOGrav_WN_RN():
     NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_obs,N_p,sigma,cadence,
-        A_rn=[1e-16,1e-12],alpha_rn=[-1/2,1.25])
+        rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
+    NANOGrav_WN_RN.T_obs = [T_obs,T_obs_min,T_obs_max]
+    NANOGrav_WN_RN.sigma = [sigma,sigma_min,sigma_max]
+    NANOGrav_WN_RN.N_p = [N_p,N_p_min,N_p_max]
+    NANOGrav_WN_RN.cadence = [cadence,cadence_min,cadence_max]
+    return NANOGrav_WN_RN
+
+@pytest.fixture
+def NANOGrav_WN_GWB():
+    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_obs,N_p,sigma,cadence,
+        GWB_amp=4e-16,GWB_alpha=-2/3)
     NANOGrav_WN_RN.T_obs = [T_obs,T_obs_min,T_obs_max]
     NANOGrav_WN_RN.sigma = [sigma,sigma_min,sigma_max]
     NANOGrav_WN_RN.N_p = [N_p,N_p_min,N_p_max]
@@ -208,7 +218,11 @@ def test_NANOGrav_WN_RN_params(source_pta,NANOGrav_WN_RN):
         [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_RN,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
-
+def test_NANOGrav_WN_GWB_params(source_pta,NANOGrav_WN_GWB):
+    for var_y in var_ys_ptas:
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_GWB,
+                                                           var_x,sampleRate_x,
+                                                           var_y,sampleRate_y)
 def test_SKA_params(source_pta,SKA):
     for var_y in var_ys_ptas:
         [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,SKA,
