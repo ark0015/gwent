@@ -17,13 +17,6 @@ domain.
 First, we load important packages
 
 
-
-.. parsed-literal::
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
-
-
 .. code:: python
 
     import numpy as np
@@ -95,7 +88,7 @@ aLIGO
 .. code:: python
 
     #aLIGO
-    aLIGO_filedirectory = load_directory + '/InstrumentFiles/aLIGO/StrainFiles/'
+    aLIGO_filedirectory = load_directory + '/InstrumentFiles/aLIGO/'
     aLIGO_filename = 'aLIGODesign.txt'
     aLIGO_filelocation = aLIGO_filedirectory + aLIGO_filename
     
@@ -107,8 +100,8 @@ Einstein Telescope
 .. code:: python
 
     #Einstein Telescope
-    ET_filedirectory = load_directory + '/InstrumentFiles/EinsteinTelescope/StrainFiles/'
-    ET_filename = 'ET_B_data.txt'
+    ET_filedirectory = load_directory + '/InstrumentFiles/EinsteinTelescope/'
+    ET_filename = 'ET_D_data.txt'
     ET_filelocation = ET_filedirectory + ET_filename
     
     ET = detector.GroundBased('ET',Ground_T_obs,load_location=ET_filelocation,I_type='A')
@@ -119,9 +112,9 @@ Plots of Ground Detectors
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(ET.fT,ET.h_n_f,label='Einstein Telescope B', linewidth = linesize)
+    plt.loglog(ET.fT,ET.h_n_f,label='Einstein Telescope D', linewidth = linesize)
     plt.loglog(aLIGO.fT,aLIGO.h_n_f,label='Advanced LIGO', linewidth = linesize)
-    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.xlabel(r'Frequency [Hz]',fontsize = labelsize)
     plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.legend(fontsize = legendsize)
@@ -147,7 +140,7 @@ https://lisa.nasa.gov/documentsReference.html.
 
 .. code:: python
 
-    LISA_Other_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/StrainFiles/'
+    LISA_Other_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/'
     LISA_ex1_filename = 'LISA_Allocation_S_h_tot.txt'
     LISA_ex1_filelocation = LISA_Other_filedirectory + LISA_ex1_filename
     
@@ -162,7 +155,7 @@ Modelled off of Robson,Cornish,and Liu 2018, LISA
 
 .. code:: python
 
-    LISA_ex2_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/StrainFiles/'
+    LISA_ex2_filedirectory = load_directory + '/InstrumentFiles/LISA_Other/'
     LISA_ex2_filename = 'LISA_sensitivity.txt'
     LISA_ex2_filelocation = LISA_ex2_filedirectory + LISA_ex2_filename
     
@@ -191,7 +184,7 @@ Plots of loaded LISA examples.
     plt.loglog(LISA_ex1.fT,LISA_ex1.h_n_f,label=LISA_ex1.name,linewidth=linesize)
     plt.loglog(LISA_ex2.fT,LISA_ex2.h_n_f,label=LISA_ex2.name,linewidth=linesize)
     plt.loglog(LISA_ex3.fT,LISA_ex3.h_n_f,label=LISA_ex3.name,linewidth=linesize)
-    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.xlabel(r'Frequency [Hz]',fontsize = labelsize)
     plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.legend(fontsize = labelsize)
@@ -208,7 +201,7 @@ Loading PTA Detection Curves and Upper Limits
 Simulated NANOGrav Continuous Wave Detection Sensitivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
+Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491)
 of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 
 .. code:: python
@@ -246,7 +239,7 @@ of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 NANOGrav Continuous Wave 11yr Upper Limit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
+Sample from Aggarwal, et al. 2019 (https://arxiv.org/abs/1812.11585) of
 the NANOGrav 11yr continuous wave upper limit.
 
 .. code:: python
@@ -277,12 +270,12 @@ Plots of the loaded PTAs
     plt.loglog(NANOGrav_cw_ul.fT,NANOGrav_cw_ul.h_n_f, linewidth = linesize,\
                label = NANOGrav_cw_ul.name)
     plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f, linewidth = linesize,\
-               label = NANOGrav_11yr_hasasia.name)
+               color='C6',label = NANOGrav_11yr_hasasia.name)
     
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.ylim([1e-15,1e-12])
     plt.xlim([1e-9,5e-7])
-    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.xlabel(r'Frequency [Hz]',fontsize = labelsize)
     plt.ylabel('Characteristic Strain',fontsize = labelsize)
     plt.legend(loc='lower right', fontsize = labelsize)
     plt.show()
@@ -322,13 +315,49 @@ SKA with White and Varied Red Noise
 
 .. code:: python
 
-    SKA_WN_RN = detector.PTA('SKA, WN and RN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_rn=[1e-16,1e-12],alpha_rn=[-1/2,1.25])
+    SKA_WN_RN = detector.PTA('SKA, WN and RN',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,
+                             rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
 
 SKA with White Noise and a Stochastic Gravitational Wave Background
 
 .. code:: python
 
-    SKA_WN_GWB = detector.PTA('SKA, WN and GWB',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,A_GWB=4e-16)
+    SKA_WN_GWB = detector.PTA('SKA, WN and GWB',T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,GWB_amp=4e-16,GWB_alpha=-2/3)
+
+SKA with Realistic Noise for each pulsar, no GWB
+
+.. code:: python
+
+    SKA_Realistic_Noise = detector.PTA('SKA, Realistic Noise',T_SKA,N_p_SKA,cadence_SKA,use_11yr=True)
+
+Plots for Simulated SKA PTAs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    fig = plt.figure()
+    plt.loglog(SKA_WN.fT,SKA_WN.h_n_f, linewidth = linesize,\
+               color = 'C0',label = SKA_WN.name)
+    plt.loglog(SKA_WN_GWB.fT,SKA_WN_GWB.h_n_f, linewidth = linesize,linestyle=':',\
+               color = 'C1',label = SKA_WN_GWB.name)
+    plt.loglog(SKA_WN_RN.fT,SKA_WN_RN.h_n_f, linewidth = linesize,linestyle='-.',\
+               color = 'C3',label = SKA_WN_RN.name)
+    plt.loglog(SKA_Realistic_Noise.fT,SKA_Realistic_Noise.h_n_f,\
+               color = 'C6',linewidth=linesize,linestyle='--',label=SKA_Realistic_Noise.name)
+    
+    plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
+    plt.ylim([1e-18,1e-11])
+    plt.xlim([3e-10,1e-6])
+    
+    plt.xlabel('Frequency [Hz]',fontsize = labelsize)
+    plt.ylabel('Characteristic Strain',fontsize = labelsize)
+    plt.legend(loc='lower right', fontsize = legendsize-2)
+    plt.show()
+
+
+
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_46_0.png
+
 
 NANOGrav-esque Detector
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -355,46 +384,51 @@ NANOGrav with White and Varied Red Noise
 
 .. code:: python
 
-    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_nano,N_p_nano,sigma_nano,cadence_nano,A_rn=[1e-16,1e-12],alpha_rn=[-1/2,1.25])
+    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_nano,N_p_nano,sigma_nano,cadence_nano,
+                                  rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
 
 NANOGrav with White Noise and a Stochastic Gravitational Wave Background
 
 .. code:: python
 
-    NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',T_nano,N_p_nano,sigma_nano,cadence_nano,A_GWB=4e-16)
+    NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',T_nano,N_p_nano,sigma_nano,cadence_nano,GWB_amp=4e-16)
 
-Plots for Simulated PTAs
-~~~~~~~~~~~~~~~~~~~~~~~~
+NANOGrav with Realistic Noise for each pulsar, no GWB
+
+.. code:: python
+
+    NANOGrav_Realistic_Noise = detector.PTA('NANOGrav, Realistic Noise',T_nano,N_p_nano,cadence_nano,use_11yr=True)
+
+Plots for Simulated NANOGrav PTAs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
     fig = plt.figure()
     plt.loglog(NANOGrav_WN.fT,NANOGrav_WN.h_n_f,\
-               linewidth=linesize,label=NANOGrav_WN.name)
+               color = 'C0',linewidth=linesize,label=NANOGrav_WN.name)
     plt.loglog(NANOGrav_WN_GWB.fT,NANOGrav_WN_GWB.h_n_f,\
-               linewidth=linesize,linestyle=':',label=NANOGrav_WN_GWB.name)
+               color = 'C1',linewidth=linesize,linestyle=':',label=NANOGrav_WN_GWB.name)
     plt.loglog(NANOGrav_WN_RN.fT,NANOGrav_WN_RN.h_n_f,\
-               linewidth=linesize,linestyle='-.',label=NANOGrav_WN_RN.name)
+               color = 'C3',linewidth=linesize,linestyle='-.',label=NANOGrav_WN_RN.name)
+    plt.loglog(NANOGrav_Realistic_Noise.fT,NANOGrav_Realistic_Noise.h_n_f,\
+               color = 'C4',linewidth=linesize,linestyle='--',label=NANOGrav_Realistic_Noise.name)
     
-    plt.loglog(SKA_WN.fT,SKA_WN.h_n_f, linewidth = linesize,\
-               label = SKA_WN.name)
-    plt.loglog(SKA_WN_GWB.fT,SKA_WN_GWB.h_n_f, linewidth = linesize,linestyle=':',\
-               label = SKA_WN_GWB.name)
-    plt.loglog(SKA_WN_RN.fT,SKA_WN_RN.h_n_f, linewidth = linesize,linestyle='-.',\
-               label = SKA_WN_RN.name)
+    plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f, linewidth = linesize,\
+               color = 'C6', label = 'NANOGrav, 11yr')
     
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
-    plt.ylim([5e-19,1e-11])
-    plt.xlim([3e-10,1e-6])
+    plt.ylim([1e-17,1e-11])
+    plt.xlim([3e-10,5e-7])
     
-    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.xlabel('Frequency [Hz]',fontsize = labelsize)
     plt.ylabel('Characteristic Strain',fontsize = labelsize)
-    plt.legend(loc='lower right', fontsize = legendsize-4)
+    plt.legend(loc='upper left', fontsize = legendsize-2)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_52_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_58_0.png
 
 
 Generating LISA designs with ``gwent``
@@ -433,7 +467,8 @@ LISA Proposal 2
 
 Values from Robson, Cornish, and Liu 2019
 https://arxiv.org/abs/1803.01944 using the Transfer Function
-Approximation within.
+Approximation within. (Note the factor of 2 change from summing 2
+independent low-frequency data channels assumed in the paper.)
 
 .. code:: python
 
@@ -456,7 +491,7 @@ Plots of Generated LISA Detectors
     fig = plt.figure()
     plt.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,label=LISA_prop1.name)
     plt.loglog(LISA_prop2.fT,LISA_prop2.h_n_f,label=LISA_prop2.name)
-    plt.xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    plt.xlabel(r'Frequency [Hz]',fontsize = labelsize)
     plt.ylabel(r'Characteristic Strain',fontsize = labelsize)
     plt.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     plt.legend(fontsize = legendsize)
@@ -464,15 +499,15 @@ Plots of Generated LISA Detectors
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_60_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_66_0.png
 
 
 Generating Binary Black Holes with ``gwent`` in the Frequency Domain
 --------------------------------------------------------------------
 
-We start with BBH parameters that exemplify the range of IMRPhenomD's
-waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
-Husa, et al. 2016 https://arxiv.org/abs/1508.07250
+We start with BBH parameters that exemplify the range of IMRPhenomD’s
+waveforms from Khan, et al. 2016 https://arxiv.org/abs/1508.07253 and
+Husa, et al. 2016 https://arxiv.org/abs/1508.07250
 
 .. code:: python
 
@@ -543,7 +578,7 @@ harmonics.
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_73_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_79_0.png
 
 
 Plots of Entire GW Band
@@ -552,8 +587,8 @@ Plots of Entire GW Band
 Displays only generated detectors: WN only PTAs, ESA L3 proposal LISA,
 aLIGO, and Einstein Telescope.
 
-Displays three sources' waveform along with their monochromatic strain
-if they were observed by the initialized instrument at the detector's
+Displays three sources’ waveform along with their monochromatic strain
+if they were observed by the initialized instrument at the detector’s
 most sensitive frequency throughout its observing run (from left to
 right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
@@ -568,30 +603,48 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
     ax.loglog(aLIGO.fT,aLIGO.h_n_f,color = cm.hsv(colornorm(2.8)),label = 'aLIGO')
     ax.loglog(ET.fT,ET.h_n_f, linewidth = linesize,color = cm.hsv(colornorm(2.5)),label = 'Einstein Telescope')
     
+    ax.loglog(source_3.f,binary.Get_Char_Strain(source_3), linewidth = linesize,color = cm.hsv(colornorm(4.5)),\
+              label = r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(np.log10(M[2]),q[2],z[2],x1[2]))
+    ax.scatter(source_3.instrument.f_opt,source_3.h_gw,color = cm.hsv(colornorm(4.5)))
+    
     ax.loglog(source_1.f,binary.Get_Char_Strain(source_1), linewidth = linesize,color = cm.hsv(colornorm(0.8)),\
-              label = r'$M = %.1e$ $M_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(M[0],q[0],z[0],x1[0]))
+              label = r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(np.log10(M[0]),q[0],z[0],x1[0]))
     ax.scatter(source_1.instrument.f_opt,source_1.h_gw,color = cm.hsv(colornorm(0.8)))
     
     ax.loglog(source_2.f,binary.Get_Char_Strain(source_2), linewidth = linesize,color = cm.hsv(colornorm(3.0)),\
-              label = r'$M = %.1e$ $M_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.0f$' %(M[1],q[1],z[1],x1[1]))
+              label = r'$M = %.0f$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.1f$' %(M[1],q[1],z[1],x1[1]))
     ax.scatter(source_2.instrument.f_opt,source_2.h_gw,color = cm.hsv(colornorm(3.0)))
     
-    ax.loglog(source_3.f,binary.Get_Char_Strain(source_3), linewidth = linesize,color = cm.hsv(colornorm(4.5)),\
-              label = r'$M = %.1e$ $M_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(M[2],q[2],z[2],x1[2]))
-    ax.scatter(source_3.instrument.f_opt,source_3.h_gw,color = cm.hsv(colornorm(4.5)))
     
-    
-    ax.set_xlim([1e-10, 1e4])
-    ax.set_ylim([1e-24, 1e-11])
     ax.tick_params(axis = 'both',which = 'major', labelsize = axissize)
     
-    ax.set_xlabel(r'Frequency $[Hz]$',fontsize = labelsize)
+    xlabel_min = -10
+    xlabel_max = 4
+    xlabels = np.arange(xlabel_min,xlabel_max+1)
+    xlabels = xlabels[1::2]
+    
+    ax.set_xticks(10.**xlabels)
+    print_xlabels = []
+    for x in xlabels:
+        if abs(x) > 1:
+            print_xlabels.append(r'$10^{%i}$' %x)
+        elif x == -1:
+            print_xlabels.append(r'$%.1f$' %10.**x)
+        else:
+            print_xlabels.append(r'$%.0f$' %10.**x)
+    ax.set_xticklabels([label for label in print_xlabels],
+                                fontsize = axissize)
+    
+    ax.set_xlim([3e-10, 1e4])
+    ax.set_ylim([1e-24, 1e-11])
+    
+    ax.set_xlabel('Frequency [Hz]',fontsize = labelsize)
     ax.set_ylabel('Characteristic Strain',fontsize = labelsize)
     ax.legend(loc='upper right', fontsize = legendsize-5)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_75_0.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_81_0.png
 
 

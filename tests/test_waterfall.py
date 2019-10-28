@@ -117,7 +117,7 @@ def test_LISA_prop1(source_space_based):
 # SNR values from the Einstein Telescope proposal run.
 #Einstein Telescope
 def test_ET(source_ground_based):
-    ET_filedirectory = load_directory + '/EinsteinTelescope/StrainFiles/'
+    ET_filedirectory = load_directory + '/EinsteinTelescope/'
     ET_filename = 'ET_D_data.txt'
     ET_filelocation = ET_filedirectory + ET_filename
     T_obs = 4*u.yr #Observing time in years
@@ -129,7 +129,7 @@ def test_ET(source_ground_based):
 # SNR values from the Advanced LIGO run.
 #aLIGO
 def test_aLIGO(source_ground_based):
-    aLIGO_filedirectory = load_directory + '/aLIGO/StrainFiles/'
+    aLIGO_filedirectory = load_directory + '/aLIGO/'
     aLIGO_filename = 'aLIGODesign.txt'
     aLIGO_filelocation = aLIGO_filedirectory + aLIGO_filename
     T_obs = 4*u.yr #Observing time in years
@@ -161,11 +161,11 @@ def test_pta_NANOGrav_WN(source_pta):
     [NANOGrav_WN_sample_x,NANOGrav_WN_sample_y,NANOGrav_WN_SNR] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,var_x,sampleRate_x,var_y,sampleRate_y)
 
 #NANOGrav with White and Varied Red Noise
-def test_pta_NANOGrav_WN_RN(source_pta):
-    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',
+def test_pta_NANOGrav_WN_GWB(source_pta):
+    NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',
         T_nano,N_p_nano,sigma_nano,cadence_nano,
-        A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
-    [NANOGrav_WN_RN_sample_x,NANOGrav_WN_RN_sample_y,NANOGrav_WN_RN_SNR] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_RN,var_x,sampleRate_x,var_y,sampleRate_y)
+        GWB_amp=4e-16)
+    [NANOGrav_WN_GWB_sample_x,NANOGrav_WN_GWB_sample_y,NANOGrav_WN_GWB_SNR] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_GWB,var_x,sampleRate_x,var_y,sampleRate_y)
 
 # #### SKA
 # SNR values from the SKA-esque run.

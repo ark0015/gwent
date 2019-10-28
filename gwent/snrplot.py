@@ -136,6 +136,15 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
         ax1.set_xticks(x_labels)
         ax1.set_yticks(np.log10(y_labels))
+    elif yaxis_type == 'lin' and xaxis_type == 'lin':
+        CS1 = ax1.contourf(sample_x,sample_y,logSNR,logLevels,cmap = colormap)
+        ax1.contour(sample_x,sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
+        ax1.set_xlim(xlabel_min,xlabel_max)
+        ax1.set_ylim(ylabel_min,ylabel_max)
+        x_labels = np.linspace(xlabel_min,xlabel_max,xlabel_max-xlabel_min+1)
+        y_labels = np.linspace(ylabel_min,ylabel_max,ylabel_max-ylabel_min+1)
+        ax1.set_xticks(x_labels)
+        ax1.set_yticks(y_labels)
     else:
         CS1 = ax1.contourf(np.log10(sample_x),np.log10(sample_y),logSNR,logLevels,cmap = colormap)
         ax1.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
@@ -159,6 +168,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xlabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
         ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
     elif var_x in ['chi1','chi2']:
+        print('here')
         x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
         x_labels = x_labels[::2]
         ax1.set_xticks(x_labels)
@@ -198,7 +208,9 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xlabel(r'$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$',fontsize = labelsize)
         ax1.set_xticklabels([r'$%.1f$' %x for x in x_labels*1e3],fontsize = axissize)
     elif var_x == 'N_p':
-        x_labels = x_labels[::2]
+        sample_range = max(x_labels)-min(x_labels)
+        sample_rate = max(2,int(sample_range/10))
+        x_labels = x_labels[::sample_rate]
         ax1.set_xticks(x_labels)
         ax1.set_xlabel(r'$\mathrm{Number~of~Pulsars}$',fontsize = labelsize)
         ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
@@ -233,6 +245,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_yticklabels([y if int(y) < 1 else int(y) for y in y_labels],\
             fontsize = axissize)
     elif var_y in ['chi1','chi2']:
+        print('here')
         y_labels = np.arange(round(ylabel_min*10),round(ylabel_max*10)+1,1)/10
         y_labels = y_labels[::2]
         ax1.set_yticks(y_labels)
@@ -272,7 +285,9 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_ylabel(r'$f_{\mathrm{IFO,break}} [\mathrm{mHz}]$',fontsize = labelsize)
         ax1.set_yticklabels([r'$%.1f$' %y for y in y_labels*1e3],fontsize = axissize)
     elif var_y == 'N_p':
-        y_labels = y_labels[::2]
+        sample_range = max(y_labels)-min(y_labels)
+        sample_rate = max(2,int(sample_range/10))
+        y_labels = y_labels[::sample_rate]
         ax1.set_yticks(y_labels)
         ax1.set_ylabel(r'$\mathrm{Number~of~Pulsars}$',fontsize = labelsize)
         ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
