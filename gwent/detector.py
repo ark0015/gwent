@@ -267,7 +267,7 @@ class PTA:
 
         phi_hist = np.histogram(new_phis, bins=nbins,density=True)
         theta_hist = np.histogram(new_thetas, bins=nbins,density=True)
-        alpha_hist = np.histogram(new_rn_alphas, bins=nbins,density=True)
+        rn_alpha_hist = np.histogram(new_rn_alphas, bins=nbins,density=True)
         rn_amp_hist = np.histogram(new_rn_amps,
                                    bins=np.logspace(min(np.log10(new_rn_amps)),max(np.log10(new_rn_amps)),nbins),
                                    density=True)

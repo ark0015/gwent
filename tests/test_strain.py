@@ -152,7 +152,7 @@ def SKA_WN():
 def test_pta_SKA_WN_RN():
     SKA_WN_RN = detector.PTA('SKA, WN and RN',
         T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,
-        A_rn=[1e-16,1e-12],alpha_rn=[-3/4,1])
+        rn_amp=[1e-16,1e-12],rn_alpha=[-3/4,1])
 
 #SKA with White Noise and a Stochastic Gravitational Wave Background
 def test_pta_SKA_WN_GWB():
