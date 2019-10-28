@@ -149,7 +149,7 @@ cadence_nano = 1/(2*u.wk.to('yr')*u.yr)
 
 def test_NANOGrav_11yr(source_pta):
     load_name = 'NANOGrav_11yr_S_eff.txt'
-    load_location = load_directory + '/NANOGrav/' + load_name
+    load_location = load_directory + '/NANOGrav/StrainFiles/' + load_name
     T_obs = 11.42*u.yr #Observing time in years
     nanograv = detector.PTA('NANOGrav 11yr',T_obs,load_location=load_location,I_type='E')
     [nanograv_sample_x,nanograv_sample_y,nanograv_SNR] = snr.Get_SNR_Matrix(source_pta,nanograv,var_x,sampleRate_x,var_y,sampleRate_y)

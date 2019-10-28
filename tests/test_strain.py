@@ -84,7 +84,7 @@ def test_LISA_ex3():
 #Samples from Mingarelli, et al. 2017 (https://arxiv.org/abs/1708.03491) 
 #of the Simulated NANOGrav Continuous Wave Detection Sensitivity.
 
-NANOGrav_filedirectory = load_directory + 'NANOGrav/'
+NANOGrav_filedirectory = load_directory + 'NANOGrav/StrainFiles'
 
 #NANOGrav continuous wave sensitivity
 NANOGrav_background = 4e-16 # Unsubtracted GWB amplitude: 0,4e-16
