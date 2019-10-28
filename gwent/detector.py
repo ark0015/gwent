@@ -342,8 +342,6 @@ class PTA:
                 cos_theta = np.random.uniform(-1,1,size=self.N_p)
                 thetas = np.arccos(cos_theta)
 
-            print(phis)
-            print(thetas)
             if hasattr(self,'GWB_amp'):
                 if not hasattr(self,'GWB_alpha'):
                     self.GWB_alpha = -2/3.
