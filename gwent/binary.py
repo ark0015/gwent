@@ -179,15 +179,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
     @property
     def h_gw(self):
         if not hasattr(self,'_h_gw'):
-            if not hasattr(self,'f_init'):
-                if hasattr(self,'_instrument'):
-                    self.Check_Freq_Evol()
-                else:
-                    raise ValueError('No instrument assigned, please fix it. '\
-                        'Try: "source.instrument = instrument".')
+            if hasattr(self,'_instrument'):
                 self._h_gw = Get_Mono_Strain(self,self.instrument.f_opt).to('')
             else:
-                self._h_gw = Get_Mono_Strain(self,self.f_init).to('')
+                raise ValueError('No instrument assigned, please fix it. '\
+                    'Try: "source.instrument = instrument".')
         return self._h_gw
     @h_gw.setter
     def h_gw(self,value):
@@ -295,8 +291,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         #t_init_source = np.random.uniform(0,100)*u.yr
 
         #Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
-        self.f_init = self.instrument.f_opt
-        t_init_source = self.Get_Time_From_Merger(self.f_init)
+        t_init_source = self.Get_Time_From_Merger(self.instrument.f_opt)
 
         #f(T_obs), the frequency of the source at T_obs before merger
         f_T_obs_source = self.Get_Source_Freq(T_obs_source)
@@ -480,12 +475,26 @@ def Get_Char_Strain(source):
 
     Parameters
     ----------
-    source
+    source : object
         Instance of gravitational wave source class
 
     """
     h_char = np.sqrt(4*source.f**2*source.h_f**2)
     return h_char
+
+def Get_Mono_Char_Strain(source,instrument):
+    """Converts source strain to characteristic strain
+
+    Parameters
+    ----------
+    source : object
+        Instance of gravitational wave source class
+    instrument : object
+        Instance of a gravitational wave detector class
+
+    """
+    h_char_mono = source.h_gw*np.sqrt(instrument.T_obs.to('s'))
+    return h_char_mono.value 
 
 def Get_Mono_Strain(source,f_gw,strain_const='Averaged'):
     """Calculates the strain from a binary black hole.

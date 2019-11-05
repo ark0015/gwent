@@ -238,8 +238,7 @@ class PTA:
     @property
     def f_opt(self):
         #The optimal frequency of the instrument ie. the frequecy at the lowest strain
-        if not hasattr(self,'_f_opt'):
-            self._f_opt = self.fT[np.argmin(self.h_n_f)]
+        self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
     def Get_NANOGrav_Param_Distributions(self):

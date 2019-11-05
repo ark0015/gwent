@@ -168,7 +168,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xlabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
         ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
     elif var_x in ['chi1','chi2']:
-        print('here')
         x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
         x_labels = x_labels[::2]
         ax1.set_xticks(x_labels)
@@ -245,7 +244,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_yticklabels([y if int(y) < 1 else int(y) for y in y_labels],\
             fontsize = axissize)
     elif var_y in ['chi1','chi2']:
-        print('here')
         y_labels = np.arange(round(ylabel_min*10),round(ylabel_max*10)+1,1)/10
         y_labels = y_labels[::2]
         ax1.set_yticks(y_labels)
