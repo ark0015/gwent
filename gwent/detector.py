@@ -740,8 +740,9 @@ class SpaceBased(Interferometer):
         else:
             index = 3
         f = self.fT.value
-        return A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
-                *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f))) #White Dwarf Background Noise
+        S_c_f = A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
+                *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f)))*(1/u.Hz) #White Dwarf Background Noise
+        return S_c_f
 
 def Load_Data(detector):
     """

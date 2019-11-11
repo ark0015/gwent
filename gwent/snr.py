@@ -353,4 +353,4 @@ def Save_SNR(sample_x,sample_y,SNRMatrix,save_location,SNR_filename,sample_filen
 
     """
     np.savetxt(save_location+SNR_filename,SNRMatrix)
-    np.savetxt(save_location+sample_filename,np.transpose([sample_x,sample_y]),fmt=fmts)
+    np.savetxt(save_location+sample_filename,np.transpose([sample_x,sample_y]))
