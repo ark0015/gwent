@@ -18,7 +18,7 @@ current_path = os.path.abspath(gwent.__path__[0])
 load_directory = os.path.join(current_path,'LoadFiles/')
 
 class PTA:
-    """
+    r"""
     Class to make a PTA instrument using the methods of Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341>
 
     Parameters
@@ -47,12 +47,29 @@ class PTA:
         Amplitude of the gravitational wave background added as red noise
     GWB_alpha : float, optional
         the GWB power law, if empty and A_GWB is set, it is assumed to be -2/3
-    rn_amp : float, optional
-        Individual pulsar red noise amplitude, is a list of [min,max] values from which to uniformly sample
-    rn_alpha : float, optional
-        Individual pulsar red noise alpha (power law), is a list of [min,max] values from which to uniformly sample
+    rn_amp : array, list, optional
+        Individual pulsar red noise amplitude.
+        If rn_amp is a list of length of N_p, the amplitudes are used as the corresponding pulsar RN injection.
+        If rn_amp is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
+        (ie. [min,max]) from which individual pulsar RN amplitudes are uniformly sampled.
+    rn_alpha : array, list, optional
+        Individual pulsar red noise alpha (power law spectral index).
+        If rn_alpha is a list of length of N_p, the alpha indices are used as the corresponding pulsar RN injection.
+        If rn_alpha is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
+        (ie. [min,max]) from which individual pulsar RN alphas are uniformly sampled.
+    phi : list, array, optional
+        Individual pulsar longitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If N_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
+    theta : array, list, optional
+        Individual pulsar colatitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If N_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
     use_11yr : bool, optional
-        Uses the NANOGrav 11yr noise as the individual pulsar noises, if N_p > 34 (the number of pulsars in the 11yr), 
+        Uses the NANOGrav 11yr noise as the individual pulsar noises, 
+        if N_p > 34 (the number of pulsars in the 11yr dataset), 
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
     realistic_noise : float, optional
         Uses realistic noise drawn from distributions based on the NANOGrav 11yr pulsar noise
@@ -76,11 +93,13 @@ class PTA:
             elif keys == 'GWB_alpha':
                 self.GWB_alpha = value
             elif keys == 'rn_amp':
-                self.rn_amp_min = value[0]
-                self.rn_amp_max = value[1]
+                self.rn_amp = value
             elif keys == 'rn_alpha':
-                self.rn_alpha_min = value[0]
-                self.rn_alpha_max = value[1]
+                self.rn_alpha = value
+            elif keys == 'phi':
+                self.phi = value
+            elif keys == 'theta':
+                self.theta = value
             elif keys == 'use_11yr':
                 self.use_11yr = value
             elif keys == 'realistic_noise':
@@ -241,7 +260,7 @@ class PTA:
         self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
-    def Get_NANOGrav_Param_Distributions(self):
+    def Load_NANOGrav_11yr_Params(self):
         """Loads in NANOGrav 11yr data
 
         Notes
@@ -252,6 +271,18 @@ class PTA:
         """
         NANOGrav_11yr_params_filedirectory = os.path.join(load_directory,'InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt')
         self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
+
+    def Get_NANOGrav_Param_Distributions(self):
+        """Takes the NANOGrav 11yr noise parameters (sigma, RN_amplitudes,RN alphas) and sky locations (phis, thetas)
+        and generates distributions from which to draw new parameters.
+
+        Notes
+        -----
+        To draw from the generated distributions, one does draws = self._distribution.rvs(size=sample_size)
+        """
+        if not hasattr(self,'_NANOGrav_11yr_params'):
+            self.Load_NANOGrav_11yr_Params()
+
         [phis,thetas,sigmas,rn_amps,rn_alphas] = self._NANOGrav_11yr_params
 
         nbins = 8
@@ -329,17 +360,19 @@ class PTA:
             psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=sigmas,\
                 phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
         else:
-            if self.N_p < 33:
-                NANOGrav_11yr_params_filedirectory = os.path.join(load_directory,'InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt')
-                self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
-                [phis,thetas,_,_,_] = self._NANOGrav_11yr_params
-                thetas = thetas[:self.N_p]
-                phis = phis[:self.N_p]
+            if not hasattr(self,'_phi_dist') or not hasattr(self,'_theta_dist'):
+                self.Get_NANOGrav_Param_Distributions()
+
+            [NANOGrav_phis,NANOGrav_thetas,_,_,_] = self._NANOGrav_11yr_params
+            if self.N_p <= len(NANOGrav_phis):
+                thetas = NANOGrav_thetas[:self.N_p]
+                phis = NANOGrav_phis[:self.N_p]
             else:
-                #Random Sky Locations of Pulsars
-                phis = np.random.uniform(0, 2*np.pi,size=self.N_p)
-                cos_theta = np.random.uniform(-1,1,size=self.N_p)
-                thetas = np.arccos(cos_theta)
+                N_added_p = self.N_p - len(NANOGrav_phis)
+                theta_draws = self._theta_dist.rvs(size=N_added_p)
+                phi_draws = self._phi_dist.rvs(size=N_added_p)
+                thetas = np.append(NANOGrav_thetas,theta_draws)
+                phis = np.append(NANOGrav_phis,phi_draws)
 
             if hasattr(self,'GWB_amp'):
                 if not hasattr(self,'GWB_alpha'):
@@ -347,18 +380,28 @@ class PTA:
                 #Make a set of psrs with the same parameters with a GWB as red noise
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
                     phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=self.GWB_amp,alpha=self.GWB_alpha,freqs=self.fT.value)
-            elif hasattr(self,'rn_amp_min') or hasattr(self,'rn_alpha_min'):
-                if not hasattr(self,'rn_amp_min'):
+            elif hasattr(self,'rn_amp') or hasattr(self,'rn_alpha'):
+                if not hasattr(self,'rn_amp'):
                     rn_amps = np.random.uniform(1e-16,1e-12,size=self.N_p)
                 else:
-                    rn_amps = np.random.uniform(self.rn_amp_min,self.rn_amp_max,size=self.N_p)
-                if not hasattr(self,'rn_alpha_min'):
+                    if len(self.rn_amp) == 2:
+                        rn_amps = np.random.uniform(min(self.rn_amp),max(self.rn_amp),size=self.N_p)
+                    elif len(self.rn_amp) == self.N_p:
+                        rn_amps = self.rn_amp
+                    else:
+                        raise ValueError('RN amplitudes must be either [rn_amp_min,rn_amp_max], or and array of RN amplitudes with len(N_p).')
+                if not hasattr(self,'rn_alpha'):
                     rn_alphas = np.random.uniform(-3/4,1,size=self.N_p)
                 else:
-                    rn_alphas = np.random.uniform(self.rn_alpha_min,self.rn_alpha_max,size=self.N_p)
-                #Make a set of psrs with uniformly sampled red noise
+                    if len(self.rn_alpha) == 2:
+                        rn_alphas = np.random.uniform(min(self.rn_alpha),max(self.rn_alpha),size=self.N_p)
+                    elif len(self.rn_alpha) == self.N_p:
+                        rn_alphas = self.rn_alpha
+                    else:
+                        raise ValueError('RN alphas must be either [rn_alpha_min,rn_alpha_max], or and array of RN alphas with len(N_p).')
+
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
-                    phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
+                    phi=phis,theta=thetas,Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
             else:
                 #Make a set of psrs with the same parameters
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
@@ -376,7 +419,7 @@ class PTA:
 
 
 class Interferometer:
-    """
+    r"""
     Class to make an interferometer
 
     Parameters
