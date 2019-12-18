@@ -11,6 +11,7 @@ from astropy.cosmology import WMAP9 as cosmo
 import gwent
 from . import utils
 
+import gwinc
 import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
 
@@ -126,7 +127,7 @@ class PTA:
                 self.realistic_noise = False
 
         if hasattr(self,'f_low') and hasattr(self,'f_high'):
-            self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
+            self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
 
         if len(args) != 0:
             if len(args) == 1:
@@ -438,6 +439,12 @@ class Interferometer:
         'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
         'h' is the characteristic strain $h_{n}(f)$ ('h')
+    f_low : float, optional
+        Assigned lowest frequency of instrument (default is assigned in particular child classes)
+    f_high : float, optional
+        Assigned highest frequency of instrument (default is assigned in particular child classes)
+    nfreqs : int, optional
+        Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
 
     """
     def __init__(self,name,T_obs,**kwargs):
@@ -449,6 +456,12 @@ class Interferometer:
                 self.load_location = value
             elif keys == 'I_type':
                 self.I_type = value
+            elif keys == 'f_low':
+                self.f_low = utils.make_quant(value,'Hz')
+            elif keys == 'f_high':
+                self.f_high = utils.make_quant(value,'Hz')
+            elif keys == 'nfreqs':
+                self.nfreqs = value
 
         if hasattr(self,'load_location'):
             Load_Data(self)
@@ -477,6 +490,8 @@ class Interferometer:
                 self._fT = self._I_data[:,0]*u.Hz
             if isinstance(self,SpaceBased):
                 self.Set_T_Function_Type()
+            if isinstance(self,GroundBased):
+                self._fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
         return self._fT
     @fT.setter
     def fT(self,value):
@@ -532,23 +547,156 @@ class Interferometer:
 class GroundBased(Interferometer):
     """
     Class to make a Ground Based Instrument using the Interferometer base class
+
+    Parameters
+    ----------
+    noise_dict : dictionary, optional
+        A nested noise dictionary that has the main variable parameter name(s) in the top level,
+        the next level of the dictionary contains the subparameter variable name(s) and the desired value
+        to which the subparameter will be changed. The subparameter value can also be an array/list of the
+        [value,min,max] if one wishes to vary the instrument over then min/max range.
+
     """
     def __init__(self,name,T_obs,**kwargs):
         super().__init__(name,T_obs,**kwargs)
-        """
-        Currently doesn't do anything differently that Instrument object, can be updated if we ever construct at Ground Based PSD...
-        """
+
+        for keys,value in kwargs.items():
+            if keys == 'noise_dict':
+                if isinstance(value,dict):
+                    self.noise_dict = value
+                else:
+                    raise ValueError(keys + ' must be a dictionary of noise sources.')
+        
+        if not hasattr(self,'nfreqs'):
+            self.nfreqs = int(1e3)
+        if not hasattr(self,'f_low'):
+            self.f_low = 1.*u.Hz
+        if not hasattr(self,'f_high'):
+            self.f_high = 1e4*u.Hz
+
+        if not hasattr(self,'load_location'):
+            if not hasattr(self,'noise_dict'):
+                self.Init_GroundBased()
+            else:
+                self.Set_Noise_Dict(self.noise_dict)
 
     @property
     def P_n_f(self):
         """Power Spectral Density. """
-        raise NotImplementedError('Uhhh, can only load from a file for right now....')
+        err_mssg =  'Currently we only calculate the Effective Noise Power Spectral Density for Ground Based detectors.\n'
+        err_mssg += 'i.e. We do not separate the transfer function from the Power Spectral Density'
+        raise NotImplementedError(err_mssg)
+
+    @property
+    def S_n_f(self):
+        """Effective Noise Power Spectral Density"""
+        if not hasattr(self,'_S_n_f'):
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._S_n_f = S_n_f_sqrt**2/u.Hz
+                elif self._I_Type == 'ENSD':
+                    self._S_n_f = self._I_data[:,1]/u.Hz
+                elif self._I_Type == 'h':
+                    self._S_n_f = self.h_n_f**2/self.fT
+            else:
+                if not any(hasattr(self,attr) for attr in ['_noise_budget','_ifo','_base_inst']):
+                    self.Init_GroundBased()
+                self._S_n_f = self._noise_budget(self.fT.value,ifo=self._ifo).calc()/u.Hz
+        return self._S_n_f
+    @S_n_f.deleter
+    def S_n_f(self):
+        del self._S_n_f
+
+    def Init_GroundBased(self):
+        """Initialized the Ground Based detector in gwinc"""
+        base_inst = [name for name in self.name.split() if name in gwinc.available_ifos()]
+        if len(base_inst) == 1:
+            self._base_inst = base_inst[0]
+        else:
+            print('You must select a base instrument model from ', [model for model in gwinc.available_ifos()])
+            print('Setting base instrument to aLIGO. To change base instrument, include different model in class name and reinitialize.')
+            self._base_inst = 'aLIGO'
+
+        if not any(hasattr(self,attr) for attr in ['_noise_budget','_init_ifo']):
+            self._noise_budget,self._init_ifo,_,_ = gwinc.load_ifo(self._base_inst)
+        self._ifo = gwinc.precompIFO(self.fT.value, self._init_ifo)
+
+    def Set_Noise_Dict(self,noise_dict):
+        """Sets new values in the nested dictionary of variable noise values
+        
+        Parameters
+        ----------
+
+        noise_dict : dictionary
+            A nested noise dictionary that has the main variable parameter name(s) in the top level,
+            the next level of the dictionary contains the subparameter variable name(s) and the desired value
+            to which the subparameter will be changed. The subparameter value can also be an array/list of the
+            [value,min,max] if one wishes to vary the instrument over then min/max range.
+
+        Examples
+        --------
+        obj.Set_Noise_Dict({'Infrastructure':{'Length':[3000,1000,5000],'Temp':500},'Laser':{'Wavelength':1e-5,'Power':130}})
+
+        """
+        if not hasattr(self,'_ifo'):
+            self.Init_GroundBased()
+        if isinstance(noise_dict,dict): 
+            for base_noise, inner_noise_dict in noise_dict.items():
+                for sub_noise,sub_noise_val in inner_noise_dict.items():
+                    if base_noise in self._ifo.keys():
+                        if sub_noise in self._ifo[base_noise].keys():
+                            self.var_dict = [base_noise+' '+sub_noise,sub_noise_val]
+                            setattr(getattr(self._ifo,base_noise),sub_noise,self._return_value)
+                        else:
+                            raise ValueError(sub_noise + ' is not a subparameter variable noise source.\
+                                Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables.')
+                    else:
+                        err_mssg = base_noise + ' is not a valid parameter variable noise source.\n'
+                        err_mssg += 'Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables.'
+                        raise ValueError(err_mssg)
+        else:
+            raise ValueError('Input must be a dictionary of noise sources.')
+
+    def Get_Noise_Dict(self):
+        """Gets and prints the available variable noises in the detector design"""
+        i=0
+        for key_1,item_1 in self._ifo.items():
+            print(key_1,'Parameters:')
+            for key_2, item_2 in item_1.items():
+                if isinstance(item_2,np.ndarray):
+                    i+=1
+                    print('    ',key_2,': array of shape',item_2.shape)
+                elif isinstance(item_2,list):
+                    i+=1
+                    print('    ',key_2,': array of shape',len(item_2))
+                elif isinstance(item_2,(int,float)):
+                    i+=1
+                    print('    ',key_2,':',item_2)
+                elif isinstance(item_2,gwinc.struct.Struct):
+                    print('    ',key_2,'Subparameters:')
+                    for key_3, item_3 in item_2.items():
+                        if isinstance(item_3,np.ndarray):
+                            i+=1
+                            print('    ','    ',key_3,': array of shape',item_3.shape)
+                        elif isinstance(item_3,list):
+                            i+=1
+                            print('    ','    ',key_3,': array of shape',len(item_3))
+                        elif isinstance(item_3,(int,float)):
+                            i+=1
+                            print('    ','    ',key_3,':',item_3)
+                else:
+                    i+=1
+                    print('    ',key_2,':',item_2)
+
+        print(' ')
+        print('Number of Variables: ',i)
 
 
 
 class SpaceBased(Interferometer):
     """
-    Class to make a Space Based interferometer
+    Class to make a Space Based Instrument using the Interferometer base class
 
     Parameters
     ----------
@@ -569,29 +717,17 @@ class SpaceBased(Interferometer):
         'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
     Background : Boolean
         Add in a Galactic Binary Confusion Noise
-    f_low : float
-        Assigned lowest frequency of instrument (default assigns 10^-5Hz)
-    f_high : float
-        Assigned highest frequency of instrument (default is 1Hz)
-    nfreqs : int
-        Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
 
     """
     def __init__(self,name,T_obs,*args,**kwargs):
         super().__init__(name,T_obs,**kwargs)
-        self.name = name
+
         for keys,value in kwargs.items():
             if keys == 'T_type':
                 self.T_type = value
             elif keys == 'Background':
                 self.Background = value
-            elif keys == 'f_low':
-                self.f_low = utils.make_quant(value,'Hz')
-            elif keys == 'f_high':
-                self.f_high = utils.make_quant(value,'Hz')
-            elif keys == 'nfreqs':
-                self.nfreqs = value
-
+            
         if not hasattr(self,'nfreqs'):
             self.nfreqs = int(1e3)
         if not hasattr(self,'f_low'):
@@ -755,11 +891,11 @@ class SpaceBased(Interferometer):
             print(' *To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A".')
             calc_type = input('Please select the calculation type: ')
             self.Set_T_Function_Type(calc_type)
-        if hasattr(self,'_T_type'):
-            if self._T_type == 'numeric':
-                self.Get_Numeric_Transfer_Function()
-            if self._T_type == 'analytic':
-                self.Get_Analytic_Transfer_Function()
+
+        if self._T_type == 'numeric':
+            self.Get_Numeric_Transfer_Function()
+        if self._T_type == 'analytic':
+            self.Get_Analytic_Transfer_Function()
 
 
     def Add_Background(self):

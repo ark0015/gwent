@@ -3,3 +3,5 @@ scipy >= 1.0
 astropy >= 3.0
 hasasia >= 0.1.6
 matplotlib > 3.0
+
+-e git+https://git.ligo.org/gwinc/pygwinc.git#egg=pygwinc

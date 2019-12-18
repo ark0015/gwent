@@ -71,7 +71,12 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
         
         if recalculate_noise in ['x','both']:
             #Update Attribute (also updates dictionary)
-            setattr(instrument,var_x,sample_x[i])
+            if isinstance(instrument,detector.GroundBased):
+                var_x_names = var_x.split()
+                updated_dict_x = {var_x_names[0]:{var_x_names[1]:sample_x[i]}}
+                instrument.Set_Noise_Dict(updated_dict_x)
+            else:
+                setattr(instrument,var_x,sample_x[i])
             Recalculate_Noise(source,instrument)
         elif recalculate_noise in ['neither']:
             #Update Attribute (also updates dictionary)
@@ -83,7 +88,12 @@ def Get_SNR_Matrix(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
                 setattr(source,var_y, sample_y[j])
             elif recalculate_noise in ['both']:
                 #Update Attribute (also updates dictionary)
-                setattr(instrument,var_y, sample_y[j])
+                if isinstance(instrument,detector.GroundBased):
+                    var_y_names = var_y.split()
+                    updated_dict_y = {var_y_names[0]:{var_y_names[1]:sample_y[i]}}
+                    instrument.Set_Noise_Dict(updated_dict_y)
+                else:
+                    setattr(instrument,var_y, sample_y[j])
                 Recalculate_Noise(source,instrument)
 
             source.Check_Freq_Evol()
@@ -239,8 +249,9 @@ def Recalculate_Noise(source,instrument):
     if hasattr(instrument,'I_type') or hasattr(instrument,'load_location'):
         raise ValueError("Cannot vary a loaded instrument's parameters")
 
-    if hasattr(instrument,'P_n_f'):
-        del instrument.P_n_f
+    if not isinstance(instrument,detector.GroundBased):
+        if hasattr(instrument,'P_n_f'):
+            del instrument.P_n_f
     if hasattr(instrument,'S_n_f'):
         del instrument.S_n_f
     if hasattr(instrument,'h_n_f'):

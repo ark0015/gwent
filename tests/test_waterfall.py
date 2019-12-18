@@ -6,6 +6,14 @@ import astropy.units as u
 
 import pytest
 
+import os,sys
+current_path = os.getcwd()
+splt_path = current_path.split("/")
+top_path_idx = splt_path.index('Research')
+top_directory = "/".join(splt_path[0:top_path_idx+1])
+gwent_path = top_directory + '/gwent/'
+sys.path.insert(0,gwent_path)
+
 import gwent
 from gwent import binary
 from gwent import detector
@@ -37,7 +45,7 @@ chi2 = 0.0 #spin of m2
 chi_min = -0.85 #Limits of PhenomD for unaligned spins
 chi_max = 0.85
 
-z = 3.0 #Redshift
+z = 1.0 #Redshift
 z_min = 1e-2
 z_max = 1e3
 

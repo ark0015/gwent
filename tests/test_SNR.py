@@ -10,6 +10,14 @@ import astropy.units as u
 
 import pytest
 
+import os,sys
+current_path = os.getcwd()
+splt_path = current_path.split("/")
+top_path_idx = splt_path.index('Research')
+top_directory = "/".join(splt_path[0:top_path_idx+1])
+gwent_path = top_directory + '/gwent/'
+sys.path.insert(0,gwent_path)
+
 import gwent
 from gwent import binary
 from gwent import detector
@@ -40,7 +48,7 @@ chi2 = 0.0 #spin of m2
 chi_min = -0.85 #Limits of PhenomD for unaligned spins
 chi_max = 0.85
 
-z = 3.0 #Redshift
+z = 1.0 #Redshift
 z_min = 1e-2
 z_max = 1e3
 
@@ -75,6 +83,35 @@ def source_space_based():
     source_space_based.z = [z,z_min,z_max]
 
     return source_space_based
+
+@pytest.fixture
+def source_ground_based():
+    #M = m1+m2 Total Mass
+    M = 10
+    M_min = 1e0
+    M_max = 1e5
+    
+    source_ground_based = binary.BBHFrequencyDomain(M,q,z,chi1,chi2)
+    source_ground_based.M = [M,M_min,M_max]
+    source_ground_based.q = [q,q_min,q_max]
+    source_ground_based.chi1 = [chi1,chi_min,chi_max]
+    source_ground_based.chi2 = [chi2,chi_min,chi_max]
+    source_ground_based.z = [z,z_min,z_max]
+
+    return source_ground_based
+
+#aLIGO calculation using pygwinc
+T_obs = 4*u.yr #Observing time in years
+T_obs_min = 1*u.yr
+T_obs_max = 10*u.yr
+noise_dict = {'Infrastructure':
+                {'Length':[10000,20000,50000],'Temp':[290,200,400]}}
+@pytest.fixture
+def aLIGO_gwinc():
+    aLIGO_gwinc = detector.GroundBased('aLIGO gwinc',T_obs,noise_dict=noise_dict,
+        f_low=1.,f_high=1e4,nfreqs=1e3)        
+    aLIGO_gwinc.T_obs = [T_obs,T_obs_min,T_obs_max]
+    return aLIGO_gwinc
 
 #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
 T_obs = 15*u.yr #Observing time in years
@@ -201,6 +238,36 @@ def LISA_ESA():
 var_x = 'M'
 # ## Create of SNR Matrices and Samples for all models
 
+# ###GroundBased ONLY:
+#
+# * Any single valued variable in list of params given by:
+#     instrument_GroundBased.Get_Noise_Dict()
+# * To make variable in SNR, declare the main variable, then the subparameter variable
+#     as a string e.g. var_x = 'Infrastructure Length', the case matters.
+#Variable on y-axis
+var_xs_ground = ['M','Infrastructure Length']
+var_ys_ground = ['Infrastructure Length','Infrastructure Temp']
+def test_aLIGO_params(source_ground_based,aLIGO_gwinc):
+    reset_source_ground_based = source_ground_based
+    reset_aLIGO_gwinc = aLIGO_gwinc
+    for var_x in var_xs_ground:
+        if var_x in source_ground_based.var_dict.keys():
+            reset_source_ground_based = source_ground_based
+        elif var_x in aLIGO_gwinc.var_dict.keys():
+            reset_aLIGO_gwinc = aLIGO_gwinc
+
+        for var_y in var_ys_ground:
+            if var_y in source_ground_based.var_dict.keys():
+                reset_source_ground_based = source_ground_based
+            elif var_y in aLIGO_gwinc.var_dict.keys():
+                reset_aLIGO_gwinc = aLIGO_gwinc
+
+            if var_x != var_y:
+                [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_ground_based,reset_aLIGO_gwinc,
+                                                                   var_x,sampleRate_x,
+                                                                   var_y,sampleRate_y)
+                snrplot.Plot_SNR(source_ground_based,aLIGO_gwinc,var_x,sample_x,var_y,sample_y,
+                    SNRMatrix,display=False)
 # ### PTA Only Params
 # 
 # * 'N_p' - Number of Pulsars
@@ -209,23 +276,54 @@ var_x = 'M'
 #Variable on y-axis
 var_ys_ptas = ['q','chi1','chi2','T_obs','N_p','sigma','cadence']
 def test_NANOGrav_WN_params(source_pta,NANOGrav_WN):
+    reset_source_pta = source_pta
+    reset_NANOGrav_WN = NANOGrav_WN
     for var_y in var_ys_ptas:
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+        if var_y in source_pta.var_dict.keys():
+            reset_source_pta = source_pta
+        elif var_y in NANOGrav_WN.var_dict.keys():
+            reset_NANOGrav_WN = NANOGrav_WN
+
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
+        snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+            SNRMatrix,display=False)
+        
 def test_NANOGrav_WN_RN_params(source_pta,NANOGrav_WN_RN):
+    reset_source_pta = source_pta
+    reset_NANOGrav_WN_RN = NANOGrav_WN_RN
     for var_y in var_ys_ptas:
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_RN,
+        if var_y in source_pta.var_dict.keys():
+            reset_source_pta = source_pta
+        elif var_y in NANOGrav_WN_RN.var_dict.keys():
+            reset_NANOGrav_WN_RN = NANOGrav_WN_RN
+
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN_RN,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
 def test_NANOGrav_WN_GWB_params(source_pta,NANOGrav_WN_GWB):
+    reset_source_pta = source_pta
+    reset_NANOGrav_WN_GWB = NANOGrav_WN_GWB
     for var_y in var_ys_ptas:
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_GWB,
+        if var_y in source_pta.var_dict.keys():
+            reset_source_pta = source_pta
+        elif var_y in NANOGrav_WN_GWB.var_dict.keys():
+            reset_NANOGrav_WN_GWB = NANOGrav_WN_GWB
+
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN_GWB,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
 def test_SKA_params(source_pta,SKA):
+    reset_source_pta = source_pta
+    reset_SKA = SKA
     for var_y in var_ys_ptas:
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,SKA,
+        if var_y in source_pta.var_dict.keys():
+            reset_source_pta = source_pta
+        elif var_y in SKA.var_dict.keys():
+            reset_SKA = SKA
+
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_SKA,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
 
@@ -238,13 +336,37 @@ def test_SKA_params(source_pta,SKA):
 # * 'f_acc_break_low' - The Low Acceleration Noise Break Frequency
 # * 'f_acc_break_high' - The High Acceleration Noise Break Frequency
 # * 'f_IFO_break' - The Optical Metrology Noise Break Frequency
-var_ys_LISA = ['q','chi1','chi2','T_obs','L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
+var_y = 'z'
+var_xs_LISA = ['M','z','q','chi1','T_obs','L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
+var_ys_LISA = ['M','z','q','chi1','T_obs','L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
 
 def test_LISA_params(source_space_based,LISA_ESA):
-    for var_y in var_ys_LISA:
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
+    reset_LISA_ESA = LISA_ESA
+    reset_source_space_based = source_space_based
+    for var_x in var_xs_LISA:
+        if var_x in source_space_based.var_dict.keys():
+            reset_source_space_based = source_space_based
+        elif var_x in LISA_ESA.var_dict.keys():
+            reset_LISA_ESA = LISA_ESA
+
+        for var_y in var_ys_LISA:
+            if var_y in source_space_based.var_dict.keys():
+                reset_source_space_based = source_space_based
+            elif var_y in LISA_ESA.var_dict.keys():
+                reset_LISA_ESA = LISA_ESA
+
+            if var_x != var_y:
+                [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_space_based,reset_LISA_ESA,
+                                                                   var_x,sampleRate_x,
+                                                                   var_y,sampleRate_y)
+                snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+                    SNRMatrix,display=False)
+                if var_y == 'z':
+                    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_space_based,reset_LISA_ESA,
+                                                                       var_x,sampleRate_x,
+                                                                       var_y,sampleRate_y)
+                    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+                        SNRMatrix,display=False,dl_axis=True)
 
 
 
