@@ -8,6 +8,7 @@
 import numpy as np
 import astropy.units as u
 
+import unittest
 import pytest
 
 import os,sys
@@ -87,7 +88,7 @@ def source_space_based():
 @pytest.fixture
 def source_ground_based():
     #M = m1+m2 Total Mass
-    M = 10
+    M = 10.
     M_min = 1e0
     M_max = 1e5
     
@@ -101,34 +102,34 @@ def source_ground_based():
     return source_ground_based
 
 #aLIGO calculation using pygwinc
-T_obs = 4*u.yr #Observing time in years
-T_obs_min = 1*u.yr
-T_obs_max = 10*u.yr
+T_obs = 4.*u.yr #Observing time in years
+T_obs_min = 1.*u.yr
+T_obs_max = 10.*u.yr
 noise_dict = {'Infrastructure':
-                {'Length':[10000,20000,50000],'Temp':[290,200,400]}}
+                {'Length':[3995,3000,5000],'Temp':[290,200,400]}}
 @pytest.fixture
 def aLIGO_gwinc():
     aLIGO_gwinc = detector.GroundBased('aLIGO gwinc',T_obs,noise_dict=noise_dict,
-        f_low=1.,f_high=1e4,nfreqs=1e3)        
+        f_low=1.,f_high=1e4,nfreqs=int(1e3))      
     aLIGO_gwinc.T_obs = [T_obs,T_obs_min,T_obs_max]
     return aLIGO_gwinc
 
 #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
-T_obs = 15*u.yr #Observing time in years
-T_obs_min = 5*u.yr
-T_obs_max = 30*u.yr
+T_obs = 15.*u.yr #Observing time in years
+T_obs_min = 5.*u.yr
+T_obs_max = 30.*u.yr
 
-sigma = 100*u.ns.to('s')*u.s #rms timing residuals in seconds
-sigma_min = 100*u.ns.to('s')*u.s
-sigma_max = 500*u.ns.to('s')*u.s
+sigma = 100.*u.ns.to('s')*u.s #rms timing residuals in seconds
+sigma_min = 100.*u.ns.to('s')*u.s
+sigma_max = 500.*u.ns.to('s')*u.s
 
 N_p = 18 #Number of pulsars
 N_p_min = 18
 N_p_max = 22
 
-cadence = 1/(2*u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every 2 weeks in num/year
-cadence_min = 2/u.yr
-cadence_max = 1/(u.wk.to('yr')*u.yr)
+cadence = 1./(2*u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every 2 weeks in num/year
+cadence_min = 2./u.yr
+cadence_max = 1./(u.wk.to('yr')*u.yr)
 
 @pytest.fixture
 def NANOGrav_WN():
@@ -139,48 +140,11 @@ def NANOGrav_WN():
     NANOGrav_WN.cadence = [cadence,cadence_min,cadence_max]
     return NANOGrav_WN
 
-@pytest.fixture
-def NANOGrav_WN_RN():
-    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_obs,N_p,sigma,cadence,
-        rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
-    NANOGrav_WN_RN.T_obs = [T_obs,T_obs_min,T_obs_max]
-    NANOGrav_WN_RN.sigma = [sigma,sigma_min,sigma_max]
-    NANOGrav_WN_RN.N_p = [N_p,N_p_min,N_p_max]
-    NANOGrav_WN_RN.cadence = [cadence,cadence_min,cadence_max]
-    return NANOGrav_WN_RN
-
-@pytest.fixture
-def NANOGrav_WN_GWB():
-    NANOGrav_WN_RN = detector.PTA('NANOGrav, WN and RN',T_obs,N_p,sigma,cadence,
-        GWB_amp=4e-16,GWB_alpha=-2/3)
-    NANOGrav_WN_RN.T_obs = [T_obs,T_obs_min,T_obs_max]
-    NANOGrav_WN_RN.sigma = [sigma,sigma_min,sigma_max]
-    NANOGrav_WN_RN.N_p = [N_p,N_p_min,N_p_max]
-    NANOGrav_WN_RN.cadence = [cadence,cadence_min,cadence_max]
-    return NANOGrav_WN_RN
-
-        
-sigma = 10*u.ns.to('s')*u.s #rms timing residuals in nanoseconds
-sigma_min = 10*u.ns.to('s')*u.s
-sigma_max = 100*u.ns.to('s')*u.s
-N_p = 20 #Number of pulsars
-cadence = 1/(u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every week in num/year
-        
-@pytest.fixture
-def SKA():
-    SKA = detector.PTA('SKA',T_obs,N_p,sigma,cadence)
-    SKA.T_obs = [T_obs,T_obs_min,T_obs_max]
-    SKA.sigma = [sigma,sigma_min,sigma_max]
-    SKA.N_p = [N_p,N_p_min,N_p_max]
-    SKA.cadence = [cadence,cadence_min,cadence_max]
-    return SKA
-        
-
 #L3 proposal
 #Default Params from https://arxiv.org/abs/1702.00786
-T_obs = 4*u.yr #Observing time in years
-T_obs_min = 1*u.yr
-T_obs_max = 10*u.yr
+T_obs = 4.*u.yr #Observing time in years
+T_obs_min = 1.*u.yr
+T_obs_max = 10.*u.yr
 
 L = 2.5e9*u.m #armlength in meters
 L_min = 1.0e7*u.m
@@ -211,6 +175,7 @@ T_type = 'N'
     
 @pytest.fixture
 def LISA_ESA():
+    print(T_obs)
     LISA_ESA = detector.SpaceBased('LISA_ESA',T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,Background=Background,T_type=T_type)
     LISA_ESA.T_obs = [T_obs,T_obs_min,T_obs_max]
     LISA_ESA.L = [L,L_min,L_max]
@@ -234,8 +199,6 @@ def LISA_ESA():
 # ### Global Detector Params
 # * 'T_obs' - Detector Observation Time
 
-#Variable on x-axis
-var_x = 'M'
 # ## Create of SNR Matrices and Samples for all models
 
 # ###GroundBased ONLY:
@@ -244,89 +207,101 @@ var_x = 'M'
 #     instrument_GroundBased.Get_Noise_Dict()
 # * To make variable in SNR, declare the main variable, then the subparameter variable
 #     as a string e.g. var_x = 'Infrastructure Length', the case matters.
-#Variable on y-axis
-var_xs_ground = ['M','Infrastructure Length']
-var_ys_ground = ['Infrastructure Length','Infrastructure Temp']
-def test_aLIGO_params(source_ground_based,aLIGO_gwinc):
-    reset_source_ground_based = source_ground_based
-    reset_aLIGO_gwinc = aLIGO_gwinc
-    for var_x in var_xs_ground:
-        if var_x in source_ground_based.var_dict.keys():
-            reset_source_ground_based = source_ground_based
-        elif var_x in aLIGO_gwinc.var_dict.keys():
-            reset_aLIGO_gwinc = aLIGO_gwinc
 
-        for var_y in var_ys_ground:
-            if var_y in source_ground_based.var_dict.keys():
-                reset_source_ground_based = source_ground_based
-            elif var_y in aLIGO_gwinc.var_dict.keys():
-                reset_aLIGO_gwinc = aLIGO_gwinc
+def test_aLIGO_params_MvIL(source_ground_based,aLIGO_gwinc):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'Infrastructure Temp'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_ground_based,aLIGO_gwinc,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_ground_based,aLIGO_gwinc,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
-            if var_x != var_y:
-                [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_ground_based,reset_aLIGO_gwinc,
-                                                                   var_x,sampleRate_x,
-                                                                   var_y,sampleRate_y)
-                snrplot.Plot_SNR(source_ground_based,aLIGO_gwinc,var_x,sample_x,var_y,sample_y,
-                    SNRMatrix,display=False)
+def test_aLIGO_params_ILvIT(source_ground_based,aLIGO_gwinc):
+    #Variable on x-axis
+    var_x = 'Infrastructure Length'
+    #Variable on y-axis
+    var_y = 'Infrastructure Temp'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_ground_based,aLIGO_gwinc,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_ground_based,aLIGO_gwinc,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+
 # ### PTA Only Params
 # 
 # * 'N_p' - Number of Pulsars
 # * 'sigma' - Root-Mean-Squared Timing Error
 # * 'cadence' - Observation Cadence
-#Variable on y-axis
-var_ys_ptas = ['q','chi1','chi2','T_obs','N_p','sigma','cadence']
-def test_NANOGrav_WN_params(source_pta,NANOGrav_WN):
-    reset_source_pta = source_pta
-    reset_NANOGrav_WN = NANOGrav_WN
-    for var_y in var_ys_ptas:
-        if var_y in source_pta.var_dict.keys():
-            reset_source_pta = source_pta
-        elif var_y in NANOGrav_WN.var_dict.keys():
-            reset_NANOGrav_WN = NANOGrav_WN
 
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
-        snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
-            SNRMatrix,display=False)
-        
-def test_NANOGrav_WN_RN_params(source_pta,NANOGrav_WN_RN):
-    reset_source_pta = source_pta
-    reset_NANOGrav_WN_RN = NANOGrav_WN_RN
-    for var_y in var_ys_ptas:
-        if var_y in source_pta.var_dict.keys():
-            reset_source_pta = source_pta
-        elif var_y in NANOGrav_WN_RN.var_dict.keys():
-            reset_NANOGrav_WN_RN = NANOGrav_WN_RN
+def test_NANOGrav_WN_params_Mvq(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'q'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN_RN,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
-def test_NANOGrav_WN_GWB_params(source_pta,NANOGrav_WN_GWB):
-    reset_source_pta = source_pta
-    reset_NANOGrav_WN_GWB = NANOGrav_WN_GWB
-    for var_y in var_ys_ptas:
-        if var_y in source_pta.var_dict.keys():
-            reset_source_pta = source_pta
-        elif var_y in NANOGrav_WN_GWB.var_dict.keys():
-            reset_NANOGrav_WN_GWB = NANOGrav_WN_GWB
+def test_NANOGrav_WN_params_Mvchi1(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'chi1'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_NANOGrav_WN_GWB,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
-def test_SKA_params(source_pta,SKA):
-    reset_source_pta = source_pta
-    reset_SKA = SKA
-    for var_y in var_ys_ptas:
-        if var_y in source_pta.var_dict.keys():
-            reset_source_pta = source_pta
-        elif var_y in SKA.var_dict.keys():
-            reset_SKA = SKA
+def test_NANOGrav_WN_params_MvTobs(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'T_obs'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_pta,reset_SKA,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
+def test_NANOGrav_WN_params_MvNp(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'N_p'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
+def test_NANOGrav_WN_params_Mvsigma(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'sigma'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_NANOGrav_WN_params_Mvcadence(source_pta,NANOGrav_WN):
+    #Variable on x-axis
+    var_x = 'M'
+    #Variable on y-axis
+    var_y = 'cadence'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_pta,NANOGrav_WN,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
 # ### LISA Only Params
 # 
@@ -336,37 +311,116 @@ def test_SKA_params(source_pta,SKA):
 # * 'f_acc_break_low' - The Low Acceleration Noise Break Frequency
 # * 'f_acc_break_high' - The High Acceleration Noise Break Frequency
 # * 'f_IFO_break' - The Optical Metrology Noise Break Frequency
-var_y = 'z'
-var_xs_LISA = ['M','z','q','chi1','T_obs','L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
-var_ys_LISA = ['M','z','q','chi1','T_obs','L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
 
-def test_LISA_params(source_space_based,LISA_ESA):
-    reset_LISA_ESA = LISA_ESA
-    reset_source_space_based = source_space_based
-    for var_x in var_xs_LISA:
-        if var_x in source_space_based.var_dict.keys():
-            reset_source_space_based = source_space_based
-        elif var_x in LISA_ESA.var_dict.keys():
-            reset_LISA_ESA = LISA_ESA
+def test_LISA_params_LvM(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'L'
+    #Variable on y-axis
+    var_y = 'M'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False,smooth_contours=True)
 
-        for var_y in var_ys_LISA:
-            if var_y in source_space_based.var_dict.keys():
-                reset_source_space_based = source_space_based
-            elif var_y in LISA_ESA.var_dict.keys():
-                reset_LISA_ESA = LISA_ESA
+def test_LISA_params_Aaccvz(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'A_acc'
+    #Variable on y-axis
+    var_y = 'z'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False,dl_axis=True)
 
-            if var_x != var_y:
-                [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_space_based,reset_LISA_ESA,
-                                                                   var_x,sampleRate_x,
-                                                                   var_y,sampleRate_y)
-                snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
-                    SNRMatrix,display=False)
-                if var_y == 'z':
-                    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(reset_source_space_based,reset_LISA_ESA,
-                                                                       var_x,sampleRate_x,
-                                                                       var_y,sampleRate_y)
-                    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
-                        SNRMatrix,display=False,dl_axis=True)
+def test_LISA_params_AIFOvq(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'A_IFO'
+    #Variable on y-axis
+    var_y = 'q'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_faccbreaklowvchi1(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'f_acc_break_low'
+    #Variable on y-axis
+    var_y = 'chi1'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_faccbreakhighvfaccbreaklow(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'f_acc_break_high'
+    #Variable on y-axis
+    var_y = 'f_acc_break_low'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_Tobsvfaccbreakhigh(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'T_obs'
+    #Variable on y-axis
+    var_y = 'f_acc_break_high'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_fIFObreakvL(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'f_IFO_break'
+    #Variable on y-axis
+    var_y = 'L'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_paramsMvfIFObreak(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'q'
+    #Variable on y-axis
+    var_y = 'f_IFO_break'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_MvAacc(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'z'
+    #Variable on y-axis
+    var_y = 'A_acc'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
+
+def test_LISA_params_MvAIFO(source_space_based,LISA_ESA):
+    #Variable on x-axis
+    var_x = 'chi1'
+    #Variable on y-axis
+    var_y = 'A_IFO'
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_space_based,LISA_ESA,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    snrplot.Plot_SNR(source_space_based,LISA_ESA,var_x,sample_x,var_y,sample_y,
+        SNRMatrix,display=False)
 
 
 

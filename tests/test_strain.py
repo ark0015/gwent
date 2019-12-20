@@ -154,7 +154,7 @@ cadence_SKA = 1/(u.wk.to('yr')*u.yr)
 @pytest.fixture
 def SKA_WN():
     SKA_WN = detector.PTA('SKA, WN Only',
-        T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,f_low=1e-10,f_high=1e-7,nfreqs=1e3)
+        T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,f_low=1e-10,f_high=1e-7,nfreqs=int(1e3))
     return SKA_WN
 
 #SKA with White and Varied Red Noise
@@ -162,6 +162,7 @@ def test_pta_SKA_WN_RN():
     SKA_WN_RN = detector.PTA('SKA, WN and RN',
         T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,
         rn_amp=[1e-16,1e-12],rn_alpha=[-3/4,1])
+    SKA_WN_RN.h_n_f
 
 #SKA with White Noise and a Stochastic Gravitational Wave Background
 def test_pta_SKA_WN_GWB():
@@ -173,7 +174,8 @@ def test_pta_SKA_WN_GWB():
 def test_pta_SKA_Realistic_Noise():
     SKA_Realistic_Noise = detector.PTA('SKA, Realistic Noise',
         T_SKA,N_p_SKA,cadence_SKA,
-        realistic_noise=True)
+        use_11yr=True)
+    SKA_Realistic_Noise.h_n_f
 
 #### NANOGrav-esque Detector
 #Fiducial 11yr parameter estimates from Arzoumanian, et al., 2018 https://arxiv.org/abs/1801.01837
@@ -206,7 +208,8 @@ def test_pta_NANOGrav_WN_GWB():
 def test_pta_NANOGrav_Realistic_Noise():
     NANOGrav_Realistic_Noise = detector.PTA('NANOGrav, Realistic Noise',
         T_nano,N_p_nano,cadence_nano,
-        use_11yr=True)
+        realistic_noise=True)
+    NANOGrav_Realistic_Noise.h_n_f
 
 
 # ####################################################################
@@ -273,7 +276,7 @@ z = [3.0,0.093,20.0]
 
 def test_BBHStrain(LISA_prop1,aLIGO,SKA_WN,ET):
     source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],
-        instrument=LISA_prop1,f_low=1e-6,f_high=10,nfreqs=1e3)
+        instrument=LISA_prop1,f_low=1e-6,f_high=10,nfreqs=int(1e3))
     source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],
         instrument=aLIGO)
     source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],
