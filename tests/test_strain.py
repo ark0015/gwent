@@ -8,14 +8,6 @@ import pytest
 import astropy.constants as const
 import astropy.units as u
 
-import os,sys
-current_path = os.getcwd()
-splt_path = current_path.split("/")
-top_path_idx = splt_path.index('Research')
-top_directory = "/".join(splt_path[0:top_path_idx+1])
-gwent_path = top_directory + '/gwent/'
-sys.path.insert(0,gwent_path)
-
 import gwent
 from gwent import detector
 from gwent import binary
