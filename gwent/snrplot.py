@@ -96,24 +96,24 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     else:
         raise ValueError(var_y + ' is not a variable in the source or the instrument.')
 
-    #Can't take log of astropy variables
-    if isinstance(sample_x,u.Quantity):
-        sample_x = sample_x.value
-    if isinstance(sample_y,u.Quantity):
-        sample_y = sample_y.value
-
     #Set whether log or linearly spaced axes
-    x_scale = np.log10(xlabel_max) - np.log10(xlabel_min)
-    if x_scale >= 2.:
-        xaxis_type = 'log'
-    else:
+    if xlabel_max <= 0.0 or xlabel_min <= 0.0:
         xaxis_type = 'lin'
-
-    y_scale = np.log10(ylabel_max) - np.log10(ylabel_min)
-    if y_scale >= 2.:
-        yaxis_type = 'log'
     else:
+        x_scale = np.log10(xlabel_max) - np.log10(xlabel_min)
+        if x_scale >= 2.:
+            xaxis_type = 'log'
+        else:
+            xaxis_type = 'lin'
+            
+    if ylabel_max <= 0.0 or ylabel_min <= 0.0:
         yaxis_type = 'lin'
+    else:
+        y_scale = np.log10(ylabel_max) - np.log10(ylabel_min)
+        if y_scale >= 2.:
+            yaxis_type = 'log'
+        else:
+            yaxis_type = 'lin'
 
     #########################
     #Make the Contour Plots
@@ -125,8 +125,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(np.log10(sample_x),sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(ylabel_min,ylabel_max)
-        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
-        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,ylabel_max-ylabel_min+1))
+        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),int(np.log10(xlabel_max)-np.log10(xlabel_min)+1))
+        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,max(int(ylabel_max-ylabel_min+1),10)))
         ax1.set_yticks(y_labels)
         ax1.set_xticks(np.log10(x_labels))
     elif yaxis_type == 'log' and xaxis_type == 'lin':
@@ -134,8 +134,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(sample_x,np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(xlabel_min,xlabel_max)
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
-        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,xlabel_max-xlabel_min+1))
-        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,max(int(xlabel_max-xlabel_min+1),10)))
+        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),int(np.log10(ylabel_max)-np.log10(ylabel_min)+1))
         ax1.set_xticks(x_labels)
         ax1.set_yticks(np.log10(y_labels))
     elif yaxis_type == 'lin' and xaxis_type == 'lin':
@@ -143,8 +143,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(sample_x,sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(xlabel_min,xlabel_max)
         ax1.set_ylim(ylabel_min,ylabel_max)
-        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,xlabel_max-xlabel_min+1))
-        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,ylabel_max-ylabel_min+1))
+        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,max(int(xlabel_max-xlabel_min+1),10)))
+        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,max(int(ylabel_max-ylabel_min+1),10)))
         ax1.set_xticks(x_labels)
         ax1.set_yticks(y_labels)
     else:
@@ -152,8 +152,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
-        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
-        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),int(np.log10(xlabel_max)-np.log10(xlabel_min)+1))
+        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),int(np.log10(ylabel_max)-np.log10(ylabel_min)+1))
         ax1.set_yticks(np.log10(y_labels))
         ax1.set_xticks(np.log10(x_labels))
 

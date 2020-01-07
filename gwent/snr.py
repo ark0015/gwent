@@ -157,86 +157,96 @@ def Get_Samples(source,instrument,var_x,sample_rate_x,var_y,sample_rate_y):
     recalculate_noise = 'neither'
 
     if var_x in source.var_dict.keys():
-        var_x_dict = source.var_dict[var_x]
+        if isinstance(source.var_dict[var_x]['min'],u.Quantity):
+            var_x_min = source.var_dict[var_x]['min'].value
+            var_x_max = source.var_dict[var_x]['max'].value
+        else:
+            var_x_min = source.var_dict[var_x]['min']
+            var_x_max = source.var_dict[var_x]['max']
     elif var_x in instrument.var_dict.keys():
         recalculate_noise = 'x'
-        var_x_dict = instrument.var_dict[var_x]
+        if isinstance(instrument.var_dict[var_x]['min'],u.Quantity):
+            var_x_min = instrument.var_dict[var_x]['min'].value
+            var_x_max = instrument.var_dict[var_x]['max'].value
+        else:
+            var_x_min = instrument.var_dict[var_x]['min']
+            var_x_max = instrument.var_dict[var_x]['max']
     else:
-        raise ValueError(var_x + ' is not a variable in the source nor the instrument.')
+        raise ValueError(var_x + ' is not a variable in the source or the instrument.')
 
     if var_y in source.var_dict.keys():
-        var_y_dict = source.var_dict[var_y]
+        if isinstance(source.var_dict[var_y]['min'],u.Quantity):
+            var_y_min = source.var_dict[var_y]['min'].value
+            var_y_max = source.var_dict[var_y]['max'].value
+        else:
+            var_y_min = source.var_dict[var_y]['min']
+            var_y_max = source.var_dict[var_y]['max']
     elif var_y in instrument.var_dict.keys():
         if recalculate_noise == 'x':
             recalculate_noise = 'both'
         else:
             recalculate_noise = 'y'
-        var_y_dict = instrument.var_dict[var_y]
+        if isinstance(instrument.var_dict[var_y]['min'],u.Quantity):
+            var_y_min = instrument.var_dict[var_y]['min'].value
+            var_y_max = instrument.var_dict[var_y]['max'].value
+        else:
+            var_y_min = instrument.var_dict[var_y]['min']
+            var_y_max = instrument.var_dict[var_y]['max']
     else:
-        raise ValueError(var_y + ' is not a variable in the source nor the instrument.')
+        raise ValueError(var_y + ' is not a variable in the source or the instrument.')
 
     if var_x in ['q','chi1','chi2'] or var_y in ['q','chi1','chi2']:
         recalculate_strain = True #Must recalculate the waveform at each point
 
     #order of magnitude cut
     oom_cut = 2.
-    if var_x_dict['min'] != None and var_x_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
+    if var_x_min != None and var_x_max != None: #If the variable has non-None 'min',and 'max' dictionary attributes
         if var_x == 'N_p':
             #sample in integer steps
-            sample_range = var_x_dict['max']-var_x_dict['min']
+            sample_range = var_x_max-var_x_min
             if sample_range > 10:
                 sample_rate = max(2,int(sample_range/10))
-                sample_x = np.arange(var_x_dict['min'],var_x_dict['max'],sample_rate)
-                if var_x_dict['max'] not in sample_x:
-                    sample_x = np.append(sample_x,var_x_dict['max'])
+                sample_x = np.arange(var_x_min,var_x_max,sample_rate)
+                if var_x_max not in sample_x:
+                    sample_x = np.append(sample_x,var_x_max)
             else:
-                sample_x = np.arange(var_x_dict['min'],var_x_dict['max']+1)
+                sample_x = np.arange(var_x_min,var_x_max+1)
         else:
             #Any other variables get sorted to linear if max-min < order of magnitude cut (oom_cut)
             #Otherwse the samples are in logspace 
-            #Need exception for astropy 
-            if isinstance(var_x_dict['min'],u.Quantity) or isinstance(var_x_dict['max'],u.Quantity):
-                scale = np.log10(var_x_dict['max'].value) - np.log10(var_x_dict['min'].value)
-                if scale >= oom_cut:
-                    sample_x = np.logspace(np.log10(var_x_dict['min'].value),np.log10(var_x_dict['max'].value),sample_rate_x)
-                else:
-                    sample_x = np.linspace(var_x_dict['min'].value,var_x_dict['max'].value,sample_rate_x)
+            if var_x_max <= 0.0 or var_x_min <= 0.0:
+                sample_x = np.linspace(var_x_min,var_x_max,sample_rate_x)
             else:
-                scale = np.log10(var_x_dict['max']) - np.log10(var_x_dict['min'])
+                scale = np.log10(var_x_max) - np.log10(var_x_min)
                 if scale >= oom_cut:
-                    sample_x = np.logspace(np.log10(var_x_dict['min']),np.log10(var_x_dict['max']),sample_rate_x)
+                    sample_x = np.logspace(np.log10(var_x_min),np.log10(var_x_max),sample_rate_x)
                 else:
-                    sample_x = np.linspace(var_x_dict['min'],var_x_dict['max'],sample_rate_x)
+                    sample_x = np.linspace(var_x_min,var_x_max,sample_rate_x)
     else:
         raise ValueError(var_x + ' does not have an assigned min and/or max.')
 
-    if var_y_dict['min'] != None and var_y_dict['max'] != None: #If the variable has non-None 'min',and 'max' dictionary attributes
+    if var_y_min != None and var_y_max != None: #If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == 'N_p':
             #sample in integer steps
-            sample_range = var_y_dict['max']-var_y_dict['min']
+            sample_range = var_y_max-var_y_min
             if sample_range > 10:
                 sample_rate = max(2,int(sample_range/10))
-                sample_y = np.arange(var_y_dict['min'],var_y_dict['max'],sample_rate)
-                if var_y_dict['max'] not in sample_y:
-                    sample_y = np.append(sample_y,var_y_dict['max'])
+                sample_y = np.arange(var_y_min,var_y_max,sample_rate)
+                if var_y_max not in sample_y:
+                    sample_y = np.append(sample_y,var_y_max)
             else:
-                sample_y = np.arange(var_y_dict['min'],var_y_dict['max']+1)
+                sample_y = np.arange(var_y_min,var_y_max+1)
         else:
             #Any other variables get sorted to linear if max-min < order of magnitude cut (oom_cut)
             #Otherwse the samples are in logspace
-            #Need exception for astropy variables
-            if isinstance(var_y_dict['min'],u.Quantity) and isinstance(var_y_dict['max'],u.Quantity):
-                scale = np.log10(var_y_dict['max'].value) - np.log10(var_y_dict['min'].value)
-                if scale >= oom_cut:
-                    sample_y = np.logspace(np.log10(var_y_dict['min'].value),np.log10(var_y_dict['max'].value),sample_rate_y)
-                else:
-                    sample_y = np.linspace(var_y_dict['min'].value,var_y_dict['max'].value,sample_rate_y)
+            if var_y_max <= 0.0 or var_y_min <= 0.0:
+                sample_y = np.linspace(var_y_min,var_y_max,sample_rate_y)
             else:
-                scale = np.log10(var_y_dict['max']) - np.log10(var_y_dict['min'])
+                scale = np.log10(var_y_max) - np.log10(var_y_min)
                 if scale >= oom_cut:
-                    sample_y = np.logspace(np.log10(var_y_dict['min']),np.log10(var_y_dict['max']),sample_rate_y)
+                    sample_y = np.logspace(np.log10(var_y_min),np.log10(var_y_max),sample_rate_y)
                 else:
-                    sample_y = np.linspace(var_y_dict['min'],var_y_dict['max'],sample_rate_y)
+                    sample_y = np.linspace(var_y_min,var_y_max,sample_rate_y)
     else:
         raise ValueError(var_y + ' does not have an assigned min and/or max value.')
 
