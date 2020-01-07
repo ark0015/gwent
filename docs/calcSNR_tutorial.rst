@@ -67,12 +67,12 @@ needs to set the minima and maxima of the selected SNR axes variables.
 .. code:: python
 
     def Get_Source(model):
-        if model in [0,1]:
+        if model in [0,1,2,3]:
             #M = m1+m2 Total Mass
-            M = 1e2
+            M = 1e1
             M_min = 1e0
-            M_max = 1e5
-        elif model in [2,3,4,5,6]:
+            M_max = 1e4
+        elif model in [4,5,6,7,8,9,10,11,12]:
             #M = m1+m2 Total Mass
             M = 1e9
             M_min = 1e8
@@ -126,19 +126,43 @@ variables and Sample Rates).
 .. code:: python
 
     def Get_Instrument(model):
-        if model in [0,1]:
+        if model in [0,1,2,3]:
             T_obs = 4*u.yr #Observing time in years
+            T_obs_min = 1*u.yr
+            T_obs_max = 10*u.yr
             if model == 0: #Einstein Telescope
                 #Loaded from http://www.et-gw.eu/index.php/etsensitivities
                 load_name = 'ET_D_data.txt'
                 load_location = load_directory + 'EinsteinTelescope/' + load_name
                 instrument = detector.GroundBased('ET',T_obs,load_location=load_location,I_type='A')
             elif model == 1: #aLIGO
-                #Loaded from https://dcc.ligo.org/T1800044/public
-                load_name = 'aLIGODesign.txt'
-                load_location = load_directory + 'aLIGO/' + load_name
-                instrument = detector.GroundBased('aLIGO',T_obs,load_location=load_location,I_type='A')
-        elif model in [2,3,4]:
+                noise_dict = {'Infrastructure':
+                              {'Length':[3995,1000,1e5]},
+                              'Laser':
+                              {'Power':[125,10,1e3]},
+                              'Seismic':
+                              {'Gamma':[0.8,1e-3,1e3]}}
+                instrument = detector.GroundBased('aLIGO',T_obs,noise_dict=noise_dict)
+            elif model == 2: #Voyager
+                noise_dict = {'Infrastructure':
+                              {'Length':[3995,1000,1e5]},
+                              'Laser':
+                              {'Power':[144.6848,10,1e3]},
+                              'Seismic':
+                              {'Gamma':[0.8,1e-3,1e3]}}
+                instrument = detector.GroundBased('Voyager',T_obs,noise_dict=noise_dict)
+            elif model == 3: #Cosmic Explorer proposal 1
+                noise_dict = {'Infrastructure':
+                              {'Length':[40000,1e3,1e5]},
+                              'Laser':
+                              {'Power':[150,10,1e3]},
+                              'Seismic':
+                              {'Gamma':[0.8,1e-3,1e3]}}
+                instrument = detector.GroundBased('CE1',T_obs,noise_dict=noise_dict)
+                
+            instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
+            
+        elif model in [4,5,6,7,8]:
             #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
             T_obs = 15*u.yr #Observing time in years
             T_obs_min = 5*u.yr
@@ -157,11 +181,17 @@ variables and Sample Rates).
             cadence_max = 1/(u.wk.to('yr')*u.yr)
             
             
-            if model == 2: #NANOGrav 15 yr WN only
+            if model == 4: #NANOGrav 15 yr WN only
                 instrument = detector.PTA('NANOGrav_WN',T_obs,N_p,sigma,cadence)
-            elif model == 3: #NANOGrav realistic noise
+            elif model == 5: #NANOGrav 15 yr WN + RN
+                instrument = detector.PTA('NANOGrav_WN_RN',T_obs,N_p,sigma,cadence,
+                                          rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
+            elif model == 6: #NANOGrav 15 yr WN + GWB
+                instrument = detector.PTA('NANOGrav_WN_GWB',T_obs,N_p,sigma,cadence,
+                                          GWB_amp=4e-16)
+            elif model == 7: #NANOGrav realistic noise
                 instrument = detector.PTA('NANOGrav_realistic_noise',T_obs,N_p,cadence,use_11yr=True)
-            elif model == 4: #NANOGrav 11 yr real data
+            elif model == 8: #NANOGrav 11 yr real data
                 #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
                 load_name = 'NANOGrav_11yr_S_eff.txt'
                 load_location = load_directory + 'NANOGrav/StrainFiles/' + load_name
@@ -173,7 +203,7 @@ variables and Sample Rates).
             instrument.N_p = [N_p,N_p_min,N_p_max]
             instrument.cadence = [cadence,cadence_min,cadence_max]
             
-        elif model in [5,6]: #SKA (2030s)
+        elif model in [9,10,11,12]: #SKA (2030s)
             #SKA calculation using parameters and methods from https://arxiv.org/abs/0804.4476 section 7.1
             T_obs = 15*u.yr #Observing time (years)
             T_obs_min = 10*u.yr
@@ -191,9 +221,15 @@ variables and Sample Rates).
             cadence_min = 2/u.yr
             cadence_max = 1/(u.wk.to('yr')*u.yr)
             
-            if model == 5: #SKA WN only
+            if model == 9: #SKA WN only
                 instrument = detector.PTA('SKA_WN',T_obs,N_p,sigma,cadence)
-            elif model == 6: #SKA realistic noise
+            elif model == 10: #SKA WN + RN
+                instrument = detector.PTA('SKA_WN_RN',T_obs,N_p,sigma,cadence,
+                                          rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
+            elif model == 11: #SKA WN + GWB
+                instrument = detector.PTA('SKA_WN_GWB',T_obs,N_p,sigma,cadence,
+                                          GWB_amp=4e-16)
+            elif model == 12: #SKA realistic noise
                 instrument = detector.PTA('SKA_realistic_noise',T_obs,N_p,cadence,use_11yr=True)
                 
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
@@ -201,10 +237,7 @@ variables and Sample Rates).
             instrument.N_p = [N_p,N_p_min,N_p_max]
             instrument.cadence = [cadence,cadence_min,cadence_max]
             
-        else:
-            #L3 proposal
-            #Default Params from https://arxiv.org/abs/1702.00786
-            
+        elif model > 12:
             T_obs = 4*u.yr #Observing time in years
             T_obs_min = 1*u.yr
             T_obs_max = 10*u.yr
@@ -227,18 +260,29 @@ variables and Sample Rates).
             
             f_IFO_break = 2.*u.mHz.to('Hz')*u.Hz
             f_IFO_break_min = 1.*u.mHz.to('Hz')*u.Hz
-            f_IFO_break_max = 5.*u.mHz.to('Hz')*u.Hz
+            f_IFO_break_max = 10.*u.mHz.to('Hz')*u.Hz
             
-            A_IFO = 10e-12*u.m
-            A_IFO_min = 1.0e-12*u.m
-            A_IFO_max = 2.0e-11*u.m
+            A_IFO_min = 1.0e-13*u.m
+            A_IFO_max = 1.0e-10*u.m
             
-            Background = False
-            T_type = 'N'
+            if model == 13: #Robson,Cornish,and Liu 2019, LISA (https://arxiv.org/abs/1803.01944)
+                A_IFO = 1.5e-11*u.m
+                Background = False
+                T_type = 'A'
     
-            instrument = detector.SpaceBased('LISA_ESA',\
-                                           T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,\
-                                           Background=Background,T_type=T_type)
+                instrument = detector.SpaceBased('Alt_LISA',\
+                                               T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,\
+                                               Background=Background,T_type=T_type)
+    
+            else: #L3 proposal
+                #Default Params from https://arxiv.org/abs/1702.00786
+                A_IFO = 10e-12*u.m
+                Background = False
+                T_type = 'N'
+            
+                instrument = detector.SpaceBased('LISA_ESA',\
+                                               T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,\
+                                               Background=Background,T_type=T_type)
                 
             instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
             instrument.L = [L,L_min,L_max]
@@ -257,30 +301,39 @@ The variables for either axis in the SNR calculation can be:
 
 -  GLOBAL:
 
-   -  ‘T_obs’ - Detector Observation Time
+   -  'T\_obs' - Detector Observation Time
 
 -  SOURCE:
 
-   -  ‘M’ - Mass (Solar Units)
-   -  ‘q’ - Mass Ratio
-   -  ‘chi1’ - Dimensionless Spin of Black Hole 1
-   -  ‘chi2’ - Dimensionless Spin of Black Hole 2
-   -  ‘z’ - Redshift
+   -  'M' - Mass (Solar Units)
+   -  'q' - Mass Ratio
+   -  'chi1' - Dimensionless Spin of Black Hole 1
+   -  'chi2' - Dimensionless Spin of Black Hole 2
+   -  'z' - Redshift
 
--  LISA ONLY:
+-  GroundBased ONLY:
 
-   -  ‘L’ - Detector Armlength
-   -  ‘A_acc’ - Detector Acceleration Noise
-   -  ‘A_IMS’ - Detector Optical Metrology Noise
-   -  ‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency
-   -  ‘f_acc_break_high’ - The High Acceleration Noise Break Frequency
-   -  ‘f_IMS_break’ - The Optical Metrology Noise Break Frequency
+   -  Any single valued variable in list of params given by:
+      instrument\_GroundBased.Get\_Noise\_Dict()
+   -  To make variable in SNR, declare the main variable, then the
+      subparameter variable as a string e.g. var\_x = 'Infrastructure
+      Length', the case matters.
 
--  PTAs ONLY:
+-  SpaceBased ONLY:
 
-   -  ‘N_p’ - Number of Pulsars
-   -  ‘sigma’ - Root-Mean-Squared Timing Error
-   -  ‘cadence’ - Observation Cadence
+   -  'L' - Detector Armlength
+   -  'A\_acc' - Detector Acceleration Noise
+   -  'A\_IFO' - Detector Optical Metrology Noise
+   -  'f\_acc\_break\_low' - The Low Acceleration Noise Break Frequency
+   -  'f\_acc\_break\_high' - The High Acceleration Noise Break
+      Frequency
+   -  'f\_IFO\_break' - The Optical Metrology Noise Break Frequency
+
+-  PTA ONLY:
+
+   -  'N\_p' - Number of Pulsars
+   -  'sigma' - Root-Mean-Squared Timing Error
+   -  'cadence' - Observation Cadence
 
 SNR Calculation
 ---------------
@@ -300,7 +353,7 @@ SNR Calculation.
     #Variable on x-axis
     var_x = 'M'
     #Model for NANOGrav WN only
-    model = 2
+    model = 4
     instrument = Get_Instrument(model)
     source = Get_Source(model)
 
@@ -320,7 +373,7 @@ returns the SNRs with size of the ``sampleRate1``\ X\ ``sampleRate2``
 
 .. parsed-literal::
 
-    30.32592487335205
+    27.46350598335266
 
 
 Plot the SNR using the initial variables and the returns from
@@ -378,7 +431,7 @@ Einstein Telescope
 
 .. parsed-literal::
 
-    Model:  ET_M_vs_z ,  done. t = :  16.7746262550354
+    Model:  ET_M_vs_z ,  done. t = :  14.575536251068115
 
 
 
@@ -387,8 +440,7 @@ Einstein Telescope
 
 .. parsed-literal::
 
-    Model:  ET_M_vs_q ,  done. t = :  20.113433837890625
-    here
+    Model:  ET_M_vs_q ,  done. t = :  18.131417989730835
 
 
 
@@ -397,7 +449,7 @@ Einstein Telescope
 
 .. parsed-literal::
 
-    Model:  ET_M_vs_chi2 ,  done. t = :  19.889232873916626
+    Model:  ET_M_vs_chi2 ,  done. t = :  17.366393089294434
 
 
 aLIGO
@@ -406,46 +458,36 @@ aLIGO
 .. code:: python
 
     model = 1
+    var_y = 'Infrastructure Length'
     instrument = Get_Instrument(model)
-    for var_y in var_ys:
-        source = Get_Source(model)
-        start = time.time()
-        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                           var_x,sampleRate_x,
-                                                           var_y,sampleRate_y)
-        end = time.time()
-        snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                         dl_axis=False,smooth_contours=False)
+    source = Get_Source(model)
     
-        print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_0.png
-
-
-.. parsed-literal::
-
-    Model:  aLIGO_M_vs_z ,  done. t = :  17.014657974243164
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_2.png
+    start = time.time()
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    end = time.time()
+    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
+                     dl_axis=False,smooth_contours=False)
+    
+    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
 
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_q ,  done. t = :  20.479567766189575
-    here
+    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:40: RuntimeWarning: invalid value encountered in sqrt
+      waist = waist * sqrt(((g1*g2)*(1-g1*g2))/((g1+g2-2*g1*g2)**2))
+    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:54: RuntimeWarning: invalid value encountered in less
+      zint[zint < 0] = 0
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_4.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_30_1.png
 
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_chi2 ,  done. t = :  19.58860492706299
+    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  13.939491033554077
 
 
 PTAs
@@ -470,7 +512,7 @@ NANOGrav WN only
 
 .. code:: python
 
-    model = 2
+    model = 4
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
@@ -490,7 +532,7 @@ NANOGrav WN only
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  44.62179899215698
+    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  41.988749980926514
 
 
 NANOGrav Realistic Noise
@@ -505,7 +547,7 @@ NANOGrav Realistic Noise
 
 .. code:: python
 
-    model = 3
+    model = 7
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
@@ -525,7 +567,7 @@ NANOGrav Realistic Noise
 
 .. parsed-literal::
 
-    Model:  NANOGrav_realistic_noise_M_vs_N_p ,  done. t = :  88.37940716743469
+    Model:  NANOGrav_realistic_noise_M_vs_N_p ,  done. t = :  88.48471927642822
 
 
 NANOGrav 11yr Data
@@ -544,7 +586,7 @@ NANOGrav 11yr Data
 
 .. code:: python
 
-    model = 4
+    model = 8
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
@@ -564,7 +606,7 @@ NANOGrav 11yr Data
 
 .. parsed-literal::
 
-    Model:  NANOGrav_11yr_M_vs_q ,  done. t = :  11.418483972549438
+    Model:  NANOGrav_11yr_M_vs_q ,  done. t = :  10.373409748077393
 
 
 SKA WN Only
@@ -583,7 +625,7 @@ SKA WN Only
 
 .. code:: python
 
-    model = 5
+    model = 9
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
@@ -603,7 +645,7 @@ SKA WN Only
 
 .. parsed-literal::
 
-    Model:  SKA_WN_M_vs_sigma ,  done. t = :  134.86095309257507
+    Model:  SKA_WN_M_vs_sigma ,  done. t = :  120.45069313049316
 
 
 SKA Realistic Noise
@@ -618,7 +660,7 @@ SKA Realistic Noise
 
 .. code:: python
 
-    model = 6
+    model = 12
     instrument = Get_Instrument(model)
     source = Get_Source(model)
     start = time.time()
@@ -638,7 +680,7 @@ SKA Realistic Noise
 
 .. parsed-literal::
 
-    Model:  SKA_realistic_noise_M_vs_T_obs ,  done. t = :  324.45782709121704
+    Model:  SKA_realistic_noise_M_vs_T_obs ,  done. t = :  263.5807590484619
 
 
 Space Based Instrument
@@ -660,7 +702,7 @@ LISA
 
 .. code:: python
 
-    model = 7
+    model = 14
     instrument = Get_Instrument(model)
     for var_y in var_ys:
         source = Get_Source(model)
@@ -681,7 +723,7 @@ LISA
 
 .. parsed-literal::
 
-    Model:  LISA_ESA_M_vs_z ,  done. t = :  23.79416799545288
+    Model:  LISA_ESA_M_vs_z ,  done. t = :  16.54398012161255
 
 
 
@@ -690,8 +732,7 @@ LISA
 
 .. parsed-literal::
 
-    Model:  LISA_ESA_M_vs_q ,  done. t = :  28.552029132843018
-    here
+    Model:  LISA_ESA_M_vs_q ,  done. t = :  19.3680260181427
 
 
 
@@ -700,7 +741,7 @@ LISA
 
 .. parsed-literal::
 
-    Model:  LISA_ESA_M_vs_chi1 ,  done. t = :  28.777315139770508
+    Model:  LISA_ESA_M_vs_chi1 ,  done. t = :  17.992519855499268
 
 
 
@@ -709,7 +750,7 @@ LISA
 
 .. parsed-literal::
 
-    Model:  LISA_ESA_M_vs_L ,  done. t = :  22.928117990493774
+    Model:  LISA_ESA_M_vs_L ,  done. t = :  15.184711933135986
 
 
 
@@ -718,6 +759,6 @@ LISA
 
 .. parsed-literal::
 
-    Model:  LISA_ESA_M_vs_A_acc ,  done. t = :  22.139339923858643
+    Model:  LISA_ESA_M_vs_A_acc ,  done. t = :  14.46771502494812
 
 
