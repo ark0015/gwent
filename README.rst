@@ -18,7 +18,7 @@ Gravitational Wave dEtector desigN Toolkit.
 
 Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
 
-.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/docs/waterfall_plot_tutorial_files/waterfall_plot_tutorial_24_0.png
+.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/docs/waterfall_plot_tutorial_files/waterfall_plot_tutorial_47_0.png
         :align: center
         :alt: gwent Waterfall Plots
 

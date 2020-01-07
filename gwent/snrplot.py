@@ -233,7 +233,7 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
     elif var_x == 'Infrastructure Length':
         ax1.set_xlabel(r'Infrastructure Length [m]',fontsize = labelsize)
-        ax1.set_xticklabels([r'$10^{%.0f}$' %y if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
     elif var_x == 'Laser Power':
         ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
         ax1.set_xlabel(r'Laser Power [W]')
