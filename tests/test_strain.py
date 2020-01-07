@@ -31,6 +31,7 @@ def aLIGO():
 
     aLIGO = detector.GroundBased('aLIGO',Ground_T_obs,
                                  load_location=aLIGO_filelocation,I_type='A')
+    aLIGO.S_n_f
     return aLIGO
 
 #Einstein Telescope
@@ -145,7 +146,7 @@ cadence_SKA = 1/(u.wk.to('yr')*u.yr)
 @pytest.fixture
 def SKA_WN():
     SKA_WN = detector.PTA('SKA, WN Only',
-        T_SKA,N_p_SKA,sigma_SKA,cadence_SKA)
+        T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,f_low=1e-10,f_high=1e-7,nfreqs=int(1e3))
     return SKA_WN
 
 #SKA with White and Varied Red Noise
@@ -153,12 +154,20 @@ def test_pta_SKA_WN_RN():
     SKA_WN_RN = detector.PTA('SKA, WN and RN',
         T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,
         rn_amp=[1e-16,1e-12],rn_alpha=[-3/4,1])
+    SKA_WN_RN.h_n_f
 
 #SKA with White Noise and a Stochastic Gravitational Wave Background
 def test_pta_SKA_WN_GWB():
     SKA_WN_GWB = detector.PTA('SKA, WN and GWB',
         T_SKA,N_p_SKA,sigma_SKA,cadence_SKA,
         GWB_amp=4e-16)
+
+#SKA with realistic noise
+def test_pta_SKA_Realistic_Noise():
+    SKA_Realistic_Noise = detector.PTA('SKA, Realistic Noise',
+        T_SKA,N_p_SKA,cadence_SKA,
+        use_11yr=True)
+    SKA_Realistic_Noise.h_n_f
 
 #### NANOGrav-esque Detector
 #Fiducial 11yr parameter estimates from Arzoumanian, et al., 2018 https://arxiv.org/abs/1801.01837
@@ -186,6 +195,13 @@ def test_pta_NANOGrav_WN_GWB():
     NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',
         T_nano,N_p_nano,sigma_nano,cadence_nano,
         GWB_amp=4e-16)
+
+#NANOGrav with Realistic Noise
+def test_pta_NANOGrav_Realistic_Noise():
+    NANOGrav_Realistic_Noise = detector.PTA('NANOGrav, Realistic Noise',
+        T_nano,N_p_nano,cadence_nano,
+        realistic_noise=True)
+    NANOGrav_Realistic_Noise.h_n_f
 
 
 # ####################################################################
@@ -220,13 +236,25 @@ f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
 f_IMS_break = 2.*u.mHz.to('Hz')*u.Hz
 A_acc = 3e-15*u.m/u.s/u.s
 A_IMS = 1.5e-11*u.m
-Background = False
+Background = True
 
 def test_LISA_prop2():
     LISA_prop2 = detector.SpaceBased('LISA Approximate',
                            LISA_T_obs,L,A_acc,f_acc_break_low,
                            f_acc_break_high,A_IMS,f_IMS_break,
                            Background=Background,T_type='A')
+
+
+# ####################################################################
+# # Calculate GroundBased amplitude spectral densities for various models
+gwinc_dict = {'Infrastructure':{'Length':3000,'Temp':[500,20,30]},'Laser':{'Wavelength':1e-5,'Power':130}}
+@pytest.fixture
+def aLIGO_gwinc():
+    aLIGO_gwinc = detector.GroundBased('aLIGO gwinc',Ground_T_obs,noise_dict=gwinc_dict)
+    return aLIGO_gwinc
+
+def test_Get_Noise_Dict(aLIGO_gwinc):
+    aLIGO_gwinc.Get_Noise_Dict()
 
 # #######################################################################
 # # BBH strain calculation
@@ -240,13 +268,15 @@ z = [3.0,0.093,20.0]
 
 def test_BBHStrain(LISA_prop1,aLIGO,SKA_WN,ET):
     source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],
-        instrument=LISA_prop1)
+        instrument=LISA_prop1,f_low=1e-6,f_high=10,nfreqs=int(1e3))
     source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],
         instrument=aLIGO)
     source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],
         instrument=SKA_WN)
     source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],
         instrument=ET)
+    binary.Get_Char_Strain(source_1)
+    binary.Get_Mono_Char_Strain(source_2,source_2.instrument)
 
 
 # ### Numerical Relativity from EOB subtraction
@@ -264,3 +294,4 @@ def test_NR_EOB():
         load_location=EOBdiff_filedirectory+'diff0261.dat')
     diff0303 = binary.BBHTimeDomain(M[1],q[0],z[1],
         load_location=EOBdiff_filedirectory+'diff0303.dat')
+    binary.Get_Char_Strain(diff0002)

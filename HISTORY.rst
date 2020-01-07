@@ -2,6 +2,11 @@
 History
 =======
 
+0.1.14 (2020-1-7)
+-------------------
+* Major addition of pygwinc
+* Minor fixes to snr sampling and plotting
+
 0.1.13 (2019-10-28)
 -------------------
 * Removing SNR Files in LoadFiles

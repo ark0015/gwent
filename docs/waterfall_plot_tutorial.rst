@@ -10,7 +10,7 @@ Loading ``gwent`` SNR Outputs to Generate Comparison Waterfall Plots
 ====================================================================
 
 Here we present a tutorial on how to use ``gwent`` output from
-``Get_SNR_Matrix`` to simultaneously plot Mass vs. Redshift SNRs for the
+``Get_SNR_Matrix`` to simultaneously plot Mass vs. Redshift SNRs for the
 instrument models currently implemented (LISA, PTAs, aLIGO, and Einstein
 Telescope) with the signal being an coalescing Binary Black Holes.
 

@@ -96,22 +96,24 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
     else:
         raise ValueError(var_y + ' is not a variable in the source or the instrument.')
 
-    #Can't take log of astropy variables
-    if isinstance(sample_x,u.Quantity):
-        sample_x = sample_x.value
-    if isinstance(sample_y,u.Quantity):
-        sample_y = sample_y.value
-
     #Set whether log or linearly spaced axes
-    if var_x in ['M','z','L','A_acc']:
-        xaxis_type = 'log'
-    else:
+    if xlabel_max <= 0.0 or xlabel_min <= 0.0:
         xaxis_type = 'lin'
-
-    if var_y in ['M','z','L','A_acc']:
-        yaxis_type = 'log'
     else:
+        x_scale = np.log10(xlabel_max) - np.log10(xlabel_min)
+        if x_scale >= 2.:
+            xaxis_type = 'log'
+        else:
+            xaxis_type = 'lin'
+
+    if ylabel_max <= 0.0 or ylabel_min <= 0.0:
         yaxis_type = 'lin'
+    else:
+        y_scale = np.log10(ylabel_max) - np.log10(ylabel_min)
+        if y_scale >= 2.:
+            yaxis_type = 'log'
+        else:
+            yaxis_type = 'lin'
 
     #########################
     #Make the Contour Plots
@@ -123,8 +125,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(np.log10(sample_x),sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(ylabel_min,ylabel_max)
-        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
-        y_labels = np.linspace(ylabel_min,ylabel_max,ylabel_max-ylabel_min+1)
+        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),int(np.log10(xlabel_max)-np.log10(xlabel_min)+1))
+        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,max(int(ylabel_max-ylabel_min+1),10)))
         ax1.set_yticks(y_labels)
         ax1.set_xticks(np.log10(x_labels))
     elif yaxis_type == 'log' and xaxis_type == 'lin':
@@ -132,8 +134,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(sample_x,np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(xlabel_min,xlabel_max)
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
-        x_labels = np.linspace(xlabel_min,xlabel_max,xlabel_max-xlabel_min+1)
-        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,max(int(xlabel_max-xlabel_min+1),10)))
+        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),int(np.log10(ylabel_max)-np.log10(ylabel_min)+1))
         ax1.set_xticks(x_labels)
         ax1.set_yticks(np.log10(y_labels))
     elif yaxis_type == 'lin' and xaxis_type == 'lin':
@@ -141,8 +143,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(sample_x,sample_y,logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(xlabel_min,xlabel_max)
         ax1.set_ylim(ylabel_min,ylabel_max)
-        x_labels = np.linspace(xlabel_min,xlabel_max,xlabel_max-xlabel_min+1)
-        y_labels = np.linspace(ylabel_min,ylabel_max,ylabel_max-ylabel_min+1)
+        x_labels = np.linspace(xlabel_min,xlabel_max,min(20,max(int(xlabel_max-xlabel_min+1),10)))
+        y_labels = np.linspace(ylabel_min,ylabel_max,min(20,max(int(ylabel_max-ylabel_min+1),10)))
         ax1.set_xticks(x_labels)
         ax1.set_yticks(y_labels)
     else:
@@ -150,8 +152,8 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.contour(np.log10(sample_x),np.log10(sample_y),logSNR,print_logLevels,colors = 'k',alpha=1.0)
         ax1.set_xlim(np.log10(xlabel_min),np.log10(xlabel_max))
         ax1.set_ylim(np.log10(ylabel_min),np.log10(ylabel_max))
-        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
-        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+        x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),int(np.log10(xlabel_max)-np.log10(xlabel_min)+1))
+        y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),int(np.log10(ylabel_max)-np.log10(ylabel_min)+1))
         ax1.set_yticks(np.log10(y_labels))
         ax1.set_xticks(np.log10(x_labels))
 
@@ -168,7 +170,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xlabel(r'$\mathrm{Redshift}$',fontsize = labelsize)
         ax1.set_xticklabels([x if int(x) < 1 else int(x) for x in x_labels],fontsize = axissize)
     elif var_x in ['chi1','chi2']:
-        print('here')
         x_labels = np.arange(round(xlabel_min*10),round(xlabel_max*10)+1,1)/10
         x_labels = x_labels[::2]
         ax1.set_xticks(x_labels)
@@ -230,6 +231,26 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_xticks(x_labels)
         ax1.set_xlabel(r'${\rm T_{obs}}$ $[\mathrm{yr}]$',fontsize = labelsize)
         ax1.set_xticklabels([r'$%i$' %int(x) for x in x_labels],fontsize = axissize)
+    elif var_x == 'Infrastructure Length':
+        ax1.set_xlabel(r'Infrastructure Length [m]',fontsize = labelsize)
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
+    elif var_x == 'Laser Power':
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
+        ax1.set_xlabel(r'Laser Power [W]')
+        ax1.set_xticklabels([r'$%.0f$' %x for x in x_labels])
+    elif var_x == 'Seismic Gamma':
+        ax1.set_xlabel(r'Seismic Gamma',fontsize = labelsize)
+        ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],fontsize = axissize)
+    else:
+        if xaxis_type == 'log':
+            ax1.set_xlabel(var_x,fontsize = labelsize)
+            ax1.set_xticklabels([r'$10^{%.0f}$' %x if abs(int(x)) > 1 else r'$%.1f$' %(10**x) for x in np.log10(x_labels)],
+                fontsize = axissize)
+        elif xaxis_type == 'lin':
+            ax1.set_xticks(x_labels)
+            ax1.set_xlabel(var_x,fontsize = labelsize)
+            ax1.set_xticklabels([r'$%.1f \times 10^{%i}$' %(x/10**int(np.log10(x)),np.log10(x)) if np.abs(int(np.log10(x))) > 1 else '{:g}'.format(x) for x in x_labels],
+                fontsize = axissize)
 
 
     if var_y == 'M':
@@ -245,7 +266,6 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_yticklabels([y if int(y) < 1 else int(y) for y in y_labels],\
             fontsize = axissize)
     elif var_y in ['chi1','chi2']:
-        print('here')
         y_labels = np.arange(round(ylabel_min*10),round(ylabel_max*10)+1,1)/10
         y_labels = y_labels[::2]
         ax1.set_yticks(y_labels)
@@ -307,8 +327,27 @@ def Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,display=T
         ax1.set_yticks(y_labels)
         ax1.set_ylabel(r'${\rm T_{obs}}$ $[\mathrm{yr}]$',fontsize = labelsize)
         ax1.set_yticklabels([r'$%i$' %int(y) for y in y_labels],fontsize = axissize)
+    elif var_y == 'Infrastructure Length':
+        ax1.set_ylabel(r'Infrastructure Length [m]',fontsize = labelsize)
+        ax1.set_yticklabels([r'$10^{%.0f}$' %y if abs(int(y)) > 1 else r'$%.1f$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
+    elif var_y == 'Laser Power':
+        ax1.set_yticklabels([r'$10^{%.0f}$' %y if abs(int(y)) > 1 else r'$%.1f$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
+        ax1.set_ylabel(r'Laser Power [W]')
+        ax1.set_yticklabels([r'$%.0f$' %y for y in y_labels])
+    elif var_y == 'Seismic Gamma':
+        ax1.set_ylabel(r'Seismic Gamma',fontsize = labelsize)
+        ax1.set_yticklabels([r'$10^{%.0f}$' %y if abs(int(y)) > 1 else r'$%.1f$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
+    else:
+        if yaxis_type == 'log':
+            ax1.set_ylabel(var_y,fontsize = labelsize)
+            ax1.set_yticklabels([r'$10^{%.0f}$' %y if abs(int(y)) > 1 else r'$%.1f$' %(10**y) for y in np.log10(y_labels)],fontsize = axissize)
+        elif yaxis_type == 'lin':
+            ax1.set_yticks(y_labels)
+            ax1.set_ylabel(var_y,fontsize = labelsize)
+            ax1.set_yticklabels([r'$%.1f \times 10^{%.0f}$' %(y/10**int(np.log10(y)),np.log10(y)) if np.abs(int(np.log10(y))) > 1 else '{:g}'.format(y) for y in y_labels],
+                fontsize = axissize)
 
-    ax1.yaxis.set_label_coords(-.10,.5)
+    ax1.yaxis.set_label_coords(-.20,.5)
 
     #If true, display luminosity distance on right side of plot
     if dl_axis:

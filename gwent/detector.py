@@ -11,6 +11,7 @@ from astropy.cosmology import WMAP9 as cosmo
 import gwent
 from . import utils
 
+import gwinc
 import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
 
@@ -18,7 +19,7 @@ current_path = os.path.abspath(gwent.__path__[0])
 load_directory = os.path.join(current_path,'LoadFiles/')
 
 class PTA:
-    """
+    r"""
     Class to make a PTA instrument using the methods of Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341>
 
     Parameters
@@ -47,12 +48,29 @@ class PTA:
         Amplitude of the gravitational wave background added as red noise
     GWB_alpha : float, optional
         the GWB power law, if empty and A_GWB is set, it is assumed to be -2/3
-    rn_amp : float, optional
-        Individual pulsar red noise amplitude, is a list of [min,max] values from which to uniformly sample
-    rn_alpha : float, optional
-        Individual pulsar red noise alpha (power law), is a list of [min,max] values from which to uniformly sample
+    rn_amp : array, list, optional
+        Individual pulsar red noise amplitude.
+        If rn_amp is a list of length of N_p, the amplitudes are used as the corresponding pulsar RN injection.
+        If rn_amp is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
+        (ie. [min,max]) from which individual pulsar RN amplitudes are uniformly sampled.
+    rn_alpha : array, list, optional
+        Individual pulsar red noise alpha (power law spectral index).
+        If rn_alpha is a list of length of N_p, the alpha indices are used as the corresponding pulsar RN injection.
+        If rn_alpha is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
+        (ie. [min,max]) from which individual pulsar RN alphas are uniformly sampled.
+    phi : list, array, optional
+        Individual pulsar longitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If N_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
+    theta : array, list, optional
+        Individual pulsar colatitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If N_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
     use_11yr : bool, optional
-        Uses the NANOGrav 11yr noise as the individual pulsar noises, if N_p > 34 (the number of pulsars in the 11yr), 
+        Uses the NANOGrav 11yr noise as the individual pulsar noises, 
+        if N_p > 34 (the number of pulsars in the 11yr dataset), 
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
     realistic_noise : float, optional
         Uses realistic noise drawn from distributions based on the NANOGrav 11yr pulsar noise
@@ -76,11 +94,13 @@ class PTA:
             elif keys == 'GWB_alpha':
                 self.GWB_alpha = value
             elif keys == 'rn_amp':
-                self.rn_amp_min = value[0]
-                self.rn_amp_max = value[1]
+                self.rn_amp = value
             elif keys == 'rn_alpha':
-                self.rn_alpha_min = value[0]
-                self.rn_alpha_max = value[1]
+                self.rn_alpha = value
+            elif keys == 'phi':
+                self.phi = value
+            elif keys == 'theta':
+                self.theta = value
             elif keys == 'use_11yr':
                 self.use_11yr = value
             elif keys == 'realistic_noise':
@@ -107,7 +127,7 @@ class PTA:
                 self.realistic_noise = False
 
         if hasattr(self,'f_low') and hasattr(self,'f_high'):
-            self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)
+            self.fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
 
         if len(args) != 0:
             if len(args) == 1:
@@ -238,11 +258,10 @@ class PTA:
     @property
     def f_opt(self):
         #The optimal frequency of the instrument ie. the frequecy at the lowest strain
-        if not hasattr(self,'_f_opt'):
-            self._f_opt = self.fT[np.argmin(self.h_n_f)]
+        self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
-    def Get_NANOGrav_Param_Distributions(self):
+    def Load_NANOGrav_11yr_Params(self):
         """Loads in NANOGrav 11yr data
 
         Notes
@@ -253,6 +272,18 @@ class PTA:
         """
         NANOGrav_11yr_params_filedirectory = os.path.join(load_directory,'InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt')
         self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
+
+    def Get_NANOGrav_Param_Distributions(self):
+        """Takes the NANOGrav 11yr noise parameters (sigma, RN_amplitudes,RN alphas) and sky locations (phis, thetas)
+        and generates distributions from which to draw new parameters.
+
+        Notes
+        -----
+        To draw from the generated distributions, one does draws = self._distribution.rvs(size=sample_size)
+        """
+        if not hasattr(self,'_NANOGrav_11yr_params'):
+            self.Load_NANOGrav_11yr_Params()
+
         [phis,thetas,sigmas,rn_amps,rn_alphas] = self._NANOGrav_11yr_params
 
         nbins = 8
@@ -330,17 +361,19 @@ class PTA:
             psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=sigmas,\
                 phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
         else:
-            if self.N_p < 33:
-                NANOGrav_11yr_params_filedirectory = os.path.join(load_directory,'InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt')
-                self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
-                [phis,thetas,_,_,_] = self._NANOGrav_11yr_params
-                thetas = thetas[:self.N_p]
-                phis = phis[:self.N_p]
+            if not hasattr(self,'_phi_dist') or not hasattr(self,'_theta_dist'):
+                self.Get_NANOGrav_Param_Distributions()
+
+            [NANOGrav_phis,NANOGrav_thetas,_,_,_] = self._NANOGrav_11yr_params
+            if self.N_p <= len(NANOGrav_phis):
+                thetas = NANOGrav_thetas[:self.N_p]
+                phis = NANOGrav_phis[:self.N_p]
             else:
-                #Random Sky Locations of Pulsars
-                phis = np.random.uniform(0, 2*np.pi,size=self.N_p)
-                cos_theta = np.random.uniform(-1,1,size=self.N_p)
-                thetas = np.arccos(cos_theta)
+                N_added_p = self.N_p - len(NANOGrav_phis)
+                theta_draws = self._theta_dist.rvs(size=N_added_p)
+                phi_draws = self._phi_dist.rvs(size=N_added_p)
+                thetas = np.append(NANOGrav_thetas,theta_draws)
+                phis = np.append(NANOGrav_phis,phi_draws)
 
             if hasattr(self,'GWB_amp'):
                 if not hasattr(self,'GWB_alpha'):
@@ -348,18 +381,28 @@ class PTA:
                 #Make a set of psrs with the same parameters with a GWB as red noise
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
                     phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=self.GWB_amp,alpha=self.GWB_alpha,freqs=self.fT.value)
-            elif hasattr(self,'rn_amp_min') or hasattr(self,'rn_alpha_min'):
-                if not hasattr(self,'rn_amp_min'):
+            elif hasattr(self,'rn_amp') or hasattr(self,'rn_alpha'):
+                if not hasattr(self,'rn_amp'):
                     rn_amps = np.random.uniform(1e-16,1e-12,size=self.N_p)
                 else:
-                    rn_amps = np.random.uniform(self.rn_amp_min,self.rn_amp_max,size=self.N_p)
-                if not hasattr(self,'rn_alpha_min'):
+                    if len(self.rn_amp) == 2:
+                        rn_amps = np.random.uniform(min(self.rn_amp),max(self.rn_amp),size=self.N_p)
+                    elif len(self.rn_amp) == self.N_p:
+                        rn_amps = self.rn_amp
+                    else:
+                        raise ValueError('RN amplitudes must be either [rn_amp_min,rn_amp_max], or and array of RN amplitudes with len(N_p).')
+                if not hasattr(self,'rn_alpha'):
                     rn_alphas = np.random.uniform(-3/4,1,size=self.N_p)
                 else:
-                    rn_alphas = np.random.uniform(self.rn_alpha_min,self.rn_alpha_max,size=self.N_p)
-                #Make a set of psrs with uniformly sampled red noise
+                    if len(self.rn_alpha) == 2:
+                        rn_alphas = np.random.uniform(min(self.rn_alpha),max(self.rn_alpha),size=self.N_p)
+                    elif len(self.rn_alpha) == self.N_p:
+                        rn_alphas = self.rn_alpha
+                    else:
+                        raise ValueError('RN alphas must be either [rn_alpha_min,rn_alpha_max], or and array of RN alphas with len(N_p).')
+
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
-                    phi=phis, theta=thetas, Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
+                    phi=phis,theta=thetas,Npsrs=self.N_p,A_rn=rn_amps,alpha=rn_alphas,freqs=self.fT.value)
             else:
                 #Make a set of psrs with the same parameters
                 psrs = hassim.sim_pta(timespan=self.T_obs.value,cad=self.cadence.value,sigma=self.sigma.value,\
@@ -377,7 +420,7 @@ class PTA:
 
 
 class Interferometer:
-    """
+    r"""
     Class to make an interferometer
 
     Parameters
@@ -396,6 +439,12 @@ class Interferometer:
         'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
         'h' is the characteristic strain $h_{n}(f)$ ('h')
+    f_low : float, optional
+        Assigned lowest frequency of instrument (default is assigned in particular child classes)
+    f_high : float, optional
+        Assigned highest frequency of instrument (default is assigned in particular child classes)
+    nfreqs : int, optional
+        Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
 
     """
     def __init__(self,name,T_obs,**kwargs):
@@ -407,6 +456,12 @@ class Interferometer:
                 self.load_location = value
             elif keys == 'I_type':
                 self.I_type = value
+            elif keys == 'f_low':
+                self.f_low = utils.make_quant(value,'Hz')
+            elif keys == 'f_high':
+                self.f_high = utils.make_quant(value,'Hz')
+            elif keys == 'nfreqs':
+                self.nfreqs = value
 
         if hasattr(self,'load_location'):
             Load_Data(self)
@@ -435,6 +490,8 @@ class Interferometer:
                 self._fT = self._I_data[:,0]*u.Hz
             if isinstance(self,SpaceBased):
                 self.Set_T_Function_Type()
+            if isinstance(self,GroundBased):
+                self._fT = np.logspace(np.log10(self.f_low.value),np.log10(self.f_high.value),self.nfreqs)*u.Hz
         return self._fT
     @fT.setter
     def fT(self,value):
@@ -490,23 +547,156 @@ class Interferometer:
 class GroundBased(Interferometer):
     """
     Class to make a Ground Based Instrument using the Interferometer base class
+
+    Parameters
+    ----------
+    noise_dict : dictionary, optional
+        A nested noise dictionary that has the main variable parameter name(s) in the top level,
+        the next level of the dictionary contains the subparameter variable name(s) and the desired value
+        to which the subparameter will be changed. The subparameter value can also be an array/list of the
+        [value,min,max] if one wishes to vary the instrument over then min/max range.
+
     """
     def __init__(self,name,T_obs,**kwargs):
         super().__init__(name,T_obs,**kwargs)
-        """
-        Currently doesn't do anything differently that Instrument object, can be updated if we ever construct at Ground Based PSD...
-        """
+
+        for keys,value in kwargs.items():
+            if keys == 'noise_dict':
+                if isinstance(value,dict):
+                    self.noise_dict = value
+                else:
+                    raise ValueError(keys + ' must be a dictionary of noise sources.')
+        
+        if not hasattr(self,'nfreqs'):
+            self.nfreqs = int(1e3)
+        if not hasattr(self,'f_low'):
+            self.f_low = 1.*u.Hz
+        if not hasattr(self,'f_high'):
+            self.f_high = 1e4*u.Hz
+
+        if not hasattr(self,'load_location'):
+            if not hasattr(self,'noise_dict'):
+                self.Init_GroundBased()
+            else:
+                self.Set_Noise_Dict(self.noise_dict)
 
     @property
     def P_n_f(self):
         """Power Spectral Density. """
-        raise NotImplementedError('Uhhh, can only load from a file for right now....')
+        err_mssg =  'Currently we only calculate the Effective Noise Power Spectral Density for Ground Based detectors.\n'
+        err_mssg += 'i.e. We do not separate the transfer function from the Power Spectral Density'
+        raise NotImplementedError(err_mssg)
+
+    @property
+    def S_n_f(self):
+        """Effective Noise Power Spectral Density"""
+        if not hasattr(self,'_S_n_f'):
+            if hasattr(self,'_I_data'):
+                if self._I_Type == 'ASD':
+                    S_n_f_sqrt = self._I_data[:,1]
+                    self._S_n_f = S_n_f_sqrt**2/u.Hz
+                elif self._I_Type == 'ENSD':
+                    self._S_n_f = self._I_data[:,1]/u.Hz
+                elif self._I_Type == 'h':
+                    self._S_n_f = self.h_n_f**2/self.fT
+            else:
+                if not any(hasattr(self,attr) for attr in ['_noise_budget','_ifo','_base_inst']):
+                    self.Init_GroundBased()
+                self._S_n_f = self._noise_budget(self.fT.value,ifo=self._ifo).calc()/u.Hz
+        return self._S_n_f
+    @S_n_f.deleter
+    def S_n_f(self):
+        del self._S_n_f
+
+    def Init_GroundBased(self):
+        """Initialized the Ground Based detector in gwinc"""
+        base_inst = [name for name in self.name.split() if name in gwinc.available_ifos()]
+        if len(base_inst) == 1:
+            self._base_inst = base_inst[0]
+        else:
+            print('You must select a base instrument model from ', [model for model in gwinc.available_ifos()])
+            print('Setting base instrument to aLIGO. To change base instrument, include different model in class name and reinitialize.')
+            self._base_inst = 'aLIGO'
+
+        if not any(hasattr(self,attr) for attr in ['_noise_budget','_init_ifo']):
+            self._noise_budget,self._init_ifo,_,_ = gwinc.load_ifo(self._base_inst)
+        self._ifo = gwinc.precompIFO(self.fT.value, self._init_ifo)
+
+    def Set_Noise_Dict(self,noise_dict):
+        """Sets new values in the nested dictionary of variable noise values
+        
+        Parameters
+        ----------
+
+        noise_dict : dictionary
+            A nested noise dictionary that has the main variable parameter name(s) in the top level,
+            the next level of the dictionary contains the subparameter variable name(s) and the desired value
+            to which the subparameter will be changed. The subparameter value can also be an array/list of the
+            [value,min,max] if one wishes to vary the instrument over then min/max range.
+
+        Examples
+        --------
+        obj.Set_Noise_Dict({'Infrastructure':{'Length':[3000,1000,5000],'Temp':500},'Laser':{'Wavelength':1e-5,'Power':130}})
+
+        """
+        if not hasattr(self,'_ifo'):
+            self.Init_GroundBased()
+        if isinstance(noise_dict,dict): 
+            for base_noise, inner_noise_dict in noise_dict.items():
+                for sub_noise,sub_noise_val in inner_noise_dict.items():
+                    if base_noise in self._ifo.keys():
+                        if sub_noise in self._ifo[base_noise].keys():
+                            self.var_dict = [base_noise+' '+sub_noise,sub_noise_val]
+                            setattr(getattr(self._ifo,base_noise),sub_noise,self._return_value)
+                        else:
+                            raise ValueError(sub_noise + ' is not a subparameter variable noise source.\
+                                Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables.')
+                    else:
+                        err_mssg = base_noise + ' is not a valid parameter variable noise source.\n'
+                        err_mssg += 'Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables.'
+                        raise ValueError(err_mssg)
+        else:
+            raise ValueError('Input must be a dictionary of noise sources.')
+
+    def Get_Noise_Dict(self):
+        """Gets and prints the available variable noises in the detector design"""
+        i=0
+        for key_1,item_1 in self._ifo.items():
+            print(key_1,'Parameters:')
+            for key_2, item_2 in item_1.items():
+                if isinstance(item_2,np.ndarray):
+                    i+=1
+                    print('    ',key_2,': array of shape',item_2.shape)
+                elif isinstance(item_2,list):
+                    i+=1
+                    print('    ',key_2,': array of shape',len(item_2))
+                elif isinstance(item_2,(int,float)):
+                    i+=1
+                    print('    ',key_2,':',item_2)
+                elif isinstance(item_2,gwinc.struct.Struct):
+                    print('    ',key_2,'Subparameters:')
+                    for key_3, item_3 in item_2.items():
+                        if isinstance(item_3,np.ndarray):
+                            i+=1
+                            print('    ','    ',key_3,': array of shape',item_3.shape)
+                        elif isinstance(item_3,list):
+                            i+=1
+                            print('    ','    ',key_3,': array of shape',len(item_3))
+                        elif isinstance(item_3,(int,float)):
+                            i+=1
+                            print('    ','    ',key_3,':',item_3)
+                else:
+                    i+=1
+                    print('    ',key_2,':',item_2)
+
+        print(' ')
+        print('Number of Variables: ',i)
 
 
 
 class SpaceBased(Interferometer):
     """
-    Class to make a Space Based interferometer
+    Class to make a Space Based Instrument using the Interferometer base class
 
     Parameters
     ----------
@@ -527,29 +717,17 @@ class SpaceBased(Interferometer):
         'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
     Background : Boolean
         Add in a Galactic Binary Confusion Noise
-    f_low : float
-        Assigned lowest frequency of instrument (default assigns 10^-5Hz)
-    f_high : float
-        Assigned highest frequency of instrument (default is 1Hz)
-    nfreqs : int
-        Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
 
     """
     def __init__(self,name,T_obs,*args,**kwargs):
         super().__init__(name,T_obs,**kwargs)
-        self.name = name
+
         for keys,value in kwargs.items():
             if keys == 'T_type':
                 self.T_type = value
             elif keys == 'Background':
                 self.Background = value
-            elif keys == 'f_low':
-                self.f_low = utils.make_quant(value,'Hz')
-            elif keys == 'f_high':
-                self.f_high = utils.make_quant(value,'Hz')
-            elif keys == 'nfreqs':
-                self.nfreqs = value
-
+            
         if not hasattr(self,'nfreqs'):
             self.nfreqs = int(1e3)
         if not hasattr(self,'f_low'):
@@ -713,11 +891,11 @@ class SpaceBased(Interferometer):
             print(' *To use the analytic fit in Larson, Hiscock, and Hellings, 2000, input "A".')
             calc_type = input('Please select the calculation type: ')
             self.Set_T_Function_Type(calc_type)
-        if hasattr(self,'_T_type'):
-            if self._T_type == 'numeric':
-                self.Get_Numeric_Transfer_Function()
-            if self._T_type == 'analytic':
-                self.Get_Analytic_Transfer_Function()
+
+        if self._T_type == 'numeric':
+            self.Get_Numeric_Transfer_Function()
+        if self._T_type == 'analytic':
+            self.Get_Analytic_Transfer_Function()
 
 
     def Add_Background(self):
@@ -741,8 +919,9 @@ class SpaceBased(Interferometer):
         else:
             index = 3
         f = self.fT.value
-        return A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
-                *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f))) #White Dwarf Background Noise
+        S_c_f = A*np.exp(-(f**a[index])+(b[index]*f*np.sin(k[index]*f)))\
+                *(f**(-7/3))*(1 + np.tanh(g[index]*(f_k[index]-f)))*(1/u.Hz) #White Dwarf Background Noise
+        return S_c_f
 
 def Load_Data(detector):
     """

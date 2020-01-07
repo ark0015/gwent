@@ -37,7 +37,7 @@ chi2 = 0.0 #spin of m2
 chi_min = -0.85 #Limits of PhenomD for unaligned spins
 chi_max = 0.85
 
-z = 3.0 #Redshift
+z = 1.0 #Redshift
 z_min = 1e-2
 z_max = 1e3
 
