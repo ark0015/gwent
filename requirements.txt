@@ -1,3 +1,4 @@
+pip >= 18.1
 numpy >= 1.14
 scipy >= 1.0
 astropy >= 3.0
