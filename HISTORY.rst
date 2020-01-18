@@ -2,6 +2,10 @@
 History
 =======
 
+0.1.15 (2020-1-18)
+-------------------
+* Including easy install of pygwinc
+
 0.1.14 (2020-1-7)
 -------------------
 * Major addition of pygwinc
