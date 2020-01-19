@@ -16,6 +16,12 @@ To install gwent, run this command in your terminal:
 
 This is the preferred method to install gwent, as it will always install the most recent stable release.
 
+To install pygwinc, a GitLab hosted package necessary to fully utilize gwent, run this command in your terminal:
+
+.. code-block:: console
+
+    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git#egg=pygwinc
+
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
 
@@ -46,6 +52,17 @@ Once you have a copy of the source, you can install it with:
 
     $ python setup.py install
 
+You will still need to manually install pygwinc, so either use
+
+.. code-block:: console
+
+    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git#egg=pygwinc
+
+or use pip to install the requirements within gwent
+
+.. code-block:: console
+
+    $ pip install -r requirements.txt
 
 .. _Github repo: https://github.com/ark0015/gwent
 .. _tarball: https://github.com/ark0015/gwent/tarball/master

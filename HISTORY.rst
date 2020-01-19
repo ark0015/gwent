@@ -1,6 +1,10 @@
 =======
 History
 =======
+0.1.16 (2020-1-19)
+-------------------
+* Removing install of pygwinc in setup.py
+* pygwinc must now be manually installed 
 
 0.1.15 (2020-1-18)
 -------------------

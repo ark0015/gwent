@@ -335,7 +335,7 @@ Add Label positions and labels for different GW detectors
     labelIpta_ypos = 0.6
 
 Plots of Entire GW Band
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
