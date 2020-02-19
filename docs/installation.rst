@@ -20,7 +20,7 @@ To install pygwinc, a GitLab hosted package necessary to fully utilize gwent, ru
 
 .. code-block:: console
 
-    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git#egg=pygwinc
+    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git@65396ee42e851ab7189618cabe1c12081b5d982e#egg=pygwinc
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
