@@ -3,5 +3,5 @@
 """Top-level package for gwent."""
 
 __author__ = """Andrew Kaiser"""
-__email__ = 'andrewkaiser70@gmail.com'
-__version__ = '0.1.16'
+__email__ = "andrewkaiser70@gmail.com"
+__version__ = "0.1.16"
