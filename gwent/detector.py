@@ -311,24 +311,28 @@ class PTA:
         if not hasattr(self, "_NANOGrav_11yr_params"):
             self.Load_NANOGrav_11yr_Params()
 
-        [phis, thetas, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
+        [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
 
         nbins = 8
+        new_T_obs = np.append(T_obs,np.linspace(min(T_obs),max(T_obs),nbins))
         # Add non-zero probability of picking 0 and pi
-        new_thetas = np.append(thetas, np.linspace(0.0, np.pi, nbins))
         new_phis = np.append(phis, np.linspace(0.0, 2 * np.pi, nbins))
+        new_thetas = np.append(thetas, np.linspace(0.0, np.pi, nbins))
+        new_cadences = np.append(cadences,np.linspace(min(cadences),max(cadences),nbins))
+        new_sigmas = np.append(sigmas, np.linspace(min(sigmas), max(sigmas), nbins))
         # add non-zero probability in middle of alphas and amps
-        new_rn_alphas = np.append(
-            rn_alphas, np.linspace(min(rn_alphas), max(rn_alphas), nbins)
-        )
         new_rn_amps = np.append(
             rn_amps, np.logspace(min(np.log10(rn_amps)), max(np.log10(rn_amps)), nbins)
         )
-        new_sigmas = np.append(sigmas, np.linspace(min(sigmas), max(sigmas), nbins))
+        new_rn_alphas = np.append(
+            rn_alphas, np.linspace(min(rn_alphas), max(rn_alphas), nbins)
+        )
 
+        T_obs_hist = np.histogram(new_T_obs, bins=nbins,density=True)
         phi_hist = np.histogram(new_phis, bins=nbins, density=True)
         theta_hist = np.histogram(new_thetas, bins=nbins, density=True)
-        rn_alpha_hist = np.histogram(new_rn_alphas, bins=nbins, density=True)
+        cadence_hist = np.histogram(new_cadences, bins=nbins,density=True)
+        sigma_hist = np.histogram(new_sigmas, bins=nbins, density=True)
         rn_amp_hist = np.histogram(
             new_rn_amps,
             bins=np.logspace(
@@ -336,49 +340,60 @@ class PTA:
             ),
             density=True,
         )
-        sigma_hist = np.histogram(new_sigmas, bins=nbins, density=True)
+        rn_alpha_hist = np.histogram(new_rn_alphas, bins=nbins, density=True)
 
+        self._T_obs_dist = stats.rv_histogram(T_obs_hist)
         self._phi_dist = stats.rv_histogram(phi_hist)
         self._theta_dist = stats.rv_histogram(theta_hist)
-        self._rn_alpha_dist = stats.rv_histogram(rn_alpha_hist)
-        self._rn_amp_dist = stats.rv_histogram(rn_amp_hist)
+        self._cadence_dist = stats.rv_histogram(cadence_hist)
         self._sigma_dist = stats.rv_histogram(sigma_hist)
+        self._rn_amp_dist = stats.rv_histogram(rn_amp_hist)
+        self._rn_alpha_dist = stats.rv_histogram(rn_alpha_hist)
 
     def Draw_New_Pulsars(self):
         if not hasattr(self, "_NANOGrav_11yr_params"):
             self.Get_NANOGrav_Param_Distributions()
 
-        [phis, thetas, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
+        [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
 
         # 34 pulsars in the 11yr dataset (ie. len(phis))
         if self.use_11yr:
             if self.N_p > len(phis):
                 N_added_p = self.N_p - len(phis)
-                theta_draws = self._theta_dist.rvs(size=N_added_p)
+
+                T_obs_draws = self._T_obs_dist.rvs(size=N_added_p)
                 phi_draws = self._phi_dist.rvs(size=N_added_p)
+                theta_draws = self._theta_dist.rvs(size=N_added_p)
+                cadence_draws = self._cadence_dist.rvs(size=N_added_p)
+                sigma_draws = self._sigma_dist.rvs(size=N_added_p)
                 rn_amp_draws = self._rn_amp_dist.rvs(size=N_added_p)
                 rn_alpha_draws = self._rn_alpha_dist.rvs(size=N_added_p)
-                sigma_draws = self._sigma_dist.rvs(size=N_added_p)
 
-                new_thetas = np.append(thetas, theta_draws)
+                new_T_obs = np.append(T_obs, T_obs_draws)
                 new_phis = np.append(phis, phi_draws)
+                new_thetas = np.append(thetas, theta_draws)
+                new_cadences = np.append(cadences, cadence_draws)
+                new_sigmas = np.append(sigmas, sigma_draws)
                 new_rn_amps = np.append(rn_amps, rn_amp_draws)
                 new_rn_alphas = np.append(rn_alphas, rn_alpha_draws)
-                new_sigmas = np.append(sigmas, sigma_draws)
             else:
-                new_thetas = thetas[: self.N_p]
+                new_T_obs = T_obs[: self.N_p]
                 new_phis = phis[: self.N_p]
+                new_thetas = thetas[: self.N_p]
+                new_cadences = cadences[: self.N_p]
+                new_sigmas = sigmas[: self.N_p]
                 new_rn_amps = rn_amps[: self.N_p]
                 new_rn_alphas = rn_alphas[: self.N_p]
-                new_sigmas = sigmas[: self.N_p]
         else:
-            new_thetas = self._theta_dist.rvs(size=self.N_p)
+            new_T_obs = self._T_obs_dist.rvs(size=self.N_p)
             new_phis = self._phi_dist.rvs(size=self.N_p)
+            new_thetas = self._theta_dist.rvs(size=self.N_p)
+            new_cadences = self._cadence_dist.rvs(size=self.N_p)
+            new_sigmas = self._sigma_dist.rvs(size=self.N_p)
             new_rn_amps = self._rn_amp_dist.rvs(size=self.N_p)
             new_rn_alphas = self._rn_alpha_dist.rvs(size=self.N_p)
-            new_sigmas = self._sigma_dist.rvs(size=self.N_p)
 
-        return [new_phis, new_thetas, new_sigmas, new_rn_amps, new_rn_alphas]
+        return [new_T_obs, new_phis, new_thetas, new_cadences, new_sigmas, new_rn_amps, new_rn_alphas]
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
