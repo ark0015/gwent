@@ -73,8 +73,8 @@ class PTA:
         Uses the NANOGrav 11yr noise as the individual pulsar noises, 
         if N_p > 34 (the number of pulsars in the 11yr dataset), 
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
-    realistic_noise : float, optional
-        Uses realistic noise drawn from distributions based on the NANOGrav 11yr pulsar noise
+    sampled_noise : float, optional
+        Uses sampled noise drawn from distributions based on the NANOGrav 11yr pulsar noise
     f_low : float, optional
         Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
     f_high : float, optional
@@ -105,8 +105,8 @@ class PTA:
                 self.theta = value
             elif keys == "use_11yr":
                 self.use_11yr = value
-            elif keys == "realistic_noise":
-                self.realistic_noise = value
+            elif keys == "sampled_noise":
+                self.sampled_noise = value
             elif keys == "f_low":
                 self.f_low = utils.make_quant(value, "Hz")
             elif keys == "f_high":
@@ -122,11 +122,11 @@ class PTA:
             Load_Data(self)
 
         if hasattr(self, "use_11yr"):
-            self.realistic_noise = True
+            self.sampled_noise = True
         else:
             self.use_11yr = False
-            if not hasattr(self, "realistic_noise"):
-                self.realistic_noise = False
+            if not hasattr(self, "sampled_noise"):
+                self.sampled_noise = False
 
         if hasattr(self, "f_low") and hasattr(self, "f_high"):
             self.fT = (
@@ -138,13 +138,7 @@ class PTA:
 
         if len(args) != 0:
             if len(args) == 1:
-                T_obs = args[0]
-                self.T_obs = utils.make_quant(T_obs, "yr")
-            elif len(args) == 3:
-                [T_obs, N_p, cadence] = args
-                self.T_obs = utils.make_quant(T_obs, "yr")
-                self.N_p = N_p
-                self.cadence = utils.make_quant(cadence, "1/yr")
+                self.N_p = args[0]
             else:
                 [T_obs, N_p, sigma, cadence] = args
                 self.T_obs = utils.make_quant(T_obs, "yr")
@@ -356,6 +350,10 @@ class PTA:
 
         [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
 
+        #Used to set minimum and maximum frequency, respectively.
+        self.T_obs = np.max(T_obs)
+        self.cadence = np.min(cadences)
+
         # 34 pulsars in the 11yr dataset (ie. len(phis))
         if self.use_11yr:
             if self.N_p > len(phis):
@@ -403,12 +401,12 @@ class PTA:
         See Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341> for details
 
         """
-        if self.realistic_noise:
-            [phis, thetas, sigmas, rn_amps, rn_alphas] = self.Draw_New_Pulsars()
+        if self.sampled_noise:
+            [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self.Draw_New_Pulsars()
             # Make a set of psrs with parameters drawn from 11yr distributaions (or real 11yr parameters if use_11yr=True)
             psrs = hassim.sim_pta(
-                timespan=self.T_obs.value,
-                cad=self.cadence.value,
+                timespan=T_obs,
+                cad=cadences,
                 sigma=sigmas,
                 phi=phis,
                 theta=thetas,
@@ -421,7 +419,7 @@ class PTA:
             if not hasattr(self, "_phi_dist") or not hasattr(self, "_theta_dist"):
                 self.Get_NANOGrav_Param_Distributions()
 
-            [NANOGrav_phis, NANOGrav_thetas, _, _, _] = self._NANOGrav_11yr_params
+            [_, NANOGrav_phis, NANOGrav_thetas, _, _, _, _] = self._NANOGrav_11yr_params
             if self.N_p <= len(NANOGrav_phis):
                 thetas = NANOGrav_thetas[: self.N_p]
                 phis = NANOGrav_phis[: self.N_p]
