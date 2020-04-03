@@ -208,7 +208,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
     if (
         var_x_min != None and var_x_max != None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
-        if var_x == "N_p":
+        if var_x == "n_p":
             # sample in integer steps
             sample_range = var_x_max - var_x_min
             if sample_range > 10:
@@ -237,7 +237,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
     if (
         var_y_min != None and var_y_max != None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
-        if var_y == "N_p":
+        if var_y == "n_p":
             # sample in integer steps
             sample_range = var_y_max - var_y_min
             if sample_range > 10:

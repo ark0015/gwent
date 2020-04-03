@@ -29,15 +29,59 @@ class PTA:
     name : string
         name of the instrument
 
-    T_obs : float
-        the observation time of the PTA in [years]
-    N_p : int
+    n_p : int
         the number of pulsars in the PTA
-    sigma : float
-        the rms error on the pulsar TOAs in [sec]
-    cadence : float
-        How often the pulsars are observed in [num/year]
 
+    T_obs : float,array, list, optional
+        the observation time of the PTA in [years]
+        If T_obs is a float, the observation time is used as the observation time for all pulsars
+        If T_obs is a list of length of n_p, the observation times are used as the corresponding pulsar observation times.
+        If T_obs is a list of length 2, it is assumed the values are the minimum and maximum observation time values
+        (ie. [min,max]) from which individual pulsar observation times are uniformly sampled.
+    sigma : float, array, list, optional
+        the rms error on the pulsar TOAs in [sec]
+        If sigma is a float, the given rms error is used for all pulsars.
+        If sigma is a list of length of n_p, the amplitudes are used as the corresponding pulsar rms error.
+        If sigma is a list of length 2, it is assumed the values are the minimum and maximum rms errors values
+        (ie. [min,max]) from which individual pulsar rms errors are uniformly sampled.
+    cadence : float, array, list, optional
+        How often the pulsars are observed in [num/year]
+        If cadence is a float, the given cadence is used for all pulsars.
+        If cadence is a list of length of n_p, the amplitudes are used as the corresponding pulsar cadence.
+        If cadence is a list of length 2, it is assumed the values are the minimum and maximum cadence values
+        (ie. [min,max]) from which individual pulsar cadences are uniformly sampled.
+    sb_amp : float, optional
+        Amplitude of the Stochastic background added as red noise
+    sb_alpha : float, optional
+        the Stochastic background power law, if empty and sb_amp is set, it is assumed to be -2/3
+    rn_amp : array, list, optional
+        Individual pulsar red noise amplitude.
+        If rn_amp is a list of length of n_p, the amplitudes are used as the corresponding pulsar RN injection.
+        If rn_amp is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
+        (ie. [min,max]) from which individual pulsar RN amplitudes are uniformly sampled.
+    rn_alpha : array, list, optional
+        Individual pulsar red noise alpha (power law spectral index).
+        If rn_alpha is a list of length of n_p, the alpha indices are used as the corresponding pulsar RN injection.
+        If rn_alpha is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
+        (ie. [min,max]) from which individual pulsar RN alphas are uniformly sampled.
+    phi : list, array, optional
+        Individual pulsar longitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If n_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
+    theta : array, list, optional
+        Individual pulsar colatitude in ecliptic coordinates.
+        If not defined, NANOGrav 11yr pulsar locations are used.
+        If n_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
+    use_11yr : bool, optional
+        Uses the NANOGrav 11yr noise as the individual pulsar noises, 
+        if n_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
+    use_rn : bool, optional
+        If no rn_amp assigned, uses the NANOGrav 11yr noise as the individual pulsar RN noises, 
+        if n_p > 34 (the number of pulsars in the 11yr dataset), 
+        it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
     load_location : string, optional
         If you want to load a PTA curve from a file, it's the file path
     I_type : string, {'E','A','h'}
@@ -45,56 +89,32 @@ class PTA:
         'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
         'h' is the characteristic strain $h_{n}(f)$ ('h')
-    GWB_amp : float, optional
-        Amplitude of the gravitational wave background added as red noise
-    GWB_alpha : float, optional
-        the GWB power law, if empty and A_GWB is set, it is assumed to be -2/3
-    rn_amp : array, list, optional
-        Individual pulsar red noise amplitude.
-        If rn_amp is a list of length of N_p, the amplitudes are used as the corresponding pulsar RN injection.
-        If rn_amp is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
-        (ie. [min,max]) from which individual pulsar RN amplitudes are uniformly sampled.
-    rn_alpha : array, list, optional
-        Individual pulsar red noise alpha (power law spectral index).
-        If rn_alpha is a list of length of N_p, the alpha indices are used as the corresponding pulsar RN injection.
-        If rn_alpha is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
-        (ie. [min,max]) from which individual pulsar RN alphas are uniformly sampled.
-    phi : list, array, optional
-        Individual pulsar longitude in ecliptic coordinates.
-        If not defined, NANOGrav 11yr pulsar locations are used.
-        If N_p > 34 (the number of pulsars in the 11yr dataset), 
-        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
-    theta : array, list, optional
-        Individual pulsar colatitude in ecliptic coordinates.
-        If not defined, NANOGrav 11yr pulsar locations are used.
-        If N_p > 34 (the number of pulsars in the 11yr dataset), 
-        it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
-    use_11yr : bool, optional
-        Uses the NANOGrav 11yr noise as the individual pulsar noises, 
-        if N_p > 34 (the number of pulsars in the 11yr dataset), 
-        it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
-    sampled_noise : float, optional
-        Uses sampled noise drawn from distributions based on the NANOGrav 11yr pulsar noise
     f_low : float, optional
         Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
     f_high : float, optional
         Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated
-
+    nbins : int, optional
+        Used to add values to every bin for sampled parameters. Default is 8 for smooth, non-zero distributions. 
+        Changing this could change distribution, so be wary, not sure how much it affects anything.
     """
 
     def __init__(self, name, *args, **kwargs):
         self.name = name
+        if len(args) != 0:
+            if len(args) == 1:
+                self.n_p = args[0]
+            else:
+                raise ValueError("Too many args, not enought kwargs!")
+
         for keys, value in kwargs.items():
-            if keys == "load_location":
-                self.load_location = value
-            elif keys == "I_type":
-                self.I_type = value
-            elif keys == "GWB_amp":
-                self.GWB_amp = value
-            elif keys == "GWB_alpha":
-                self.GWB_alpha = value
+            if keys == "T_obs":
+                self.T_obs = utils.make_quant(value, "yr")
+            elif keys == "sigma":
+                self.sigma = utils.make_quant(value, "s")
+            elif keys == "cadence":
+                self.cadence = utils.make_quant(value, "1/yr")
             elif keys == "rn_amp":
                 self.rn_amp = value
             elif keys == "rn_alpha":
@@ -103,30 +123,40 @@ class PTA:
                 self.phi = value
             elif keys == "theta":
                 self.theta = value
+            elif keys == "sb_amp":
+                self.sb_amp = value
+            elif keys == "sb_alpha":
+                self.sb_alpha = value
             elif keys == "use_11yr":
                 self.use_11yr = value
-            elif keys == "sampled_noise":
-                self.sampled_noise = value
+            elif keys == "use_rn":
+                self.use_rn = value
+            elif keys == "load_location":
+                self.load_location = value
+            elif keys == "I_type":
+                self.I_type = value
             elif keys == "f_low":
                 self.f_low = utils.make_quant(value, "Hz")
             elif keys == "f_high":
                 self.f_high = utils.make_quant(value, "Hz")
             elif keys == "nfreqs":
                 self.nfreqs = value
+            elif keys == "nbins":
+                self.nbins = value
             else:
                 raise ValueError("%s is not an accepted input option." % keys)
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
+        if not hasattr(self,"nbins"):
+            self.nbins = 8
         if hasattr(self, "load_location"):
             Load_Data(self)
 
-        if hasattr(self, "use_11yr"):
-            self.sampled_noise = True
-        else:
+        if not hasattr(self, "use_11yr"):
             self.use_11yr = False
-            if not hasattr(self, "sampled_noise"):
-                self.sampled_noise = False
+        if not hasattr(self, "use_rn"):
+            self.use_rn = False
 
         if hasattr(self, "f_low") and hasattr(self, "f_high"):
             self.fT = (
@@ -136,15 +166,14 @@ class PTA:
                 * u.Hz
             )
 
-        if len(args) != 0:
-            if len(args) == 1:
-                self.N_p = args[0]
-            else:
-                [T_obs, N_p, sigma, cadence] = args
-                self.T_obs = utils.make_quant(T_obs, "yr")
-                self.N_p = N_p
-                self.sigma = utils.make_quant(sigma, "s")
-                self.cadence = utils.make_quant(cadence, "1/yr")
+    @property
+    def n_p(self):
+        return self._n_p
+
+    @n_p.setter
+    def n_p(self, value):
+        self.var_dict = ["n_p", value]
+        self._n_p = self._return_value
 
     @property
     def T_obs(self):
@@ -156,15 +185,6 @@ class PTA:
         if not isinstance(self._return_value, u.Quantity):
             self._return_value = utils.make_quant(self._return_value, "yr")
         self._T_obs = self._return_value
-
-    @property
-    def N_p(self):
-        return self._N_p
-
-    @N_p.setter
-    def N_p(self, value):
-        self.var_dict = ["N_p", value]
-        self._N_p = self._return_value
 
     @property
     def cadence(self):
@@ -189,6 +209,42 @@ class PTA:
         self._sigma = self._return_value
 
     @property
+    def phi(self):
+        return self._phi
+
+    @phi.setter
+    def phi(self, value):
+        self.var_dict = ["phi", value]
+        self._phi = self._return_value
+
+    @property
+    def theta(self):
+        return self._theta
+
+    @theta.setter
+    def theta(self, value):
+        self.var_dict = ["theta", value]
+        self._theta = self._return_value
+
+    @property
+    def rn_amp(self):
+        return self._rn_amp
+
+    @rn_amp.setter
+    def rn_amp(self, value):
+        self.var_dict = ["rn_amp", value]
+        self._rn_amp = self._return_value
+
+    @property
+    def rn_alpha(self):
+        return self._rn_alpha
+
+    @rn_alpha.setter
+    def rn_alpha(self, value):
+        self.var_dict = ["rn_alpha", value]
+        self._rn_alpha = self._return_value
+
+    @property
     def var_dict(self):
         return self._var_dict
 
@@ -201,8 +257,8 @@ class PTA:
         if not hasattr(self, "_fT"):
             # frequency sampled from 1/observation time to nyquist frequency (c/2)
             # 5 is the default value for now (from Hazboun et al. 2019)
-            T_obs_sec = self.T_obs.to("s").value
-            cadence_sec = self.cadence.to("1/s").value
+            T_obs_sec = np.max(self.T_obs).to("s").value
+            cadence_sec = np.max(self.cadence).to("1/s").value
             self._fT = (
                 np.logspace(
                     np.log10(1 / (5 * T_obs_sec)),
@@ -249,7 +305,7 @@ class PTA:
 
     @property
     def S_n_f(self):
-        # Effective noise power amplitude
+        """Effective noise power amplitude"""
         if not hasattr(self, "_S_n_f"):
             if hasattr(self, "_I_data"):
                 if self._I_Type == "ASD":
@@ -276,7 +332,7 @@ class PTA:
 
     @property
     def f_opt(self):
-        # The optimal frequency of the instrument ie. the frequecy at the lowest strain
+        """The optimal frequency of the instrument ie. the frequecy at the lowest strain"""
         self._f_opt = self.fT[np.argmin(self.h_n_f)]
         return self._f_opt
 
@@ -285,217 +341,203 @@ class PTA:
 
         Notes
         -----
-        The file is in the form of sky locations (phi,theta) in the first two columns, 
-        Individual Pulsar WN RMS (sigmas), RN Amplitudes, and RN Alphas in the last three columns, respectively.
-
+        The file is in the form of observation times (T_obs) in the first column,
+        sky locations (phi,theta) in the second and third columns, 
+        Individual Pulsar cadences and WN RMS (sigmas) in the fourth and fifth,
+        RN Amplitudes, and RN Alphas in the last two columns.
         """
         NANOGrav_11yr_params_filedirectory = os.path.join(
             load_directory, "InstrumentFiles/NANOGrav/NANOGrav_11yr_params.txt"
         )
         self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
 
-    def Get_NANOGrav_Param_Distributions(self):
-        """Takes the NANOGrav 11yr noise parameters (sigma, RN_amplitudes,RN alphas) and sky locations (phis, thetas)
-        and generates distributions from which to draw new parameters.
+    def Get_Param_Distributions(self,var_name,NG_11yr_idx):
+        """Gets the noise parameter values (sigma, Rn_amplitudes,RN alphas) and sky locations (phis, thetas)
+        and generates populated arrays from which distributions can be made. If no user values for a param are given,
+        it uses the NANOGrav 11yr parameters.
+
+        var_name : string
+            The name of the noise parameter to assign sampled parameters
+        NG_11yr_idx : int
+            Index of corresponding value in NANOGrav 11yr params
+        """
+        if not hasattr(self, "_NANOGrav_11yr_params"):
+            self.Load_NANOGrav_11yr_Params()
+
+        if not hasattr(self,var_name):
+            samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
+            if var_name == 'phi':
+                # Add non-zero probability of picking 0 and 2pi
+                return np.append(samp_var, np.linspace(0.0, 2 * np.pi, self.nbins))
+            elif var_name == 'theta':
+                # Add non-zero probability of picking 0 and pi
+                return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
+            else:
+                return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+        else:
+            var = getattr(self,var_name)
+            if isinstance(var,u.Quantity):
+                var = var.value
+            if isinstance(var,(list,np.ndarray)):
+                if self.var_dict[var_name]['sampled'] == False:
+                    if len(var) == self.n_p:
+                        return var
+                    else:
+                        raise ValueError("{} must be the same length as n_p: {}".format(var_name,self.n_p))
+                else:
+                    if len(var) == 2:
+                        #Uniformly Sample
+                        samp_var = np.random.uniform(var[0], var[1], size=self.n_p)
+                    elif len(var) == self.n_p:
+                        samp_var = var
+                    else:
+                        raise ValueError("To sample {}, it must be either [min,max], or an array of individual pulsar {} of length n_p: {}".format(var_name,var_name,self.n_p))
+
+                    if var_name == 'rn_amp':
+                        return np.append(samp_var,np.logspace(min(np.log10(samp_var)),max(np.log10(samp_var)),self.nbins))
+                    else:
+                        return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+            else:
+                if var_name in self.var_dict.keys():
+                    if self.var_dict[var_name]['sampled'] == False:
+                        return np.ones(self.n_p)*var
+                else:
+                    self.var_dict[var_name]['sampled'] == True
+                    samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
+                    if var_name == 'phi':
+                        # Add non-zero probability of picking 0 and 2pi
+                        return np.append(samp_var, np.linspace(0.0, 2 * np.pi, self.nbins))
+                    elif var_name == 'theta':
+                        # Add non-zero probability of picking 0 and pi
+                        return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
+                    else:
+                        return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+
+    def Get_Sample_Draws(self,var_name,num_draws):
+        """For observation times, all noise parameters (sigma, Rn_amplitudes,RN alphas), cadence, and sky locations (phis, thetas),
+        uses the individual parameter value ranges and generates distributions from which to draw new parameters.
 
         Notes
         -----
         To draw from the generated distributions, one does draws = self._distribution.rvs(size=sample_size)
         """
-        if not hasattr(self, "_NANOGrav_11yr_params"):
-            self.Load_NANOGrav_11yr_Params()
+        var_list = ['T_obs','phi','theta','cadence','sigma','rn_amp','rn_alpha']
+    
+        for i in range(len(var_list)):
+            if var_name == var_list[i]:
+                NG_11yr_idx = i
 
-        [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
+        samp_var = self.Get_Param_Distributions(var_name,NG_11yr_idx)
+        if isinstance(samp_var,(list,np.ndarray)):
+            if len(samp_var) > 1:
+                if var_name in ["rn_amp"]:
+                    var_hist = np.histogram(samp_var,bins=np.logspace(min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins),density=True)
+                else:
+                    var_hist = np.histogram(samp_var, bins=self.nbins,density=True)
+                var_dist = stats.rv_histogram(var_hist)
 
-        nbins = 8
-        new_T_obs = np.append(T_obs,np.linspace(min(T_obs),max(T_obs),nbins))
-        # Add non-zero probability of picking 0 and pi
-        new_phis = np.append(phis, np.linspace(0.0, 2 * np.pi, nbins))
-        new_thetas = np.append(thetas, np.linspace(0.0, np.pi, nbins))
-        new_cadences = np.append(cadences,np.linspace(min(cadences),max(cadences),nbins))
-        new_sigmas = np.append(sigmas, np.linspace(min(sigmas), max(sigmas), nbins))
-        # add non-zero probability in middle of alphas and amps
-        new_rn_amps = np.append(
-            rn_amps, np.logspace(min(np.log10(rn_amps)), max(np.log10(rn_amps)), nbins)
-        )
-        new_rn_alphas = np.append(
-            rn_alphas, np.linspace(min(rn_alphas), max(rn_alphas), nbins)
-        )
-
-        T_obs_hist = np.histogram(new_T_obs, bins=nbins,density=True)
-        phi_hist = np.histogram(new_phis, bins=nbins, density=True)
-        theta_hist = np.histogram(new_thetas, bins=nbins, density=True)
-        cadence_hist = np.histogram(new_cadences, bins=nbins,density=True)
-        sigma_hist = np.histogram(new_sigmas, bins=nbins, density=True)
-        rn_amp_hist = np.histogram(
-            new_rn_amps,
-            bins=np.logspace(
-                min(np.log10(new_rn_amps)), max(np.log10(new_rn_amps)), nbins
-            ),
-            density=True,
-        )
-        rn_alpha_hist = np.histogram(new_rn_alphas, bins=nbins, density=True)
-
-        self._T_obs_dist = stats.rv_histogram(T_obs_hist)
-        self._phi_dist = stats.rv_histogram(phi_hist)
-        self._theta_dist = stats.rv_histogram(theta_hist)
-        self._cadence_dist = stats.rv_histogram(cadence_hist)
-        self._sigma_dist = stats.rv_histogram(sigma_hist)
-        self._rn_amp_dist = stats.rv_histogram(rn_amp_hist)
-        self._rn_alpha_dist = stats.rv_histogram(rn_alpha_hist)
-
-    def Draw_New_Pulsars(self):
-        if not hasattr(self, "_NANOGrav_11yr_params"):
-            self.Get_NANOGrav_Param_Distributions()
-
-        [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self._NANOGrav_11yr_params
-
-        #Used to set minimum and maximum frequency, respectively.
-        self.T_obs = np.max(T_obs)
-        self.cadence = np.min(cadences)
-
-        # 34 pulsars in the 11yr dataset (ie. len(phis))
-        if self.use_11yr:
-            if self.N_p > len(phis):
-                N_added_p = self.N_p - len(phis)
-
-                T_obs_draws = self._T_obs_dist.rvs(size=N_added_p)
-                phi_draws = self._phi_dist.rvs(size=N_added_p)
-                theta_draws = self._theta_dist.rvs(size=N_added_p)
-                cadence_draws = self._cadence_dist.rvs(size=N_added_p)
-                sigma_draws = self._sigma_dist.rvs(size=N_added_p)
-                rn_amp_draws = self._rn_amp_dist.rvs(size=N_added_p)
-                rn_alpha_draws = self._rn_alpha_dist.rvs(size=N_added_p)
-
-                new_T_obs = np.append(T_obs, T_obs_draws)
-                new_phis = np.append(phis, phi_draws)
-                new_thetas = np.append(thetas, theta_draws)
-                new_cadences = np.append(cadences, cadence_draws)
-                new_sigmas = np.append(sigmas, sigma_draws)
-                new_rn_amps = np.append(rn_amps, rn_amp_draws)
-                new_rn_alphas = np.append(rn_alphas, rn_alpha_draws)
-            else:
-                new_T_obs = T_obs[: self.N_p]
-                new_phis = phis[: self.N_p]
-                new_thetas = thetas[: self.N_p]
-                new_cadences = cadences[: self.N_p]
-                new_sigmas = sigmas[: self.N_p]
-                new_rn_amps = rn_amps[: self.N_p]
-                new_rn_alphas = rn_alphas[: self.N_p]
-        else:
-            new_T_obs = self._T_obs_dist.rvs(size=self.N_p)
-            new_phis = self._phi_dist.rvs(size=self.N_p)
-            new_thetas = self._theta_dist.rvs(size=self.N_p)
-            new_cadences = self._cadence_dist.rvs(size=self.N_p)
-            new_sigmas = self._sigma_dist.rvs(size=self.N_p)
-            new_rn_amps = self._rn_amp_dist.rvs(size=self.N_p)
-            new_rn_alphas = self._rn_alpha_dist.rvs(size=self.N_p)
-
-        return [new_T_obs, new_phis, new_thetas, new_cadences, new_sigmas, new_rn_amps, new_rn_alphas]
+        return var_dist.rvs(size=num_draws)
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
 
         Notes
         -----
+        Assigns pulsar parameters based on what the initial values were given per parameter.
+        If necessary parameters are left unassigned, it uses 11yr values for n_p <= 34, and samples from the 11yr parameters if n_p > 34
+        If a range of values were given for a parameter, the per pulsar parameters are drawn from a uniform distribution
+        assigns the new pulsar parameters to the corresponding PTA class parameter.
         See Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341> for details
 
         """
-        if self.sampled_noise:
-            [T_obs, phis, thetas, cadences, sigmas, rn_amps, rn_alphas] = self.Draw_New_Pulsars()
-            # Make a set of psrs with parameters drawn from 11yr distributaions (or real 11yr parameters if use_11yr=True)
+        if not hasattr(self, "_NANOGrav_11yr_params"):
+            self.Load_NANOGrav_11yr_Params()
+
+        [NG_T_obs, NG_phis, NG_thetas, NG_cadences, NG_sigmas, NG_rn_amps, NG_rn_alphas] = self._NANOGrav_11yr_params
+        var_list = ['T_obs','phi','theta','cadence','sigma','rn_amp','rn_alpha']
+
+        for i,var in enumerate(var_list):
+            if var in self.var_dict.keys():
+                if self.var_dict[var]['sampled'] == True:
+                    # 34 pulsars in the 11yr dataset
+                    if self.use_11yr:
+                        if self.n_p <= len(self._NANOGrav_11yr_params[i]):
+                            setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
+                        else:
+                            n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
+                            var_draw = self.Get_Sample_Draws(var,n_added_p)
+                            setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
+                    else:
+                        setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
+                else:
+                    #Constant values for all pulsars
+                    setattr(self,var,self.Get_Param_Distributions(var,i))
+            else:
+                #Assign/sample values for values needed to make a sensitivity curve
+                if var in ['T_obs','phi','theta','cadence','sigma']:
+                    # 34 pulsars in the 11yr dataset (ie. len(phis))
+                    if self.use_11yr:
+                        if self.n_p <= len(self._NANOGrav_11yr_params[i]):
+                            setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
+                        else:
+                            n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
+                            var_draw = self.Get_Sample_Draws(var,n_added_p)
+                            setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
+                    else:
+                        setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
+                else: 
+                    if self.use_rn:
+                        if self.use_11yr:
+                            if self.n_p <= len(self._NANOGrav_11yr_params[i]):
+                                setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
+                            else:
+                                n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
+                                var_draw = self.Get_Sample_Draws(var,n_added_p)
+                                setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
+                        else:
+                            setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
+
+        if hasattr(self,'rn_amp'):
             psrs = hassim.sim_pta(
-                timespan=T_obs,
-                cad=cadences,
-                sigma=sigmas,
-                phi=phis,
-                theta=thetas,
-                Npsrs=self.N_p,
-                A_rn=rn_amps,
-                alpha=rn_alphas,
+                timespan=self.T_obs.value,
+                cad=self.cadence.value,
+                sigma=self.sigma.value,
+                phi=self.phi,
+                theta=self.theta,
+                Npsrs=self.n_p,
+                A_rn=self.rn_amp,
+                alpha=self.rn_alpha,
+                freqs=self.fT.value,
+            )
+        elif hasattr(self, "sb_amp"):
+            if not hasattr(self, "sb_alpha"):
+                self.sb_alpha = -2 / 3.0
+            # Make a set of psrs with the same parameters with a sb as red noise
+            psrs = hassim.sim_pta(
+                timespan=self.T_obs.value,
+                cad=self.cadence.value,
+                sigma=self.sigma.value,
+                phi=self.phi,
+                theta=self.theta,
+                Npsrs=self.n_p,
+                A_rn=self.sb_amp,
+                alpha=self.sb_alpha,
                 freqs=self.fT.value,
             )
         else:
-            if not hasattr(self, "_phi_dist") or not hasattr(self, "_theta_dist"):
-                self.Get_NANOGrav_Param_Distributions()
+            psrs = hassim.sim_pta(
+                timespan=self.T_obs.value,
+                cad=self.cadence.value,
+                sigma=self.sigma.value,
+                phi=self.phi,
+                theta=self.theta,
+                Npsrs=self.n_p,
+                freqs=self.fT.value,
+            )
 
-            [_, NANOGrav_phis, NANOGrav_thetas, _, _, _, _] = self._NANOGrav_11yr_params
-            if self.N_p <= len(NANOGrav_phis):
-                thetas = NANOGrav_thetas[: self.N_p]
-                phis = NANOGrav_phis[: self.N_p]
-            else:
-                N_added_p = self.N_p - len(NANOGrav_phis)
-                theta_draws = self._theta_dist.rvs(size=N_added_p)
-                phi_draws = self._phi_dist.rvs(size=N_added_p)
-                thetas = np.append(NANOGrav_thetas, theta_draws)
-                phis = np.append(NANOGrav_phis, phi_draws)
-
-            if hasattr(self, "GWB_amp"):
-                if not hasattr(self, "GWB_alpha"):
-                    self.GWB_alpha = -2 / 3.0
-                # Make a set of psrs with the same parameters with a GWB as red noise
-                psrs = hassim.sim_pta(
-                    timespan=self.T_obs.value,
-                    cad=self.cadence.value,
-                    sigma=self.sigma.value,
-                    phi=phis,
-                    theta=thetas,
-                    Npsrs=self.N_p,
-                    A_rn=self.GWB_amp,
-                    alpha=self.GWB_alpha,
-                    freqs=self.fT.value,
-                )
-            elif hasattr(self, "rn_amp") or hasattr(self, "rn_alpha"):
-                if not hasattr(self, "rn_amp"):
-                    rn_amps = np.random.uniform(1e-16, 1e-12, size=self.N_p)
-                else:
-                    if len(self.rn_amp) == 2:
-                        rn_amps = np.random.uniform(
-                            min(self.rn_amp), max(self.rn_amp), size=self.N_p
-                        )
-                    elif len(self.rn_amp) == self.N_p:
-                        rn_amps = self.rn_amp
-                    else:
-                        raise ValueError(
-                            "RN amplitudes must be either [rn_amp_min,rn_amp_max], or and array of RN amplitudes with len(N_p)."
-                        )
-                if not hasattr(self, "rn_alpha"):
-                    rn_alphas = np.random.uniform(-3 / 4, 1, size=self.N_p)
-                else:
-                    if len(self.rn_alpha) == 2:
-                        rn_alphas = np.random.uniform(
-                            min(self.rn_alpha), max(self.rn_alpha), size=self.N_p
-                        )
-                    elif len(self.rn_alpha) == self.N_p:
-                        rn_alphas = self.rn_alpha
-                    else:
-                        raise ValueError(
-                            "RN alphas must be either [rn_alpha_min,rn_alpha_max], or and array of RN alphas with len(N_p)."
-                        )
-
-                psrs = hassim.sim_pta(
-                    timespan=self.T_obs.value,
-                    cad=self.cadence.value,
-                    sigma=self.sigma.value,
-                    phi=phis,
-                    theta=thetas,
-                    Npsrs=self.N_p,
-                    A_rn=rn_amps,
-                    alpha=rn_alphas,
-                    freqs=self.fT.value,
-                )
-            else:
-                # Make a set of psrs with the same parameters
-                psrs = hassim.sim_pta(
-                    timespan=self.T_obs.value,
-                    cad=self.cadence.value,
-                    sigma=self.sigma.value,
-                    phi=phis,
-                    theta=thetas,
-                    Npsrs=self.N_p,
-                    freqs=self.fT.value,
-                )
-
+        #Turn of sampling for an initialized PTA
+        for value in self.var_dict.values():
+            value['sampled'] = False
         # Get Spectra of pulsars
         spectra = []
         for p in psrs:

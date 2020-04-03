@@ -310,7 +310,7 @@ def Plot_SNR(
         ax1.set_xticks(x_labels)
         ax1.set_xlabel(r"$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$", fontsize=labelsize)
         ax1.set_xticklabels([r"$%.1f$" % x for x in x_labels * 1e3], fontsize=axissize)
-    elif var_x == "N_p":
+    elif var_x == "n_p":
         sample_range = max(x_labels) - min(x_labels)
         sample_rate = max(2, int(sample_range / 10))
         x_labels = x_labels[::sample_rate]
@@ -489,7 +489,7 @@ def Plot_SNR(
         ax1.set_yticks(y_labels)
         ax1.set_ylabel(r"$f_{\mathrm{IFO,break}} [\mathrm{mHz}]$", fontsize=labelsize)
         ax1.set_yticklabels([r"$%.1f$" % y for y in y_labels * 1e3], fontsize=axissize)
-    elif var_y == "N_p":
+    elif var_y == "n_p":
         sample_range = max(y_labels) - min(y_labels)
         sample_rate = max(2, int(sample_range / 10))
         y_labels = y_labels[::sample_rate]
