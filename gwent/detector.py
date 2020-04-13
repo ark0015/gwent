@@ -106,7 +106,7 @@ class PTA:
             if len(args) == 1:
                 self.n_p = args[0]
             else:
-                raise ValueError("Too many args, not enought kwargs!")
+                raise ValueError("Too many args, not enough kwargs!")
 
         for keys, value in kwargs.items():
             if keys == "T_obs":
@@ -148,7 +148,7 @@ class PTA:
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self,"nbins"):
+        if not hasattr(self, "nbins"):
             self.nbins = 8
         if hasattr(self, "load_location"):
             Load_Data(self)
@@ -257,6 +257,8 @@ class PTA:
         if not hasattr(self, "_fT"):
             # frequency sampled from 1/observation time to nyquist frequency (c/2)
             # 5 is the default value for now (from Hazboun et al. 2019)
+            if not hasattr(self,"_T_obs") or not hasattr(self,"_cadence"):
+                self.Init_PTA()
             T_obs_sec = np.max(self.T_obs).to("s").value
             cadence_sec = np.max(self.cadence).to("1/s").value
             self._fT = (
@@ -351,7 +353,7 @@ class PTA:
         )
         self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
 
-    def Get_Param_Distributions(self,var_name,NG_11yr_idx):
+    def Get_Param_Distributions(self, var_name, NG_11yr_idx):
         """Gets the noise parameter values (sigma, Rn_amplitudes,RN alphas) and sky locations (phis, thetas)
         and generates populated arrays from which distributions can be made. If no user values for a param are given,
         it uses the NANOGrav 11yr parameters.
@@ -364,56 +366,96 @@ class PTA:
         if not hasattr(self, "_NANOGrav_11yr_params"):
             self.Load_NANOGrav_11yr_Params()
 
-        if not hasattr(self,var_name):
+        if not hasattr(self, var_name):
             samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
-            if var_name == 'phi':
+            if var_name == "phi":
                 # Add non-zero probability of picking 0 and 2pi
                 return np.append(samp_var, np.linspace(0.0, 2 * np.pi, self.nbins))
-            elif var_name == 'theta':
+            elif var_name == "theta":
                 # Add non-zero probability of picking 0 and pi
                 return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
             else:
-                return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+                return np.append(
+                    samp_var, np.linspace(min(samp_var), max(samp_var), self.nbins)
+                )
         else:
-            var = getattr(self,var_name)
-            if isinstance(var,u.Quantity):
+            var = getattr(self, var_name)
+            if isinstance(var, u.Quantity):
                 var = var.value
-            if isinstance(var,(list,np.ndarray)):
-                if self.var_dict[var_name]['sampled'] == False:
+            if isinstance(var, (list, np.ndarray)):
+                if self.var_dict[var_name]["sampled"] == False:
                     if len(var) == self.n_p:
                         return var
+                    elif len(var) == 1:
+                        return np.ones(self.n_p) * var
                     else:
-                        raise ValueError("{} must be the same length as n_p: {}".format(var_name,self.n_p))
+                        if self.var_dict['n_p']["sampled"] == True:
+                            if var_name == "rn_amp":
+                                return np.append(
+                                    var,
+                                    np.logspace(
+                                        min(np.log10(var)),
+                                        max(np.log10(var)),
+                                        self.nbins,
+                                    ),
+                                )
+                            else:
+                                return np.append(
+                                    var,
+                                    np.linspace(min(var), max(var), self.nbins),
+                                )
+                        else:
+                            raise ValueError(
+                                "{} must be a single value, or the same length as n_p: {}".format(var_name, self.n_p))
                 else:
                     if len(var) == 2:
-                        #Uniformly Sample
+                        # Uniformly Sample
                         samp_var = np.random.uniform(var[0], var[1], size=self.n_p)
                     elif len(var) == self.n_p:
                         samp_var = var
                     else:
-                        raise ValueError("To sample {}, it must be either [min,max], or an array of individual pulsar {} of length n_p: {}".format(var_name,var_name,self.n_p))
+                        raise ValueError(
+                            "To sample {}, it must be either [min,max], or an array of individual pulsar {} of length n_p: {}".format(
+                                var_name, var_name, self.n_p
+                            )
+                        )
 
-                    if var_name == 'rn_amp':
-                        return np.append(samp_var,np.logspace(min(np.log10(samp_var)),max(np.log10(samp_var)),self.nbins))
+                    if var_name == "rn_amp":
+                        return np.append(
+                            samp_var,
+                            np.logspace(
+                                min(np.log10(samp_var)),
+                                max(np.log10(samp_var)),
+                                self.nbins,
+                            ),
+                        )
                     else:
-                        return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+                        return np.append(
+                            samp_var,
+                            np.linspace(min(samp_var), max(samp_var), self.nbins),
+                        )
             else:
                 if var_name in self.var_dict.keys():
-                    if self.var_dict[var_name]['sampled'] == False:
-                        return np.ones(self.n_p)*var
+                    if self.var_dict[var_name]["sampled"] == False:
+                        return np.ones(self.n_p) * var
                 else:
-                    self.var_dict[var_name]['sampled'] == True
+                    self.var_dict[var_name]["sampled"] == True
                     samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
-                    if var_name == 'phi':
+                    if var_name == "phi":
                         # Add non-zero probability of picking 0 and 2pi
-                        return np.append(samp_var, np.linspace(0.0, 2 * np.pi, self.nbins))
-                    elif var_name == 'theta':
+                        return np.append(
+                            samp_var, np.linspace(0.0, 2 * np.pi, self.nbins)
+                        )
+                    elif var_name == "theta":
                         # Add non-zero probability of picking 0 and pi
                         return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
                     else:
-                        return np.append(samp_var,np.linspace(min(samp_var),max(samp_var),self.nbins))
+                        return np.append(
+                            samp_var,
+                            np.linspace(min(samp_var), max(samp_var), self.nbins),
+                        )
 
-    def Get_Sample_Draws(self,var_name,num_draws):
+    def Get_Sample_Draws(self, var_name, num_draws):
         """For observation times, all noise parameters (sigma, Rn_amplitudes,RN alphas), cadence, and sky locations (phis, thetas),
         uses the individual parameter value ranges and generates distributions from which to draw new parameters.
 
@@ -421,19 +463,25 @@ class PTA:
         -----
         To draw from the generated distributions, one does draws = self._distribution.rvs(size=sample_size)
         """
-        var_list = ['T_obs','phi','theta','cadence','sigma','rn_amp','rn_alpha']
-    
+        var_list = ["T_obs", "phi", "theta", "cadence", "sigma", "rn_amp", "rn_alpha"]
+
         for i in range(len(var_list)):
             if var_name == var_list[i]:
                 NG_11yr_idx = i
 
-        samp_var = self.Get_Param_Distributions(var_name,NG_11yr_idx)
-        if isinstance(samp_var,(list,np.ndarray)):
+        samp_var = self.Get_Param_Distributions(var_name, NG_11yr_idx)
+        if isinstance(samp_var, (list, np.ndarray)):
             if len(samp_var) > 1:
                 if var_name in ["rn_amp"]:
-                    var_hist = np.histogram(samp_var,bins=np.logspace(min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins),density=True)
+                    var_hist = np.histogram(
+                        samp_var,
+                        bins=np.logspace(
+                            min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins
+                        ),
+                        density=True,
+                    )
                 else:
-                    var_hist = np.histogram(samp_var, bins=self.nbins,density=True)
+                    var_hist = np.histogram(samp_var, bins=self.nbins, density=True)
                 var_dist = stats.rv_histogram(var_hist)
 
         return var_dist.rvs(size=num_draws)
@@ -453,62 +501,106 @@ class PTA:
         if not hasattr(self, "_NANOGrav_11yr_params"):
             self.Load_NANOGrav_11yr_Params()
 
-        [NG_T_obs, NG_phis, NG_thetas, NG_cadences, NG_sigmas, NG_rn_amps, NG_rn_alphas] = self._NANOGrav_11yr_params
-        var_list = ['T_obs','phi','theta','cadence','sigma','rn_amp','rn_alpha']
+        [
+            NG_T_obs,
+            NG_phis,
+            NG_thetas,
+            NG_cadences,
+            NG_sigmas,
+            NG_rn_amps,
+            NG_rn_alphas,
+        ] = self._NANOGrav_11yr_params
+        var_list = ["T_obs", "phi", "theta", "cadence", "sigma", "rn_amp", "rn_alpha"]
 
-        for i,var in enumerate(var_list):
+        for i, var in enumerate(var_list):
             if var in self.var_dict.keys():
-                if self.var_dict[var]['sampled'] == True:
-                    # 34 pulsars in the 11yr dataset
-                    if self.use_11yr:
-                        if self.n_p <= len(self._NANOGrav_11yr_params[i]):
-                            setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
-                        else:
-                            n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
-                            var_draw = self.Get_Sample_Draws(var,n_added_p)
-                            setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
-                    else:
-                        setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
+                if self.var_dict[var]["sampled"] == True:
+                    setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
                 else:
-                    #Constant values for all pulsars
-                    setattr(self,var,self.Get_Param_Distributions(var,i))
+                    if self.var_dict['n_p']["sampled"] == True:
+                        prev_var = getattr(self,var)
+                        if isinstance(prev_var,u.Quantity):
+                            prev_var = prev_var.value
+
+                        if isinstance(prev_var,(list,np.ndarray)):
+                            n_added_p = self.n_p - len(prev_var)
+                            var_draw = self.Get_Sample_Draws(var, n_added_p)
+                            setattr(
+                                    self,
+                                    var,
+                                    np.append(prev_var, var_draw),
+                                )
+                        else:
+                            # Constant values for all pulsars
+                            setattr(self, var, self.Get_Param_Distributions(var, i))
+                    else:
+                        # Constant values for all pulsars
+                        setattr(self, var, self.Get_Param_Distributions(var, i))
             else:
-                #Assign/sample values for values needed to make a sensitivity curve
-                if var in ['T_obs','phi','theta','cadence','sigma']:
+                # Assign/sample values for values needed to make a sensitivity curve
+                if var in ["T_obs", "phi", "theta", "cadence", "sigma"]:
                     # 34 pulsars in the 11yr dataset (ie. len(phis))
                     if self.use_11yr:
                         if self.n_p <= len(self._NANOGrav_11yr_params[i]):
-                            setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
+                            setattr(
+                                self, var, self._NANOGrav_11yr_params[i][: self.n_p]
+                            )
                         else:
                             n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
-                            var_draw = self.Get_Sample_Draws(var,n_added_p)
-                            setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
+                            var_draw = self.Get_Sample_Draws(var, n_added_p)
+                            setattr(
+                                self,
+                                var,
+                                np.append(self._NANOGrav_11yr_params[i], var_draw),
+                            )
                     else:
-                        setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
-                else: 
+                        setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
+                else:
                     if self.use_rn:
                         if self.use_11yr:
                             if self.n_p <= len(self._NANOGrav_11yr_params[i]):
-                                setattr(self,var,self._NANOGrav_11yr_params[i][: self.n_p])
+                                setattr(
+                                    self, var, self._NANOGrav_11yr_params[i][: self.n_p]
+                                )
                             else:
-                                n_added_p = self.n_p - len(self._NANOGrav_11yr_params[i])
-                                var_draw = self.Get_Sample_Draws(var,n_added_p)
-                                setattr(self,var,np.append(self._NANOGrav_11yr_params[i], var_draw))
+                                n_added_p = self.n_p - len(
+                                    self._NANOGrav_11yr_params[i]
+                                )
+                                var_draw = self.Get_Sample_Draws(var, n_added_p)
+                                setattr(
+                                    self,
+                                    var,
+                                    np.append(self._NANOGrav_11yr_params[i], var_draw),
+                                )
                         else:
-                            setattr(self,var,self.Get_Sample_Draws(var,self.n_p))
+                            setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
 
-        if hasattr(self,'rn_amp'):
-            psrs = hassim.sim_pta(
-                timespan=self.T_obs.value,
-                cad=self.cadence.value,
-                sigma=self.sigma.value,
-                phi=self.phi,
-                theta=self.theta,
-                Npsrs=self.n_p,
-                A_rn=self.rn_amp,
-                alpha=self.rn_alpha,
-                freqs=self.fT.value,
-            )
+        if hasattr(self, "rn_amp"):
+            if hasattr(self,"sb_amp"):
+                psrs = hassim.sim_pta(
+                    timespan=self.T_obs.value,
+                    cad=self.cadence.value,
+                    sigma=self.sigma.value,
+                    phi=self.phi,
+                    theta=self.theta,
+                    Npsrs=self.n_p,
+                    A_rn=self.rn_amp,
+                    alpha=self.rn_alpha,
+                    A_gwb = self.sb_amp,
+                    freqs=self.fT.value,
+                )
+            else:
+                psrs = hassim.sim_pta(
+                    timespan=self.T_obs.value,
+                    cad=self.cadence.value,
+                    sigma=self.sigma.value,
+                    phi=self.phi,
+                    theta=self.theta,
+                    Npsrs=self.n_p,
+                    A_rn=self.rn_amp,
+                    alpha=self.rn_alpha,
+                    freqs=self.fT.value,
+                )
         elif hasattr(self, "sb_amp"):
             if not hasattr(self, "sb_alpha"):
                 self.sb_alpha = -2 / 3.0
@@ -534,10 +626,12 @@ class PTA:
                 Npsrs=self.n_p,
                 freqs=self.fT.value,
             )
-
-        #Turn of sampling for an initialized PTA
-        for value in self.var_dict.values():
-            value['sampled'] = False
+        # Turn of sampling for an initialized PTA (except if sampling n_p)
+        for key,value in self.var_dict.items():
+            if key == 'n_p':
+                pass
+            else:
+                value["sampled"] = False
         # Get Spectra of pulsars
         spectra = []
         for p in psrs:

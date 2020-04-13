@@ -209,6 +209,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
         var_x_min != None and var_x_max != None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_x == "n_p":
+            instrument.var_dict[var_x]["sampled"] = True
             # sample in integer steps
             sample_range = var_x_max - var_x_min
             if sample_range > 10:
@@ -238,6 +239,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
         var_y_min != None and var_y_max != None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == "n_p":
+            instrument.var_dict[var_y]["sampled"] = True
             # sample in integer steps
             sample_range = var_y_max - var_y_min
             if sample_range > 10:
@@ -318,7 +320,7 @@ def Calc_Mono_SNR(source, instrument):
         )
     indxfgw = np.abs(instrument.fT - instrument.f_opt).argmin()
 
-    return source.h_gw * np.sqrt(instrument.T_obs.to("s") / instrument.S_n_f[indxfgw])
+    return source.h_gw * np.sqrt(np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw])
 
 
 def Calc_Chirp_SNR(source, instrument):

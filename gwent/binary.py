@@ -315,7 +315,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         M_time = self.M.to("kg") * m_conv
         M_chirp_source = eta ** (3 / 5) * M_time
 
-        T_obs = utils.make_quant(self.instrument.T_obs, "s")
+        T_obs = utils.make_quant(np.max(self.instrument.T_obs), "s")
         T_obs_source = T_obs / (1 + self.z)
 
         # Assumes t_init is in source frame, can either be randomly drawn
@@ -546,7 +546,7 @@ def Get_Mono_Char_Strain(source, instrument):
         Instance of a gravitational wave detector class
 
     """
-    h_char_mono = source.h_gw * np.sqrt(instrument.T_obs.to("s"))
+    h_char_mono = source.h_gw * np.sqrt(np.max(instrument.T_obs.to("s")))
     return h_char_mono.value
 
 
