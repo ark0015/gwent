@@ -390,27 +390,35 @@ class PTA:
                         return np.ones(self.n_p) * var
                     else:
                         if self.var_dict['n_p']["sampled"] == True:
-                            if var_name == "rn_amp":
-                                return np.append(
-                                    var,
-                                    np.logspace(
-                                        min(np.log10(var)),
-                                        max(np.log10(var)),
-                                        self.nbins,
-                                    ),
-                                )
+                            unique_vals = np.unique(var)
+                            if len(unique_vals) == 1:
+                                return unique_vals[0]
                             else:
-                                return np.append(
-                                    var,
-                                    np.linspace(min(var), max(var), self.nbins),
-                                )
+                                if var_name == "rn_amp":
+                                    return np.append(
+                                        var,
+                                        np.logspace(
+                                            min(np.log10(unique_vals)),
+                                            max(np.log10(unique_vals)),
+                                            self.nbins,
+                                        ),
+                                    )
+                                else:
+                                    return np.append(
+                                        var,
+                                        np.linspace(min(unique_vals), max(unique_vals), self.nbins),
+                                    )
                         else:
                             raise ValueError(
                                 "{} must be a single value, or the same length as n_p: {}".format(var_name, self.n_p))
                 else:
                     if len(var) == 2:
-                        # Uniformly Sample
-                        samp_var = np.random.uniform(var[0], var[1], size=self.n_p)
+                        #Uniformly sample in logspace
+                        if var_name == "rn_amp":
+                            samp_var = np.random.uniform(np.log10(var[0]), np.log10(var[1]), size=self.n_p)
+                        else:
+                            # Uniformly Sample in linspace
+                            samp_var = np.random.uniform(var[0], var[1], size=self.n_p)
                     elif len(var) == self.n_p:
                         samp_var = var
                     else:
@@ -421,14 +429,9 @@ class PTA:
                         )
 
                     if var_name == "rn_amp":
-                        return np.append(
-                            samp_var,
-                            np.logspace(
-                                min(np.log10(samp_var)),
-                                max(np.log10(samp_var)),
-                                self.nbins,
-                            ),
-                        )
+                        add_var = np.logspace(min(samp_var),max(samp_var),self.nbins)
+                        samp_var = 10**samp_var
+                        return  np.append(samp_var,add_var)
                     else:
                         return np.append(
                             samp_var,
@@ -437,7 +440,7 @@ class PTA:
             else:
                 if var_name in self.var_dict.keys():
                     if self.var_dict[var_name]["sampled"] == False:
-                        return np.ones(self.n_p) * var
+                        return np.ones(self.n_p)*var
                 else:
                     self.var_dict[var_name]["sampled"] == True
                     samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
@@ -483,8 +486,11 @@ class PTA:
                 else:
                     var_hist = np.histogram(samp_var, bins=self.nbins, density=True)
                 var_dist = stats.rv_histogram(var_hist)
-
-        return var_dist.rvs(size=num_draws)
+                return var_dist.rvs(size=num_draws)
+            else:
+                return np.ones(num_draws) * samp_var[0]
+        else:
+            return np.ones(num_draws) * samp_var 
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
@@ -521,15 +527,19 @@ class PTA:
                         prev_var = getattr(self,var)
                         if isinstance(prev_var,u.Quantity):
                             prev_var = prev_var.value
-
                         if isinstance(prev_var,(list,np.ndarray)):
-                            n_added_p = self.n_p - len(prev_var)
-                            var_draw = self.Get_Sample_Draws(var, n_added_p)
-                            setattr(
-                                    self,
-                                    var,
-                                    np.append(prev_var, var_draw),
-                                )
+                            if len(prev_var) > self.n_p:
+                                setattr(self, var, prev_var[: self.n_p])
+                            elif len(prev_var) < self.n_p:
+                                n_added_p = self.n_p - len(prev_var)
+                                var_draw = self.Get_Sample_Draws(var, n_added_p)
+                                setattr(
+                                        self,
+                                        var,
+                                        np.append(prev_var, var_draw),
+                                    )
+                            else:
+                                pass
                         else:
                             # Constant values for all pulsars
                             setattr(self, var, self.Get_Param_Distributions(var, i))
