@@ -320,7 +320,9 @@ def Calc_Mono_SNR(source, instrument):
         )
     indxfgw = np.abs(instrument.fT - instrument.f_opt).argmin()
 
-    return source.h_gw * np.sqrt(np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw])
+    return source.h_gw * np.sqrt(
+        np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw]
+    )
 
 
 def Calc_Chirp_SNR(source, instrument):

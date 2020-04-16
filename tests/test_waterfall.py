@@ -151,20 +151,20 @@ def test_NANOGrav_11yr(source_pta):
     load_name = 'NANOGrav_11yr_S_eff.txt'
     load_location = load_directory + '/NANOGrav/StrainFiles/' + load_name
     T_obs = 11.42*u.yr #Observing time in years
-    nanograv = detector.PTA('NANOGrav 11yr',T_obs,load_location=load_location,I_type='E')
+    nanograv = detector.PTA('NANOGrav 11yr',T_obs=T_obs,load_location=load_location,I_type='E')
     [nanograv_sample_x,nanograv_sample_y,nanograv_SNR] = snr.Get_SNR_Matrix(source_pta,nanograv,var_x,sampleRate_x,var_y,sampleRate_y)
 
 #NANOGrav with White Noise only
 def test_pta_NANOGrav_WN(source_pta):
     NANOGrav_WN = detector.PTA('NANOGrav, WN Only',
-        T_nano,N_p_nano,sigma_nano,cadence_nano)
+        N_p_nano,T_obs=T_nano,sigma=sigma_nano,cadence=cadence_nano)
     [NANOGrav_WN_sample_x,NANOGrav_WN_sample_y,NANOGrav_WN_SNR] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,var_x,sampleRate_x,var_y,sampleRate_y)
 
 #NANOGrav with White and Varied Red Noise
 def test_pta_NANOGrav_WN_GWB(source_pta):
     NANOGrav_WN_GWB = detector.PTA('NANOGrav, WN and GWB',
-        T_nano,N_p_nano,sigma_nano,cadence_nano,
-        GWB_amp=4e-16)
+        N_p_nano,T_obs=T_nano,sigma=sigma_nano,cadence=cadence_nano,
+        sb_amp=4e-16)
     [NANOGrav_WN_GWB_sample_x,NANOGrav_WN_GWB_sample_y,NANOGrav_WN_GWB_SNR] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN_GWB,var_x,sampleRate_x,var_y,sampleRate_y)
 
 # #### SKA
@@ -176,7 +176,7 @@ def test_SKA(source_pta):
     N_p = 20 #Number of pulsars
     cadence = 1/(u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every week in num/year
 
-    SKA = detector.PTA('SKA',T_obs,N_p,sigma,cadence)
+    SKA = detector.PTA('SKA',N_p,T_obs=T_obs,sigma=sigma,cadence=cadence)
     [SKA_sample_x,SKA_sample_y,SKA_SNR] = snr.Get_SNR_Matrix(source_pta,SKA,var_x,sampleRate_x,var_y,sampleRate_y)
 
 

@@ -257,7 +257,7 @@ class PTA:
         if not hasattr(self, "_fT"):
             # frequency sampled from 1/observation time to nyquist frequency (c/2)
             # 5 is the default value for now (from Hazboun et al. 2019)
-            if not hasattr(self,"_T_obs") or not hasattr(self,"_cadence"):
+            if not hasattr(self, "_T_obs") or not hasattr(self, "_cadence"):
                 self.Init_PTA()
             T_obs_sec = np.max(self.T_obs).to("s").value
             cadence_sec = np.max(self.cadence).to("1/s").value
@@ -363,8 +363,6 @@ class PTA:
         NG_11yr_idx : int
             Index of corresponding value in NANOGrav 11yr params
         """
-        if not hasattr(self, "_NANOGrav_11yr_params"):
-            self.Load_NANOGrav_11yr_Params()
 
         if not hasattr(self, var_name):
             samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
@@ -374,6 +372,15 @@ class PTA:
             elif var_name == "theta":
                 # Add non-zero probability of picking 0 and pi
                 return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
+            elif var_name == "rn_amp":
+                return np.append(
+                    samp_var,
+                    np.logspace(
+                        min(np.log10(samp_var)),
+                        max(np.log10(samp_var)),
+                        self.nbins,
+                    ),
+                )
             else:
                 return np.append(
                     samp_var, np.linspace(min(samp_var), max(samp_var), self.nbins)
@@ -389,7 +396,7 @@ class PTA:
                     elif len(var) == 1:
                         return np.ones(self.n_p) * var
                     else:
-                        if self.var_dict['n_p']["sampled"] == True:
+                        if self.var_dict["n_p"]["sampled"] == True:
                             unique_vals = np.unique(var)
                             if len(unique_vals) == 1:
                                 return unique_vals[0]
@@ -406,16 +413,25 @@ class PTA:
                                 else:
                                     return np.append(
                                         var,
-                                        np.linspace(min(unique_vals), max(unique_vals), self.nbins),
+                                        np.linspace(
+                                            min(unique_vals),
+                                            max(unique_vals),
+                                            self.nbins,
+                                        ),
                                     )
                         else:
                             raise ValueError(
-                                "{} must be a single value, or the same length as n_p: {}".format(var_name, self.n_p))
+                                "{} must be a single value, or the same length as n_p: {}".format(
+                                    var_name, self.n_p
+                                )
+                            )
                 else:
                     if len(var) == 2:
-                        #Uniformly sample in logspace
+                        # Uniformly sample in logspace
                         if var_name == "rn_amp":
-                            samp_var = np.random.uniform(np.log10(var[0]), np.log10(var[1]), size=self.n_p)
+                            samp_var = np.random.uniform(
+                                np.log10(var[0]), np.log10(var[1]), size=self.n_p
+                            )
                         else:
                             # Uniformly Sample in linspace
                             samp_var = np.random.uniform(var[0], var[1], size=self.n_p)
@@ -429,9 +445,9 @@ class PTA:
                         )
 
                     if var_name == "rn_amp":
-                        add_var = np.logspace(min(samp_var),max(samp_var),self.nbins)
-                        samp_var = 10**samp_var
-                        return  np.append(samp_var,add_var)
+                        add_var = np.logspace(min(samp_var), max(samp_var), self.nbins)
+                        samp_var = 10 ** samp_var
+                        return np.append(samp_var, add_var)
                     else:
                         return np.append(
                             samp_var,
@@ -440,7 +456,7 @@ class PTA:
             else:
                 if var_name in self.var_dict.keys():
                     if self.var_dict[var_name]["sampled"] == False:
-                        return np.ones(self.n_p)*var
+                        return np.ones(self.n_p) * var
                 else:
                     self.var_dict[var_name]["sampled"] == True
                     samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
@@ -452,6 +468,15 @@ class PTA:
                     elif var_name == "theta":
                         # Add non-zero probability of picking 0 and pi
                         return np.append(samp_var, np.linspace(0.0, np.pi, self.nbins))
+                    elif var_name == "rn_amp":
+                        return np.append(
+                            samp_var,
+                            np.logspace(
+                                min(np.log10(samp_var)),
+                                max(np.log10(samp_var)),
+                                self.nbins,
+                            ),
+                        )
                     else:
                         return np.append(
                             samp_var,
@@ -490,7 +515,7 @@ class PTA:
             else:
                 return np.ones(num_draws) * samp_var[0]
         else:
-            return np.ones(num_draws) * samp_var 
+            return np.ones(num_draws) * samp_var
 
     def Init_PTA(self):
         """Initializes a PTA in hasasia
@@ -523,21 +548,19 @@ class PTA:
                 if self.var_dict[var]["sampled"] == True:
                     setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
                 else:
-                    if self.var_dict['n_p']["sampled"] == True:
-                        prev_var = getattr(self,var)
-                        if isinstance(prev_var,u.Quantity):
+                    if self.var_dict["n_p"]["sampled"] == True:
+                        prev_var = getattr(self, var)
+                        if isinstance(prev_var, u.Quantity):
                             prev_var = prev_var.value
-                        if isinstance(prev_var,(list,np.ndarray)):
+                        if isinstance(prev_var, (list, np.ndarray)):
                             if len(prev_var) > self.n_p:
                                 setattr(self, var, prev_var[: self.n_p])
                             elif len(prev_var) < self.n_p:
                                 n_added_p = self.n_p - len(prev_var)
                                 var_draw = self.Get_Sample_Draws(var, n_added_p)
                                 setattr(
-                                        self,
-                                        var,
-                                        np.append(prev_var, var_draw),
-                                    )
+                                    self, var, np.append(prev_var, var_draw),
+                                )
                             else:
                                 pass
                         else:
@@ -586,7 +609,8 @@ class PTA:
                             setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
 
         if hasattr(self, "rn_amp"):
-            if hasattr(self,"sb_amp"):
+            """
+            if hasattr(self, "sb_amp"):
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
                     cad=self.cadence.value,
@@ -596,21 +620,22 @@ class PTA:
                     Npsrs=self.n_p,
                     A_rn=self.rn_amp,
                     alpha=self.rn_alpha,
-                    A_gwb = self.sb_amp,
+                    A_gwb=self.sb_amp,
                     freqs=self.fT.value,
                 )
             else:
-                psrs = hassim.sim_pta(
-                    timespan=self.T_obs.value,
-                    cad=self.cadence.value,
-                    sigma=self.sigma.value,
-                    phi=self.phi,
-                    theta=self.theta,
-                    Npsrs=self.n_p,
-                    A_rn=self.rn_amp,
-                    alpha=self.rn_alpha,
-                    freqs=self.fT.value,
-                )
+            """
+            psrs = hassim.sim_pta(
+                timespan=self.T_obs.value,
+                cad=self.cadence.value,
+                sigma=self.sigma.value,
+                phi=self.phi,
+                theta=self.theta,
+                Npsrs=self.n_p,
+                A_rn=self.rn_amp,
+                alpha=self.rn_alpha,
+                freqs=self.fT.value,
+            )
         elif hasattr(self, "sb_amp"):
             if not hasattr(self, "sb_alpha"):
                 self.sb_alpha = -2 / 3.0
@@ -637,8 +662,8 @@ class PTA:
                 freqs=self.fT.value,
             )
         # Turn of sampling for an initialized PTA (except if sampling n_p)
-        for key,value in self.var_dict.items():
-            if key == 'n_p':
+        for key, value in self.var_dict.items():
+            if key == "n_p":
                 pass
             else:
                 value["sampled"] = False

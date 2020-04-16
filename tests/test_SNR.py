@@ -9,7 +9,7 @@ import numpy as np
 import astropy.units as u
 
 import pytest
-"""
+
 import os,sys
 current_path = os.getcwd()
 splt_path = current_path.split("/")
@@ -17,7 +17,7 @@ top_path_idx = splt_path.index('Research')
 top_directory = "/".join(splt_path[0:top_path_idx+1])
 gwent_path = top_directory + '/gwent/'
 sys.path.insert(0,gwent_path)
-"""
+
 
 import gwent
 from gwent import binary
@@ -133,10 +133,10 @@ cadence_max = 1./(u.wk.to('yr')*u.yr)
 
 @pytest.fixture
 def NANOGrav_WN():
-    NANOGrav_WN = detector.PTA('NANOGrav',T_obs,N_p,sigma,cadence)
+    NANOGrav_WN = detector.PTA('NANOGrav',N_p,T_obs=T_obs,sigma=sigma,cadence=cadence)
     NANOGrav_WN.T_obs = [T_obs,T_obs_min,T_obs_max]
     NANOGrav_WN.sigma = [sigma,sigma_min,sigma_max]
-    NANOGrav_WN.N_p = [N_p,N_p_min,N_p_max]
+    NANOGrav_WN.n_p = [N_p,N_p_min,N_p_max]
     NANOGrav_WN.cadence = [cadence,cadence_min,cadence_max]
     return NANOGrav_WN
 
@@ -175,7 +175,6 @@ T_type = 'N'
     
 @pytest.fixture
 def LISA_ESA():
-    print(T_obs)
     LISA_ESA = detector.SpaceBased('LISA_ESA',T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,Background=Background,T_type=T_type)
     LISA_ESA.T_obs = [T_obs,T_obs_min,T_obs_max]
     LISA_ESA.L = [L,L_min,L_max]
@@ -274,7 +273,7 @@ def test_NANOGrav_WN_params_MvNp(source_pta,NANOGrav_WN):
     #Variable on x-axis
     var_x = 'M'
     #Variable on y-axis
-    var_y = 'N_p'
+    var_y = 'n_p'
     [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source_pta,NANOGrav_WN,
                                                        var_x,sampleRate_x,
                                                        var_y,sampleRate_y)

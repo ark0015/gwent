@@ -99,7 +99,7 @@ class BinaryBlackHole:
     def f(self):
         if not hasattr(self, "_f"):
             raise NotImplementedError(
-                "Interferometer frequency must be defined inside SpaceBased or GroundBased classes."
+                "The frequency must be defined inside BBHFrequencyDomain or BBHTimeDomain classes."
             )
         return self._f
 
