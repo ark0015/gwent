@@ -9,7 +9,7 @@ from . import binary
 from .utils import make_quant
 
 
-def Get_SNR_Matrix(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
+def Get_SNR_Matrix(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y,**kwargs):
     """Calculates SNR Matrix
 
     Parameters
@@ -43,6 +43,19 @@ def Get_SNR_Matrix(source, instrument, var_x, sample_rate_x, var_y, sample_rate_
     Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
 
     """
+    for keys,value in kwargs.items():
+        if keys == 'inc':
+            inc = value
+        elif keys == 'integral_consts':
+            integral_consts = value
+        else:
+            raise ValueError("%s is not an accepted input option." % keys)
+
+    if 'inc' not in locals():
+        inc = None
+    if 'integral_consts' not in locals():
+        integral_consts = None
+
 
     source.instrument = instrument
     # Get Samples for variables
@@ -102,7 +115,7 @@ def Get_SNR_Matrix(source, instrument, var_x, sample_rate_x, var_y, sample_rate_
             if source.ismono:  # Monochromatic Source and not diff EOB SNR
                 if hasattr(source, "h_gw"):
                     del source.h_gw
-                SNRMatrix[j, i] = Calc_Mono_SNR(source, instrument)
+                SNRMatrix[j, i] = Calc_Mono_SNR(source, instrument,inc=inc)
             else:  # Chirping Source
                 if (
                     recalculate_strain == True
@@ -116,7 +129,7 @@ def Get_SNR_Matrix(source, instrument, var_x, sample_rate_x, var_y, sample_rate_
                     del source.f
                 if hasattr(source, "h_f"):
                     del source.h_f
-                SNRMatrix[j, i] = Calc_Chirp_SNR(source, instrument)
+                SNRMatrix[j, i] = Calc_Chirp_SNR(source, instrument,integral_consts=integral_consts)
 
     if switch:
         return [original_sample_x, original_sample_y, SNRMatrix.T]
@@ -299,7 +312,7 @@ def Recalculate_Noise(source, instrument):
         source.instrument = instrument
 
 
-def Calc_Mono_SNR(source, instrument):
+def Calc_Mono_SNR(source, instrument,inc=None):
     """Calculates the SNR for a monochromatic source
 
     Parameters
@@ -308,24 +321,28 @@ def Calc_Mono_SNR(source, instrument):
         Instance of a gravitational wave source class
     instrument : object
         Instance of a gravitational wave detector class
+    inc : None,float,int, optional
+        The inclination of the monochromatic source in radians.
 
     """
-    if isinstance(instrument, detector.PTA):
-        source.h_gw = binary.Get_Mono_Strain(
-            source, instrument.f_opt, strain_const="Optimal"
-        )
+    if not hasattr(source,'instrument'):
+        source.instrument = instrument
+
+    if not isinstance(instrument, detector.PTA):
+        source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
     else:
-        source.h_gw = binary.Get_Mono_Strain(
-            source, instrument.f_opt, strain_const="Averaged"
-        )
-    indxfgw = np.abs(instrument.fT - instrument.f_opt).argmin()
+        if inc is not None:
+            source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
+        else:
+            source.h_gw = binary.Get_Mono_Strain(source, inc=0.0)
+    indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
 
     return source.h_gw * np.sqrt(
         np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw]
     )
 
 
-def Calc_Chirp_SNR(source, instrument):
+def Calc_Chirp_SNR(source, instrument,integral_consts=None):
     """Calculates the SNR for an evolving source
 
     Parameters
@@ -343,11 +360,16 @@ def Calc_Chirp_SNR(source, instrument):
 
     """
 
-    # Use to integrate from initial observed frequency f(t_init) to f(t_init-T_obs)
+    # Previously, it was designed to integrate from initial observed frequency f(t_init) to f(t_init-T_obs)
     # Does not work unless t_init is randomly sampled, which we don't do
     # indxfgw_start = np.abs(source.f-source.f_init).argmin()
     # indxfgw_end = np.abs(source.f-source.f_T_obs).argmin()
 
+    if not hasattr(source,'instrument'):
+        source.instrument = instrument
+    if not hasattr(source,'f_T_obs'):
+        source.Check_Freq_Evol()
+        
     # Only want to integrate from observed frequency (f(T_obs_before_merger)) till merger
     indxfgw_start = np.abs(source.f - source.f_T_obs).argmin()
     indxfgw_end = len(source.f)

@@ -110,11 +110,11 @@ class PTA:
 
         for keys, value in kwargs.items():
             if keys == "T_obs":
-                self.T_obs = utils.make_quant(value, "yr")
+                self.T_obs = value
             elif keys == "sigma":
-                self.sigma = utils.make_quant(value, "s")
+                self.sigma = value
             elif keys == "cadence":
-                self.cadence = utils.make_quant(value, "1/yr")
+                self.cadence = value
             elif keys == "rn_amp":
                 self.rn_amp = value
             elif keys == "rn_alpha":
@@ -932,31 +932,43 @@ class GroundBased(Interferometer):
             self.Init_GroundBased()
         if isinstance(noise_dict, dict):
             for base_noise, inner_noise_dict in noise_dict.items():
-                for sub_noise, sub_noise_val in inner_noise_dict.items():
-                    if base_noise in self._ifo.keys():
+                if base_noise in self._ifo.keys():
+                    for sub_noise, sub_noise_val in inner_noise_dict.items():
                         if sub_noise in self._ifo[base_noise].keys():
-                            self.var_dict = [
-                                base_noise + " " + sub_noise,
-                                sub_noise_val,
-                            ]
-                            setattr(
-                                getattr(self._ifo, base_noise),
-                                sub_noise,
-                                self._return_value,
-                            )
+                            if isinstance(sub_noise_val,dict):
+                                for sub_sub_noise, sub_sub_noise_val in sub_noise_val.items():
+                                    self.var_dict = [
+                                        base_noise + " " + sub_noise + " " + sub_sub_noise,
+                                        sub_sub_noise_val,
+                                    ]
+                                    setattr(
+                                        getattr(self._ifo, base_noise)[sub_noise],
+                                        sub_sub_noise,
+                                        self._return_value,
+                                    )
+                            else:
+                                self.var_dict = [
+                                    base_noise + " " + sub_noise,
+                                    sub_noise_val,
+                                ]
+                                setattr(
+                                    getattr(self._ifo, base_noise),
+                                    sub_noise,
+                                    self._return_value,
+                                )
                         else:
                             raise ValueError(
                                 sub_noise
                                 + " is not a subparameter variable noise source.\
                                 Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables."
                             )
-                    else:
-                        err_mssg = (
-                            base_noise
-                            + " is not a valid parameter variable noise source.\n"
-                        )
-                        err_mssg += "Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables."
-                        raise ValueError(err_mssg)
+                else:
+                    err_mssg = (
+                        base_noise
+                        + " is not a valid parameter variable noise source.\n"
+                    )
+                    err_mssg += "Try calling Get_Noise_Dict on your GroundBased object to find acceptable variables."
+                    raise ValueError(err_mssg)
         else:
             raise ValueError("Input must be a dictionary of noise sources.")
 
@@ -1045,12 +1057,12 @@ class SpaceBased(Interferometer):
 
         if len(args) != 0:
             [L, A_acc, f_acc_break_low, f_acc_break_high, A_IFO, f_IFO_break] = args
-            self.L = utils.make_quant(L, "m")
-            self.A_acc = utils.make_quant(A_acc, "m/(s*s)")
-            self.f_acc_break_low = utils.make_quant(f_acc_break_low, "Hz")
-            self.f_acc_break_high = utils.make_quant(f_acc_break_high, "Hz")
-            self.A_IFO = utils.make_quant(A_IFO, "m")
-            self.f_IFO_break = utils.make_quant(f_IFO_break, "Hz")
+            self.L = L
+            self.A_acc = A_acc
+            self.f_acc_break_low = f_acc_break_low
+            self.f_acc_break_high = f_acc_break_high
+            self.A_IFO = A_IFO
+            self.f_IFO_break = f_IFO_break
 
         if not hasattr(self, "load_location"):
             if not hasattr(self, "T_type"):
