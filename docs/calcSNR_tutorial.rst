@@ -1,4 +1,3 @@
-
 .. module:: hasasia
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
@@ -16,11 +15,14 @@ Black Holes.
 
 First, we import important modules.
 
+
 .. code:: python
 
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    from scipy.constants import golden_ratio
+    
     import astropy.constants as const
     import time
     import astropy.units as u
@@ -29,16 +31,27 @@ First, we import important modules.
     import gwent.binary as binary
     import gwent.detector as detector
     import gwent.snr as snr
-    import gwent.snrplot as snrplot
+    from gwent.snrplot import Plot_SNR
 
-Setting matplotlib preferences
+Setting matplotlib preferences and adding a pretty plot function for fig
+sizes
 
 .. code:: python
 
+    def get_fig_size(width=7,scale=2.0):
+        #width = 3.36 # 242 pt
+        base_size = np.array([1, 1/scale/golden_ratio])
+        fig_size = width * base_size
+        return(fig_size)
     mpl.rcParams['figure.dpi'] = 300
-    mpl.rcParams['figure.figsize'] = [5,3]
+    #mpl.rcParams['figure.figsize'] = get_fig_size()
     mpl.rcParams['text.usetex'] = True
-    mpl.rc('font',**{'family':'serif','serif':['Times New Roman'],'size':14})
+    mpl.rc('font',**{'family':'serif','serif':['Times New Roman']})
+    mpl.rcParams['lines.linewidth'] = 1.3
+    mpl.rcParams['axes.labelsize'] = 12
+    mpl.rcParams['xtick.labelsize'] = 10
+    mpl.rcParams['ytick.labelsize'] = 10
+    mpl.rcParams['legend.fontsize'] = 8
 
 We need to get the file directories to load in the instrument files.
 
@@ -46,248 +59,76 @@ We need to get the file directories to load in the instrument files.
 
     load_directory = gwent.__path__[0] + '/LoadFiles/InstrumentFiles/'
 
-Source Selection Function
--------------------------
+Fiducial Source Creation
+------------------------
 
-Takes in a an instrument model that dictates reasonable mass ranges for
-the particular detector mass regime and instantiates a source with the
-variable ranges limited by the waveform calibration region.
+To run ``snr.Get_SNR_Matrix``, you need to instantiate a source. Since
+we need to reinitialize a few times, we just put it here as a function.
 
-The source parameters must be set (ie. M,q,z,chi1,chi2), but one only
+This is an example for reasonable mass ranges for the particular
+detector mass regime and the variable ranges limited by the waveform
+calibration region.
+
+The source parameters must be set (ie. M,q,z,chi1,chi2), but one also
 needs to set the minima and maxima of the selected SNR axes variables.
+This takes the form of
+``source_param = [fiducial_value,minimum,maximum]``
 
 .. code:: python
 
-    def Get_Source(model):
-        if model in [0,1,2,3]:
-            #M = m1+m2 Total Mass
-            M = 1e1
-            M_min = 1e0
-            M_max = 1e4
-        elif model in [4,5,6,7,8,9,10,11,12]:
-            #M = m1+m2 Total Mass
-            M = 1e9
-            M_min = 1e8
-            M_max = 1e11
-        else:
-            #M = m1+m2 Total Mass
-            M = 1e6
-            M_min = 1e1
-            M_max = 1e10
-            
+    def Initialize_Source(instrument):
+        """Initializes a source binary based on the instrument type and returns the source
+        """
+        
         #q = m2/m1 reduced mass
         q = 1.0
         q_min = 1.0
         q_max = 18.0
+        q_list = [q,q_min,q_max]
     
         #Chi = S_i*L/m_i**2, spins of each mass i
         chi1 = 0.0 #spin of m1
         chi2 = 0.0 #spin of m2
         chi_min = -0.85 #Limits of PhenomD for unaligned spins
         chi_max = 0.85
-        
-        z = 1.0 #Redshift
+        chi1_list = [chi1,chi_min,chi_max]
+        chi2_list = [chi2,chi_min,chi_max]
+    
+        #Redshift
         z_min = 1e-2
         z_max = 1e3
-        
-        source = binary.BBHFrequencyDomain(M,q,z,chi1,chi2)
-        source.M = [M,M_min,M_max]
-        source.q = [q,q_min,q_max]
-        source.chi1 = [chi1,chi_min,chi_max]
-        source.chi2 = [chi2,chi_min,chi_max]
-        source.z = [z,z_min,z_max]
     
+        if isinstance(instrument,detector.GroundBased):
+            #Total source mass
+            M_ground_source = [10.,1.,1e4]
+            #Redshift
+            z_ground_source = [0.1,z_min,z_max]
+    
+            source = binary.BBHFrequencyDomain(M_ground_source,
+                                               q_list,
+                                               z_ground_source,
+                                               chi1_list,
+                                               chi2_list)
+        elif isinstance(instrument,detector.SpaceBased):
+            M_space_source = [1e6,10.,1e10]
+            z_space_source = [1.0,z_min,z_max]
+            source = binary.BBHFrequencyDomain(M_space_source,
+                                               q_list,
+                                               z_space_source,
+                                               chi1_list,
+                                               chi2_list)
+        elif isinstance(instrument,detector.PTA):
+            M_pta_source = [1e9,1e8,1e11]
+            z_pta_source = [0.1,z_min,z_max]
+            source = binary.BBHFrequencyDomain(M_pta_source,
+                                               q_list,
+                                               z_pta_source,
+                                               chi1_list,
+                                               chi2_list)
         return source
 
-Instrument Selection Function
------------------------------
-
-Takes in an instrument model then assigns the fiducial noise and
-detector values. The model only assigns ranges of calculation for quick
-variable calculations, but one only needs to set the minima and maxima
-if they wish to use other selected SNR axes variables.
-
-If loading a detector, the file should be frequency in the first column
-and either strain, effective strain noise spectral density, or amplitude
-spectral density in the second column.
-
-For generating a detector, one must assign a value to each of the
-different instrument parameters (see the section on Declaring x and y
-variables and Sample Rates).
-
-.. code:: python
-
-    def Get_Instrument(model):
-        if model in [0,1,2,3]:
-            T_obs = 4*u.yr #Observing time in years
-            T_obs_min = 1*u.yr
-            T_obs_max = 10*u.yr
-            if model == 0: #Einstein Telescope
-                #Loaded from http://www.et-gw.eu/index.php/etsensitivities
-                load_name = 'ET_D_data.txt'
-                load_location = load_directory + 'EinsteinTelescope/' + load_name
-                instrument = detector.GroundBased('ET',T_obs,load_location=load_location,I_type='A')
-            elif model == 1: #aLIGO
-                noise_dict = {'Infrastructure':
-                              {'Length':[3995,1000,1e5]},
-                              'Laser':
-                              {'Power':[125,10,1e3]},
-                              'Seismic':
-                              {'Gamma':[0.8,1e-3,1e3]}}
-                instrument = detector.GroundBased('aLIGO',T_obs,noise_dict=noise_dict)
-            elif model == 2: #Voyager
-                noise_dict = {'Infrastructure':
-                              {'Length':[3995,1000,1e5]},
-                              'Laser':
-                              {'Power':[144.6848,10,1e3]},
-                              'Seismic':
-                              {'Gamma':[0.8,1e-3,1e3]}}
-                instrument = detector.GroundBased('Voyager',T_obs,noise_dict=noise_dict)
-            elif model == 3: #Cosmic Explorer proposal 1
-                noise_dict = {'Infrastructure':
-                              {'Length':[40000,1e3,1e5]},
-                              'Laser':
-                              {'Power':[150,10,1e3]},
-                              'Seismic':
-                              {'Gamma':[0.8,1e-3,1e3]}}
-                instrument = detector.GroundBased('CE1',T_obs,noise_dict=noise_dict)
-                
-            instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
-            
-        elif model in [4,5,6,7,8]:
-            #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
-            T_obs = 15*u.yr #Observing time in years
-            T_obs_min = 5*u.yr
-            T_obs_max = 30*u.yr
-            
-            sigma = 100*u.ns.to('s')*u.s #rms timing residuals in seconds
-            sigma_min = 100*u.ns.to('s')*u.s
-            sigma_max = 500*u.ns.to('s')*u.s
-            
-            N_p = 18 #Number of pulsars
-            N_p_min = 18
-            N_p_max = 40
-            
-            cadence = 1/(2*u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every 2 weeks in num/year
-            cadence_min = 2/u.yr
-            cadence_max = 1/(u.wk.to('yr')*u.yr)
-            
-            
-            if model == 4: #NANOGrav 15 yr WN only
-                instrument = detector.PTA('NANOGrav_WN',T_obs,N_p,sigma,cadence)
-            elif model == 5: #NANOGrav 15 yr WN + RN
-                instrument = detector.PTA('NANOGrav_WN_RN',T_obs,N_p,sigma,cadence,
-                                          rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
-            elif model == 6: #NANOGrav 15 yr WN + GWB
-                instrument = detector.PTA('NANOGrav_WN_GWB',T_obs,N_p,sigma,cadence,
-                                          GWB_amp=4e-16)
-            elif model == 7: #NANOGrav realistic noise
-                instrument = detector.PTA('NANOGrav_realistic_noise',T_obs,N_p,cadence,use_11yr=True)
-            elif model == 8: #NANOGrav 11 yr real data
-                #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
-                load_name = 'NANOGrav_11yr_S_eff.txt'
-                load_location = load_directory + 'NANOGrav/StrainFiles/' + load_name
-                T_obs = 11.42*u.yr #Observing time in years
-                instrument = detector.PTA('NANOGrav_11yr',load_location=load_location,I_type='E')
-                
-            instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
-            instrument.sigma = [sigma,sigma_min,sigma_max]
-            instrument.N_p = [N_p,N_p_min,N_p_max]
-            instrument.cadence = [cadence,cadence_min,cadence_max]
-            
-        elif model in [9,10,11,12]: #SKA (2030s)
-            #SKA calculation using parameters and methods from https://arxiv.org/abs/0804.4476 section 7.1
-            T_obs = 15*u.yr #Observing time (years)
-            T_obs_min = 10*u.yr
-            T_obs_max = 30*u.yr
-            
-            sigma = 10*u.ns.to('s')*u.s #rms timing residuals in nanoseconds
-            sigma_min = 10*u.ns.to('s')*u.s
-            sigma_max = 100*u.ns.to('s')*u.s
-            
-            N_p = 20 #Number of pulsars
-            N_p_min = 18
-            N_p_max = 200
-            
-            cadence = 1/(u.wk.to('yr')*u.yr) #Avg observation cadence of 1 every week in num/year
-            cadence_min = 2/u.yr
-            cadence_max = 1/(u.wk.to('yr')*u.yr)
-            
-            if model == 9: #SKA WN only
-                instrument = detector.PTA('SKA_WN',T_obs,N_p,sigma,cadence)
-            elif model == 10: #SKA WN + RN
-                instrument = detector.PTA('SKA_WN_RN',T_obs,N_p,sigma,cadence,
-                                          rn_amp=[1e-16,1e-12],rn_alpha=[-1/2,1.25])
-            elif model == 11: #SKA WN + GWB
-                instrument = detector.PTA('SKA_WN_GWB',T_obs,N_p,sigma,cadence,
-                                          GWB_amp=4e-16)
-            elif model == 12: #SKA realistic noise
-                instrument = detector.PTA('SKA_realistic_noise',T_obs,N_p,cadence,use_11yr=True)
-                
-            instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
-            instrument.sigma = [sigma,sigma_min,sigma_max]
-            instrument.N_p = [N_p,N_p_min,N_p_max]
-            instrument.cadence = [cadence,cadence_min,cadence_max]
-            
-        elif model > 12:
-            T_obs = 4*u.yr #Observing time in years
-            T_obs_min = 1*u.yr
-            T_obs_max = 10*u.yr
-    
-            L = 2.5e9*u.m #armlength in meters
-            L_min = 1.0e7*u.m
-            L_max = 1.0e11*u.m
-            
-            A_acc = 3e-15*u.m/u.s/u.s
-            A_acc_min = 1e-16*u.m/u.s/u.s
-            A_acc_max = 1e-14*u.m/u.s/u.s
-            
-            f_acc_break_low = .4*u.mHz.to('Hz')*u.Hz
-            f_acc_break_low_min = .1*u.mHz.to('Hz')*u.Hz
-            f_acc_break_low_max = 1.0*u.mHz.to('Hz')*u.Hz
-            
-            f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
-            f_acc_break_high_min = 1.*u.mHz.to('Hz')*u.Hz
-            f_acc_break_high_max = 10.*u.mHz.to('Hz')*u.Hz
-            
-            f_IFO_break = 2.*u.mHz.to('Hz')*u.Hz
-            f_IFO_break_min = 1.*u.mHz.to('Hz')*u.Hz
-            f_IFO_break_max = 10.*u.mHz.to('Hz')*u.Hz
-            
-            A_IFO_min = 1.0e-13*u.m
-            A_IFO_max = 1.0e-10*u.m
-            
-            if model == 13: #Robson,Cornish,and Liu 2019, LISA (https://arxiv.org/abs/1803.01944)
-                A_IFO = 1.5e-11*u.m
-                Background = False
-                T_type = 'A'
-    
-                instrument = detector.SpaceBased('Alt_LISA',\
-                                               T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,\
-                                               Background=Background,T_type=T_type)
-    
-            else: #L3 proposal
-                #Default Params from https://arxiv.org/abs/1702.00786
-                A_IFO = 10e-12*u.m
-                Background = False
-                T_type = 'N'
-            
-                instrument = detector.SpaceBased('LISA_ESA',\
-                                               T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IFO,f_IFO_break,\
-                                               Background=Background,T_type=T_type)
-                
-            instrument.T_obs = [T_obs,T_obs_min,T_obs_max]
-            instrument.L = [L,L_min,L_max]
-            instrument.A_acc = [A_acc,A_acc_min,A_acc_max]
-            instrument.f_acc_break_low = [f_acc_break_low,f_acc_break_low_min,f_acc_break_low_max]
-            instrument.f_acc_break_high = [f_acc_break_high,f_acc_break_high_min,f_acc_break_high_max]
-            instrument.A_IFO = [A_IFO,A_IFO_min,A_IFO_max]
-            instrument.f_IFO_break = [f_IFO_break,f_IFO_break_min,f_IFO_break_max]
-            
-        return instrument
-
-Declaring x and y variables and Sample Rates
---------------------------------------------
+Create SNR Matrices and Samples for a Few Examples
+--------------------------------------------------
 
 The variables for either axis in the SNR calculation can be:
 
@@ -322,68 +163,143 @@ The variables for either axis in the SNR calculation can be:
 
 -  PTA ONLY:
 
-   -  ‘N_p’ - Number of Pulsars
+   -  ‘n_p’ - Number of Pulsars
    -  ‘sigma’ - Root-Mean-Squared Timing Error
    -  ‘cadence’ - Observation Cadence
 
-SNR Calculation
----------------
+Instrument Creation Examples
+----------------------------
 
-Based on the selected model, we use ``Get_Instrument`` and
-``Get_Source`` to instantiate both the instrument and the model for the
-SNR Calculation.
+For each instrument one wants to investigate, you have to assign the
+fiducial noise and detector values. We do the same reinitialization game
+here as the source, so each of these are functions.
 
-.. code:: python
+These examples only assign ranges of calculation for quick variable
+calculations, but one only needs to set the minima and maxima if they
+wish to use other selected SNR axes variables.
 
-    #Number of SNRMatrix rows
-    sampleRate_y = 75
-    #Number of SNRMatrix columns
-    sampleRate_x = 75
-    #Variable on y-axis
-    var_y = 'z'
-    #Variable on x-axis
-    var_x = 'M'
-    #Model for NANOGrav WN only
-    model = 4
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
+If loading a detector, the file should be frequency in the first column
+and either strain, effective strain noise spectral density, or amplitude
+spectral density in the second column.
 
-We now use ``Get_SNR_Matrix`` with the variables given and the data
-range to sample the space either logrithmically or linearly based on the
-selection of variables. It computes the SNR for each value, then returns
-the variable ranges used to calculate the SNR for each matrix, then
-returns the SNRs with size of the ``sampleRate1``\ X\ ``sampleRate2``
+The strain tutorial goes into more detail on initializing detectors, so
+if you get lost, look there!
+
+Ground Based Detectors
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,var_x,sampleRate_x,var_y,sampleRate_y)
-    end = time.time()
-    print(end-start)
+    def Initialize_aLIGO():
+        #Observing time in years
+        T_obs_ground_list = [4*u.yr,1*u.yr,10*u.yr]
+        #aLIGO
+        noise_dict_aLIGO = {'Infrastructure':
+                      {'Length':[3995,1000,1e5]},
+                      'Laser':
+                      {'Power':[125,10,1e3]},
+                      'Seismic':
+                      {'Gamma':[0.8,1e-3,1e3]}}
+        aLIGO = detector.GroundBased('aLIGO',T_obs_ground_list,noise_dict=noise_dict_aLIGO)
+        
+        return aLIGO
 
-
-.. parsed-literal::
-
-    27.46350598335266
-
-
-Plot the SNR using the initial variables and the returns from
-``Get_SNR_Matrix``
+Space Based Detectors
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,smooth_contours=False)
+    def Initialize_LISA():
+        T_obs_space_list = [4*u.yr,1*u.yr,10*u.yr]
+    
+        #armlength in meters
+        L = 2.5e9*u.m
+        L_min = 1.0e7*u.m
+        L_max = 1.0e11*u.m
+        L_list = [L,L_min,L_max]
+    
+        #Acceleration Noise Amplitude
+        A_acc = 3e-15*u.m/u.s/u.s
+        A_acc_min = 1e-16*u.m/u.s/u.s
+        A_acc_max = 1e-14*u.m/u.s/u.s
+        A_acc_list = [A_acc,A_acc_min,A_acc_max]
+    
+        #The Low Acceleration Noise Break Frequency
+        f_acc_break_low = .4*u.mHz.to('Hz')*u.Hz
+        f_acc_break_low_min = .1*u.mHz.to('Hz')*u.Hz
+        f_acc_break_low_max = 1.0*u.mHz.to('Hz')*u.Hz
+        f_acc_break_low_list = [f_acc_break_low,f_acc_break_low_min,f_acc_break_low_max]
+    
+        #The High Acceleration Noise Break Frequency
+        f_acc_break_high = 8.*u.mHz.to('Hz')*u.Hz
+        f_acc_break_high_min = 1.*u.mHz.to('Hz')*u.Hz
+        f_acc_break_high_max = 10.*u.mHz.to('Hz')*u.Hz
+        f_acc_break_high_list = [f_acc_break_high,f_acc_break_high_min,f_acc_break_high_max]
+    
+        #The Optical Metrology Noise Break Frequency
+        f_IFO_break = 2.*u.mHz.to('Hz')*u.Hz
+        f_IFO_break_min = 1.*u.mHz.to('Hz')*u.Hz
+        f_IFO_break_max = 10.*u.mHz.to('Hz')*u.Hz
+        f_IFO_break_list = [f_IFO_break,f_IFO_break_min,f_IFO_break_max]
+    
+        #Detector Optical Metrology Noise
+        A_IFO = 10e-12*u.m
+        A_IFO_min = 1.0e-13*u.m
+        A_IFO_max = 1.0e-10*u.m
+        A_IFO_list = [A_IFO,A_IFO_min,A_IFO_max]
+    
+        Background = False
+    
+        #Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017 (https://arxiv.org/abs/1702.00786)
+        T_type = 'N'
+    
+        LISA_prop1 = detector.SpaceBased('LISA_prop1',
+                                         T_obs_space_list,L_list,A_acc_list,
+                                         f_acc_break_low_list,f_acc_break_high_list,
+                                         A_IFO_list,f_IFO_break_list,
+                                         Background=Background,T_type=T_type)
+        return LISA_prop1
 
+PTA Detectors
+~~~~~~~~~~~~~
 
+.. code:: python
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_22_0.png
+    def Initialize_NANOGrav():
+        #NANOGrav calculation using 11.5yr parameters https://arxiv.org/abs/1801.01837
+        #Observing time in years
+        T_obs_ptas_list = [11.42*u.yr,5*u.yr,30*u.yr]
+        #rms timing residuals in seconds
+        sigma = 100*u.ns.to('s')*u.s
+        sigma_min = 100*u.ns.to('s')*u.s
+        sigma_max = 500*u.ns.to('s')*u.s
+        sigma_list = [sigma,sigma_min,sigma_max]
+        #Number of pulsars
+        n_p = 34
+        n_p_min = 18
+        n_p_max = 200
+        n_p_list = [n_p,n_p_min,n_p_max]
+        #Avg observation cadence of 1 every 2 weeks in num/year
+        cadence = 1/(2*u.wk.to('yr')*u.yr)
+        cadence_min = 2/u.yr
+        cadence_max = 1/(u.wk.to('yr')*u.yr)
+        cadence_list = [cadence,cadence_min,cadence_max]
+    
+        #NANOGrav 11.4 yr WN only
+        NANOGrav_WN = detector.PTA('NANOGrav_WN',n_p_list,T_obs=T_obs_ptas_list,sigma=sigma_list,cadence=cadence_list)
+        return NANOGrav_WN
 
+SNR Calculations
+----------------
 
-Create SNR Matrices and Samples for a Few Examples
---------------------------------------------------
+To actually sample the parameter space, one needs to declare x and y
+variables that correspond to the variables inside the relavant
+instrument and/or model for the SNR Calculation.
 
-Ground Based Instruments
-~~~~~~~~~~~~~~~~~~~~~~~~
+You will also need to assign Sample Rates for each, this will directly
+determine how long a calculation will take. I have kept all curves under
+100 for paper figures, so I would recommend nothing over that, but I
+won’t tell you what to do!
 
 .. code:: python
 
@@ -391,77 +307,137 @@ Ground Based Instruments
     sampleRate_y = 50
     #Number of SNRMatrix columns
     sampleRate_x = 50
-    #Variable on y-axis
-    var_ys = ['z','q','chi2']
-    #Variable on x-axis
-    var_x = 'M'
 
-Einstein Telescope
-^^^^^^^^^^^^^^^^^^
+We now use ``Get_SNR_Matrix`` with the variables given and the data
+range to sample the space either logrithmically or linearly based on the
+selection of variables. It computes the SNR for each value, then returns
+the variable ranges used to calculate the SNR for each matrix, then
+returns the SNRs with size of the ``sampleRate_x``\ X\ ``sampleRate_y``
+
+aLIGO
+~~~~~
+
+Varying Source Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here we calculate the SNR for three source parameters ``chi1``,\ ``q``,
+and ``z`` using ``Get_SNR_Matrix``. For ease of the example, we just do
+them all at once.
 
 .. code:: python
 
-    model = 0
-    instrument = Get_Instrument(model)
+    #Variable on y-axis
+    var_ys = ['chi1','q','z']
+    #Variable on x-axis
+    var_x = 'M'
+    instrument = Initialize_aLIGO()
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
     for var_y in var_ys:
-        source = Get_Source(model)
+        source = Initialize_Source(instrument)
         start = time.time()
         [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
         end = time.time()
-        snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                         dl_axis=False,smooth_contours=False)
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
     
         print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+
+
+.. parsed-literal::
+
+    Model:  aLIGO_M_vs_chi1 ,  done. t = :  17.051253080368042
+    Model:  aLIGO_M_vs_q ,  done. t = :  17.81633687019348
+    Model:  aLIGO_M_vs_z ,  done. t = :  14.062479972839355
+
+
+Plotting SNRs
+^^^^^^^^^^^^^
+
+This is just an example of plotting the above SNRs using the
+``Plot_SNR`` function. The function can take a *ton* of parameters, but
+for simple plots most of them are unneccessary.
+
+.. code:: python
+
+    figsize = get_fig_size()
+    fig, axes = plt.subplots(1,3,figsize=figsize)
+    loglevelMin=-1.0
+    loglevelMax=4.0
+    hspace = .1
+    wspace = .45
+    
+    ii = 0
+    for i,ax in enumerate(axes):
+        if ii == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=True,display_cbar=True,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,
+                     xticklabels_kwargs={'rotation':70,'y':0.02},
+                     ylabels_kwargs={'labelpad':-5})
+        else:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=False,display_cbar=False,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
+        ii += 1
 
 
 
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_0.png
 
 
-.. parsed-literal::
-
-    Model:  ET_M_vs_z ,  done. t = :  14.575536251068115
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_2.png
-
-
-.. parsed-literal::
-
-    Model:  ET_M_vs_q ,  done. t = :  18.131417989730835
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_4.png
-
-
-.. parsed-literal::
-
-    Model:  ET_M_vs_chi2 ,  done. t = :  17.366393089294434
-
-
-aLIGO
-^^^^^
+A simple example for just one figure.
 
 .. code:: python
 
-    model = 1
-    var_y = 'Infrastructure Length'
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
+    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1])
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_0.png
+
+
+Varying Instrument Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is very similar to the previous example, but with varying the
+instrument parameters ``Infrastructure Length``, ``Seismic Gamma``, and
+``Laser Power``\ vs. ``M``.
+
+One thing to note is that we moved the instrument initialization inside
+the for loop this time since we don’t want the parameters to stay at the
+max value from the previous run.
+
+.. code:: python
+
+    #Variable on y-axis
+    var_ys = ['Infrastructure Length','Seismic Gamma','Laser Power']
+    #Variable on x-axis
+    var_x = 'M'
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
+    for var_y in var_ys:
+        instrument = Initialize_aLIGO()
+        source = Initialize_Source(instrument)
+        start = time.time()
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                           var_x,sampleRate_x,
+                                                           var_y,sampleRate_y)
+        end = time.time()
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
     
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
-    
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+        print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
 
 
 .. parsed-literal::
@@ -472,284 +448,392 @@ aLIGO
       zint[zint < 0] = 0
 
 
+.. parsed-literal::
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_1.png
+    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  14.259448051452637
 
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  13.939491033554077
-
-
-PTAs
-~~~~
-
-These can take a really long time if you vary the instrument parameters.
-Be careful with your sample rates!
-
-NANOGrav WN only
-^^^^^^^^^^^^^^^^
-
-.. code:: python
-
-    #Number of SNRMatrix rows
-    sampleRate_y = 10
-    #Number of SNRMatrix columns
-    sampleRate_x = 10
-    #Variable on y-axis
-    var_y = 'cadence'
-    #Variable on x-axis
-    var_x = 'M'
-
-.. code:: python
-
-    model = 4
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
-    
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_33_0.png
+    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/newtonian.py:52: RuntimeWarning: invalid value encountered in true_divide
+      coeff = 3**(-gamma*f)/(3**(-gamma*f) + 3**(-gamma*fk))
 
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  41.988749980926514
+    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  14.215790033340454
+    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  14.641427993774414
 
 
-NANOGrav Realistic Noise
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. code:: python
+
+    figsize = get_fig_size()
+    fig, axes = plt.subplots(1,3,figsize=figsize)
+    loglevelMin=-1.0
+    loglevelMax=3.0
+    
+    wspace = .5
+    
+    ii = 0
+    for i,ax in enumerate(axes):
+        if ii == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=True,display_cbar=True,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,
+                     xticklabels_kwargs={'rotation':70,'y':0.02},ylabels_kwargs={'labelpad':-5})
+        else:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=False,display_cbar=False,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     xticklabels_kwargs={'rotation':70,'y':0.02},
+                     ylabels_kwargs={'labelpad':1})
+        ii += 1
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_32_0.png
+
+
+LISA SNR
+~~~~~~~~
+
+We now just for examples repeat the above few SNR calculations for LISA
+parameters.
 
 .. code:: python
 
     #Variable on y-axis
-    var_y = 'N_p'
+    var_ys = ['chi1','q','z']
     #Variable on x-axis
     var_x = 'M'
-
-.. code:: python
-
-    model = 7
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
+    instrument = Initialize_LISA()
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
+    for var_y in var_ys:
+        source = Initialize_Source(instrument)
+        start = time.time()
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                           var_x,sampleRate_x,
+                                                           var_y,sampleRate_y)
+        end = time.time()
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
     
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_36_0.png
+        print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
 
 
 .. parsed-literal::
 
-    Model:  NANOGrav_realistic_noise_M_vs_N_p ,  done. t = :  88.48471927642822
+    Model:  LISA_prop1_M_vs_chi1 ,  done. t = :  22.185662031173706
+    Model:  LISA_prop1_M_vs_q ,  done. t = :  22.43631887435913
+    Model:  LISA_prop1_M_vs_z ,  done. t = :  18.2937490940094
 
-
-NANOGrav 11yr Data
-^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
-    #Number of SNRMatrix rows
-    sampleRate_y = 50
-    #Number of SNRMatrix columns
-    sampleRate_x = 50
+    figsize = get_fig_size()
+    fig, axes = plt.subplots(1,3,figsize=figsize)
+    loglevelMin=-1.0
+    loglevelMax=7.0
+    hspace = .1
+    wspace = .45
+    
+    ii = 0
+    for i,ax in enumerate(axes):
+        if ii == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=True,display_cbar=True,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,
+                     xticklabels_kwargs={'rotation':70,'y':0.02},
+                     ylabels_kwargs={'labelpad':-5})
+        else:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=False,display_cbar=False,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
+        ii += 1
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_35_0.png
+
+
+Another included feature is the ability to add luminosity distance or
+lookback times onto the right hand axes of the redshift vs. total mass
+plots.
+
+.. code:: python
+
+    figsize = get_fig_size()
+    fig, axes = plt.subplots(1,2,figsize=figsize)
+    wspace = 0.6
+    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],fig=fig,ax=axes[0],
+             display=False,display_cbar=False,dl_axis=True,
+             xticklabels_kwargs={'rotation':70,'y':0.02},
+             ylabels_kwargs={'labelpad':-3})
+    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],fig=fig,ax=axes[1],
+             lb_axis=True,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02},
+             ylabels_kwargs={'labelpad':-3})
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_37_0.png
+
+
+.. code:: python
+
     #Variable on y-axis
-    var_y = 'q'
+    var_ys = ['L','A_acc','A_IFO','f_acc_break_low','f_acc_break_high','f_IFO_break']
     #Variable on x-axis
     var_x = 'M'
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
+    for var_y in var_ys:
+        instrument = Initialize_LISA()
+        source = Initialize_Source(instrument)
+        start = time.time()
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                           var_x,sampleRate_x,
+                                                           var_y,sampleRate_y)
+        end = time.time()
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
+    
+        print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+
+
+.. parsed-literal::
+
+    Model:  LISA_prop1_M_vs_L ,  done. t = :  17.450850009918213
+    Model:  LISA_prop1_M_vs_A_acc ,  done. t = :  17.71195697784424
+    Model:  LISA_prop1_M_vs_A_IFO ,  done. t = :  18.5645112991333
+    Model:  LISA_prop1_M_vs_f_acc_break_low ,  done. t = :  18.719192028045654
+    Model:  LISA_prop1_M_vs_f_acc_break_high ,  done. t = :  17.924755096435547
+    Model:  LISA_prop1_M_vs_f_IFO_break ,  done. t = :  17.63184094429016
+
 
 .. code:: python
 
-    model = 8
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
+    figsize = get_fig_size(scale=1.0)
+    fig, axes = plt.subplots(2,3,figsize=figsize)
     
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+    loglevelMin=-1.0
+    loglevelMax=6.0
+    hspace = .1
+    wspace = .55
+    
+    ii = 0
+    for i in range(np.shape(axes)[0]):
+        for j in range(np.shape(axes)[1]):
+            if ii == (np.shape(axes)[0]*np.shape(axes)[1])-1:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],display=True,display_cbar=True,
+                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':1})
+            elif ii in [(np.shape(axes)[0]*np.shape(axes)[1])-2,(np.shape(axes)[0]*np.shape(axes)[1])-3]:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,
+                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':0})
+            else:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,x_axis_label=False,
+                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':1})
+            ii += 1
 
 
 
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_39_0.png
 
 
-.. parsed-literal::
+PTA SNRs
+~~~~~~~~
 
-    Model:  NANOGrav_11yr_M_vs_q ,  done. t = :  10.373409748077393
-
-
-SKA WN Only
-^^^^^^^^^^^
+Same as the rest, just for example purposes!
 
 .. code:: python
 
-    #Number of SNRMatrix rows
-    sampleRate_y = 10
-    #Number of SNRMatrix columns
-    sampleRate_x = 10
     #Variable on y-axis
-    var_y = 'sigma'
+    var_ys = ['chi1','q','z']
     #Variable on x-axis
     var_x = 'M'
+    instrument = Initialize_NANOGrav()
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
+    for var_y in var_ys:
+        source = Initialize_Source(instrument)
+        start = time.time()
+        [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                           var_x,sampleRate_x,
+                                                           var_y,sampleRate_y)
+        end = time.time()
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
+    
+        print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+
+
+.. parsed-literal::
+
+    Model:  NANOGrav_WN_M_vs_chi1 ,  done. t = :  15.365206003189087
+    Model:  NANOGrav_WN_M_vs_q ,  done. t = :  10.81308102607727
+    Model:  NANOGrav_WN_M_vs_z ,  done. t = :  15.231884002685547
+
 
 .. code:: python
 
-    model = 9
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
-    start = time.time()
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
+    figsize = get_fig_size()
+    fig, axes = plt.subplots(1,3,figsize=figsize)
+    loglevelMin=-1.0
+    loglevelMax=5.0
+    hspace = .1
+    wspace = .45
     
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+    ii = 0
+    for i,ax in enumerate(axes):
+        if ii == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=True,display_cbar=True,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,
+                     xticklabels_kwargs={'rotation':70,'y':0.02},
+                     ylabels_kwargs={'labelpad':-5})
+        else:
+            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                     sample_y_array[ii],SNR_array[ii],
+                     fig=fig,ax=ax,display=False,display_cbar=False,
+                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
+        ii += 1
 
 
 
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_42_0.png
 
 
-.. parsed-literal::
-
-    Model:  SKA_WN_M_vs_sigma ,  done. t = :  120.45069313049316
-
-
-SKA Realistic Noise
-^^^^^^^^^^^^^^^^^^^
+There is also functionality to plot two different plots together for
+eazy comparison.
 
 .. code:: python
 
-    #Variable on y-axis
-    var_y = 'T_obs'
-    #Variable on x-axis
-    var_x = 'M'
-
-.. code:: python
-
-    model = 12
-    instrument = Get_Instrument(model)
-    source = Get_Source(model)
-    start = time.time()
+    instrument = Initialize_NANOGrav()
+    source = Initialize_Source(instrument)
     [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       var_x,sampleRate_x,
-                                                       var_y,sampleRate_y)
-    end = time.time()
-    snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                     dl_axis=False,smooth_contours=False)
-    
-    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+                                                       'M',sampleRate_x,
+                                                       'z',sampleRate_y,inc=np.pi/2)
+
+.. code:: python
+
+    fig,ax = plt.subplots()
+    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],
+             display=False,display_cbar=False,fig=fig,ax=ax,
+             contour_kwargs={'cmap':'viridis'},cfill=False)
+    Plot_SNR('M',sample_x,'z',sample_y,SNRMatrix,fig=fig,ax=ax,
+             contour_kwargs={'cmap':'viridis','linestyles':'--'},cfill=False)
 
 
 
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_45_0.png
 
 
-.. parsed-literal::
-
-    Model:  SKA_realistic_noise_M_vs_T_obs ,  done. t = :  263.5807590484619
-
-
-Space Based Instrument
-~~~~~~~~~~~~~~~~~~~~~~
-
-LISA
-^^^^
+These can take a long time if you vary the instrument parameters. Be
+careful with your sample rates!
 
 .. code:: python
 
-    #Number of SNRMatrix rows
-    sampleRate_y = 50
-    #Number of SNRMatrix columns
-    sampleRate_x = 50
     #Variable on y-axis
-    var_ys = ['z','q','chi1','L','A_acc']
+    var_ys = ['n_p','sigma','cadence','T_obs']
     #Variable on x-axis
     var_x = 'M'
-
-.. code:: python
-
-    model = 14
-    instrument = Get_Instrument(model)
+    sample_x_array = []
+    sample_y_array = []
+    SNR_array = []
     for var_y in var_ys:
-        source = Get_Source(model)
+        instrument = Initialize_NANOGrav()
+        source = Initialize_Source(instrument)
         start = time.time()
         [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
                                                            var_x,sampleRate_x,
                                                            var_y,sampleRate_y)
         end = time.time()
-        snrplot.Plot_SNR(source,instrument,var_x,sample_x,var_y,sample_y,SNRMatrix,
-                         dl_axis=False,smooth_contours=False)
+        sample_x_array.append(sample_x)
+        sample_y_array.append(sample_y)
+        SNR_array.append(SNRMatrix)
     
         print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
 
 
+.. parsed-literal::
+
+    Model:  NANOGrav_WN_M_vs_n_p ,  done. t = :  204.38892197608948
+    Model:  NANOGrav_WN_M_vs_sigma ,  done. t = :  230.15640377998352
+    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  285.314738035202
+    Model:  NANOGrav_WN_M_vs_T_obs ,  done. t = :  451.1644449234009
+
+
+.. code:: python
+
+    figsize = get_fig_size(scale=1.0)
+    fig, axes = plt.subplots(2,2,figsize=figsize)
+    
+    loglevelMax=4.0
+    hspace = .2
+    wspace = .3
+    
+    ii = 0
+    for i in range(np.shape(axes)[0]):
+        for j in range(np.shape(axes)[1]):
+            if ii == (np.shape(axes)[0]*np.shape(axes)[1])-1:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],
+                         logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':5})
+            elif ii == (np.shape(axes)[0]*np.shape(axes)[1])-2:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,
+                         logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':2})
+            else:
+                Plot_SNR('M',sample_x_array[ii],var_ys[ii],
+                         sample_y_array[ii],SNR_array[ii],
+                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,x_axis_label=False,
+                         logLevels_max=loglevelMax,
+                         hspace=hspace,wspace=wspace,
+                         xticklabels_kwargs={'rotation':70,'y':0.02},
+                         ylabels_kwargs={'labelpad':2})
+            ii += 1
+
+
 
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_0.png
-
-
-.. parsed-literal::
-
-    Model:  LISA_ESA_M_vs_z ,  done. t = :  16.54398012161255
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_2.png
-
-
-.. parsed-literal::
-
-    Model:  LISA_ESA_M_vs_q ,  done. t = :  19.3680260181427
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_4.png
-
-
-.. parsed-literal::
-
-    Model:  LISA_ESA_M_vs_chi1 ,  done. t = :  17.992519855499268
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_6.png
-
-
-.. parsed-literal::
-
-    Model:  LISA_ESA_M_vs_L ,  done. t = :  15.184711933135986
-
-
-
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_8.png
-
-
-.. parsed-literal::
-
-    Model:  LISA_ESA_M_vs_A_acc ,  done. t = :  14.46771502494812
 
 

@@ -9,8 +9,8 @@ Welcome to gwent's documentation!
    installation
    usage
    strain_plot_tutorial
+   source_plot_tutorial
    calcSNR_tutorial
-   waterfall_plot_tutorial
    modules
    contributing
    authors

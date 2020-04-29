@@ -81,7 +81,7 @@ def Plot_SNR(var_x,sample_x,var_y,sample_y,SNRMatrix,
     else:
         fig,ax = plt.subplots()
 
-    if 'colors' not in contour_kwargs.keys():
+    if 'colors' not in contour_kwargs.keys() and 'cmap' not in contour_kwargs.keys():
         contour_kwargs['colors'] = 'k'
     if 'linewidths' not in contour_kwargs.keys():
         contour_kwargs['linewidths'] = 2.0
@@ -113,12 +113,14 @@ def Plot_SNR(var_x,sample_x,var_y,sample_y,SNRMatrix,
     #Set whether log or linearly spaced axes
     if xlabel_max < 0.0 or xlabel_min < 0.0 or var_x in ['n_p','T_obs']:
         xaxis_type = 'lin'
-        x_labels = np.linspace(xlabel_min,xlabel_max,xlabel_max-xlabel_min+1)
+        step_size = int(xlabel_max,xlabel_max-xlabel_min+1)
+        x_labels = np.linspace(xlabel_min,xlabel_max,step_size)
     else:
         x_log_range = np.log10(xlabel_max) - np.log10(xlabel_min)
         if x_log_range >= 2.:
             xaxis_type = 'log'
-            x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),np.log10(xlabel_max)-np.log10(xlabel_min)+1)
+            step_size = int(np.log10(xlabel_max)-np.log10(xlabel_min)+1)
+            x_labels = np.logspace(np.log10(xlabel_min),np.log10(xlabel_max),step_size)
         else:
             xaxis_type = 'lin'
             x_scale = 10**round(np.log10(xlabel_min))
@@ -126,12 +128,14 @@ def Plot_SNR(var_x,sample_x,var_y,sample_y,SNRMatrix,
 
     if ylabel_max < 0.0 or ylabel_min < 0.0 or var_y in ['n_p','T_obs']:
         yaxis_type = 'lin'
-        y_labels = np.linspace(ylabel_min,ylabel_max,ylabel_max-ylabel_min+1)
+        step_size = int(ylabel_max-ylabel_min+1)
+        y_labels = np.linspace(ylabel_min,ylabel_max,step_size)
     else:
         y_log_range = np.log10(ylabel_max) - np.log10(ylabel_min)
         if y_log_range >= 2.:
             yaxis_type = 'log'
-            y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+            step_size = int(np.log10(ylabel_max)-np.log10(ylabel_min)+1)
+            y_labels = np.logspace(np.log10(ylabel_min),np.log10(ylabel_max),step_size)
         else:
             yaxis_type = 'lin'
             y_scale = 10**round(np.log10(ylabel_min))

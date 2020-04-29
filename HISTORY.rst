@@ -1,6 +1,14 @@
 =======
 History
 =======
+0.2.0 (2020-4-29)
+-------------------
+* Major Changes to PTA detector setup
+* Major Changes to snrplot
+* Overhaul of tutorials
+* Minor Changes to binary and snr functions
+* Other Minor Changes sprinkled throughout 
+
 0.1.16 (2020-1-19)
 -------------------
 * Removing install of pygwinc in setup.py
