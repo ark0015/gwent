@@ -113,7 +113,7 @@ def Plot_SNR(var_x,sample_x,var_y,sample_y,SNRMatrix,
     #Set whether log or linearly spaced axes
     if xlabel_max < 0.0 or xlabel_min < 0.0 or var_x in ['n_p','T_obs']:
         xaxis_type = 'lin'
-        step_size = int(xlabel_max,xlabel_max-xlabel_min+1)
+        step_size = int(xlabel_max-xlabel_min+1)
         x_labels = np.linspace(xlabel_min,xlabel_max,step_size)
     else:
         x_log_range = np.log10(xlabel_max) - np.log10(xlabel_min)
