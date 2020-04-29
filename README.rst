@@ -18,7 +18,7 @@ Gravitational Wave dEtector desigN Toolkit.
 
 Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
 
-.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/docs/waterfall_plot_tutorial_files/waterfall_plot_tutorial_47_0.png
+.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/docs/calcSNR_tutorial_files/full_waterfall_plots_lb.png
         :align: center
         :alt: gwent Waterfall Plots
 
@@ -28,8 +28,38 @@ Generates strain sensitivity curves and Waterfall plots for various gravitationa
 
 Features
 --------
+Calculates the sensitivity curves for various designs of pulsar timing arrays, space-based detectors, and ground-based detectors.
+This includes:
+* NANOGrav
+* SKA
+* LISA
+* aLIGO
+* Voyager
+* and more!
 
-* TODO
+Calculates the strain from coalescing black hole binaries. It contains functionality for different source descriptions:
+* Slowly-evolving sources, ie. BHBs early in their inspiral where they appear to not change in frequency.
+* Rapidly-evolving sources, ie. BHBs in the final stages of coalescence. 
+** Uses a fully Pythonic implementation of the phenomenological model `IMRPhenomD` to accurately represent the inspiral, merger, and ringdown of the BHB.
+
+Calculates the matched-filtered signal-to-noise ratio (SNR) to help assess the detectability of any BHB source configuration by any represented gravitational wave detector.
+* Includes robust plotting methods to represent these SNRs.
+
+
+Getting Started
+---------------
+`gwent` is available on the Python Package Inventory, so the preferred method to install `gwent` is to install it with `pip`, as it will always install the most recent stable release.
+
+.. code-block:: console
+
+    $ pip install gwent
+
+
+To install `pygwinc`, a GitLab hosted package necessary to fully utilize `gwent`, run this command in your terminal:
+
+.. code-block:: console
+
+    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git@65396ee42e851ab7189618cabe1c12081b5d982e#egg=pygwinc
 
 Credits
 -------

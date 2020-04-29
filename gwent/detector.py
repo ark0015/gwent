@@ -376,9 +376,7 @@ class PTA:
                 return np.append(
                     samp_var,
                     np.logspace(
-                        min(np.log10(samp_var)),
-                        max(np.log10(samp_var)),
-                        self.nbins,
+                        min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins,
                     ),
                 )
             else:
@@ -935,10 +933,17 @@ class GroundBased(Interferometer):
                 if base_noise in self._ifo.keys():
                     for sub_noise, sub_noise_val in inner_noise_dict.items():
                         if sub_noise in self._ifo[base_noise].keys():
-                            if isinstance(sub_noise_val,dict):
-                                for sub_sub_noise, sub_sub_noise_val in sub_noise_val.items():
+                            if isinstance(sub_noise_val, dict):
+                                for (
+                                    sub_sub_noise,
+                                    sub_sub_noise_val,
+                                ) in sub_noise_val.items():
                                     self.var_dict = [
-                                        base_noise + " " + sub_noise + " " + sub_sub_noise,
+                                        base_noise
+                                        + " "
+                                        + sub_noise
+                                        + " "
+                                        + sub_sub_noise,
                                         sub_sub_noise_val,
                                     ]
                                     setattr(

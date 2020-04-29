@@ -209,7 +209,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def h_gw(self):
         if not hasattr(self, "_h_gw"):
             if hasattr(self, "_instrument"):
-                self._h_gw = Get_Mono_Strain(self,frame="source").to("")
+                self._h_gw = Get_Mono_Strain(self, frame="source").to("")
             else:
                 raise ValueError(
                     "No instrument assigned, please fix it. "
@@ -233,7 +233,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
             else:
                 raise ValueError(
                     "No GW frequency or instrument assigned, please fix it. "
-                    'Try: assigning source.f_gw or source.instrument.'
+                    "Try: assigning source.f_gw or source.instrument."
                 )
         return self._f_gw
 
@@ -293,7 +293,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
             Determines whether the given frequency is in the source or observer frame.
 
         """
-        freq = utils.make_quant(freq,'1/s')
+        freq = utils.make_quant(freq, "1/s")
         m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
         eta = self.q / (1 + self.q) ** 2
 
@@ -309,7 +309,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
         return 5 * (M_chirp) ** (-5 / 3) * (8 * np.pi * f_obs_source) ** (-8 / 3)
 
-    def Get_Source_Freq(self, tau,frame="observer"):
+    def Get_Source_Freq(self, tau, frame="observer"):
         """Calculates the binary black hole's gravitational wave frequency given a time from merger
 
         Parameters
@@ -321,14 +321,14 @@ class BBHFrequencyDomain(BinaryBlackHole):
             Determines whether the given frequency is in the source or observer frame.
 
         """
-        tau = utils.make_quant(tau,'s')
+        tau = utils.make_quant(tau, "s")
         if frame == "observer":
             tau_source = tau / (1 + self.z)
         elif frame == "source":
             tau_source = tau
         else:
             raise ValueError("The reference frame can only be observer or source.")
-        
+
         m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
         eta = self.q / (1 + self.q) ** 2
 
@@ -337,7 +337,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
         return 1.0 / 8.0 / np.pi / M_chirp * (5 * M_chirp / tau_source) ** (3.0 / 8.0)
 
-    def Check_Freq_Evol(self,T_evol=None, T_evol_frame="observer", f_gw_frame="source"):
+    def Check_Freq_Evol(
+        self, T_evol=None, T_evol_frame="observer", f_gw_frame="source"
+    ):
         """Checks the frequency evolution of the black hole binary.
         
         Parameters
@@ -373,38 +375,48 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
         if T_evol is not None:
             T_evol = utils.make_quant(T_evol, "s")
-            if hasattr(self,"_instrument"):
-                if hasattr(self,"_f_gw"):
-                    t_init_source = self.Get_Time_From_Merger(self.f_gw,frame=f_gw_frame)
+            if hasattr(self, "_instrument"):
+                if hasattr(self, "_f_gw"):
+                    t_init_source = self.Get_Time_From_Merger(
+                        self.f_gw, frame=f_gw_frame
+                    )
                 else:
                     # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
-                    t_init_source = self.Get_Time_From_Merger(self.instrument.f_opt,frame="observer")
+                    t_init_source = self.Get_Time_From_Merger(
+                        self.instrument.f_opt, frame="observer"
+                    )
                 # f(T_evol), the frequency of the source at T_evol before merger
-                f_T_evol_source = self.Get_Source_Freq(T_evol,frame=T_evol_frame)
-            elif hasattr(self,"_f_gw") and not hasattr(self,"_instrument"):
-                t_init_source = self.Get_Time_From_Merger(self.f_gw,frame=f_gw_frame)
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame=T_evol_frame)
+            elif hasattr(self, "_f_gw") and not hasattr(self, "_instrument"):
+                t_init_source = self.Get_Time_From_Merger(self.f_gw, frame=f_gw_frame)
                 # f(T_evol), the frequency of the source at T_evol before merger
-                f_T_evol_source = self.Get_Source_Freq(T_evol,frame=T_evol_frame)
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame=T_evol_frame)
             else:
-                raise ValueError("Must either assign T_evol a value, or assign the source an instrument.")
+                raise ValueError(
+                    "Must either assign T_evol a value, or assign the source an instrument."
+                )
         else:
-            if hasattr(self,"instrument"):
+            if hasattr(self, "instrument"):
                 T_evol = utils.make_quant(np.max(self.instrument.T_obs), "s")
                 # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
-                t_init_source = self.Get_Time_From_Merger(self.instrument.f_opt,frame="observer")
+                t_init_source = self.Get_Time_From_Merger(
+                    self.instrument.f_opt, frame="observer"
+                )
                 # f(T_evol), the frequency of the source at T_evol before merger
-                f_T_evol_source = self.Get_Source_Freq(T_evol,frame="observer")
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame="observer")
             else:
-                raise ValueError("Must either assign T_evol a value, or assign the source an instrument.")
+                raise ValueError(
+                    "Must either assign T_evol a value, or assign the source an instrument."
+                )
 
         # Assumes t_init is in source frame, can either be randomly drawn
         # t_init_source = np.random.uniform(0,100)*u.yr
 
         if T_evol_frame == "observer":
             T_obs = T_evol
-            T_evol_source = T_evol/(1 + self.z)
+            T_evol_source = T_evol / (1 + self.z)
         elif T_evol_frame == "source":
-            T_obs = T_evol*(1+self.z)
+            T_obs = T_evol * (1 + self.z)
             T_evol_source = T_evol
         else:
             raise ValueError("The reference frame can only be observer or source.")
@@ -626,17 +638,16 @@ def Get_Mono_Strain(source, inc=None, frame="source"):
     source : object
         Instance of gravitational wave source class
     inc : float, optional
-        The inclination of the source in radians. If inc is None, the strain is
-         sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
-        'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
+        The inclination of the source in radians. If inc is None, the strain is \
+        sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
     frame : str, {'source','observer'}
-        Determines whether the frequency is in the source or observer frame. 
+        Determines whether the frequency is in the source or observer frame. \
         May not be used if source has an instrument assigned.
 
     Returns
     -------
     float
-        the strain of a monochromatic source in the dector frame
+        The strain of a monochromatic source in the dector frame.
 
     """
     f_gw = utils.make_quant(source.f_gw, "Hz")
@@ -659,9 +670,7 @@ def Get_Mono_Strain(source, inc=None, frame="source"):
 
     if inc is not None:
         if inc > np.pi or inc < -np.pi:
-            raise ValueError(
-                'Inclination must be between -pi and pi.'
-            )
+            raise ValueError("Inclination must be between -pi and pi.")
         a = 1 + np.cos(inc) ** 2
         b = -2 * np.cos(inc)
         const_val = 2 * np.sqrt(0.5 * (a ** 2 + b ** 2))
