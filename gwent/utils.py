@@ -68,7 +68,15 @@ def Get_Var_Dict(obj, value):
         if len(value) == 2 and isinstance(value[0], str):
             var_name = value[0]
             vals = value[1]
-            if isinstance(vals, list) and len(vals) == 3:
+            if isinstance(vals, u.Quantity):
+                no_unit_vals = vals.value
+            else:
+                no_unit_vals = vals
+
+            if isinstance(no_unit_vals, list) and len(no_unit_vals) == 3:
+                if hasattr(obj, "n_p"):
+                    if obj.n_p == len(no_unit_vals):
+                        raise ValueError(LenError_1())
                 if (
                     isinstance(vals[0], (float, int, u.Quantity))
                     and isinstance(vals[1], (float, int, u.Quantity))
@@ -79,14 +87,48 @@ def Get_Var_Dict(obj, value):
                         "val": vals[0],
                         "min": vals[1],
                         "max": vals[2],
+                        "sampled": False,
                     }
                 else:
                     raise ValueError(DictError_3())
-            elif isinstance(vals, (float, int, np.int64, u.Quantity)):
+            elif (
+                isinstance(no_unit_vals, (list, np.ndarray)) and len(no_unit_vals) != 3
+            ):
                 if var_name in obj._var_dict.keys():
                     obj._var_dict[var_name]["val"] = vals
                 else:
-                    obj.var_dict[var_name] = {"val": vals, "min": None, "max": None}
+                    if len(no_unit_vals) == 2:
+                        obj.var_dict[var_name] = {
+                            "val": vals,
+                            "min": None,
+                            "max": None,
+                            "sampled": True,
+                        }
+                    else:
+                        if hasattr(obj, "n_p"):
+                            if obj.n_p == len(no_unit_vals):
+                                obj.var_dict[var_name] = {
+                                    "val": vals,
+                                    "min": None,
+                                    "max": None,
+                                    "sampled": False,
+                                }
+                            else:
+                                raise ValueError(LenError_2())
+                        else:
+                            raise ValueError(LenError_2())
+
+                obj._return_value = vals
+            elif isinstance(no_unit_vals, (float, int, np.int64)):
+                if var_name in obj._var_dict.keys():
+                    obj._var_dict[var_name]["val"] = vals
+                else:
+                    obj.var_dict[var_name] = {
+                        "val": vals,
+                        "min": None,
+                        "max": None,
+                        "sampled": False,
+                    }
                 obj._return_value = vals
             else:
                 raise ValueError(DictError_2())
@@ -111,3 +153,11 @@ def DictError_3():
 def DictError_2():
     return 'Must assign a name and value in a list (ie. ["name",val]) \n\
     where name is a string, and val is either a float, an int, or an astropy Quantity.'
+
+
+def LenError_1():
+    return "Could not tell if values are pulsar values or min/maxes. Try using more than 3 pulsars."
+
+
+def LenError_2():
+    return "To assign an array of values, it must be either [min,max], or an array of individual pulsar parameters of length n_p."

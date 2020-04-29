@@ -99,7 +99,7 @@ class BinaryBlackHole:
     def f(self):
         if not hasattr(self, "_f"):
             raise NotImplementedError(
-                "Interferometer frequency must be defined inside SpaceBased or GroundBased classes."
+                "The frequency must be defined inside BBHFrequencyDomain or BBHTimeDomain classes."
             )
         return self._f
 
@@ -144,6 +144,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
         The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
     nfreqs : int, optional
         The number of frequencies at which the BBH waveform is calculated
+    instrument: object, optional
+        If assigned, the optimal frequency (ie. most sensitive frequency) of the detector is used as
+        the binary's GW frequency
 
     Notes
     -----
@@ -167,6 +170,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
             elif keys == "instrument":
                 self.instrument = value
                 self.Check_Freq_Evol()
+            elif keys == "f_gw":
+                self.f_gw = value
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
         if not hasattr(self, "f_low"):
@@ -204,7 +209,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def h_gw(self):
         if not hasattr(self, "_h_gw"):
             if hasattr(self, "_instrument"):
-                self._h_gw = Get_Mono_Strain(self, self.instrument.f_opt).to("")
+                self._h_gw = Get_Mono_Strain(self, frame="source").to("")
             else:
                 raise ValueError(
                     "No instrument assigned, please fix it. "
@@ -219,6 +224,26 @@ class BBHFrequencyDomain(BinaryBlackHole):
     @h_gw.deleter
     def h_gw(self):
         del self._h_gw
+
+    @property
+    def f_gw(self):
+        if not hasattr(self, "_f_gw"):
+            if hasattr(self, "_instrument"):
+                self._f_gw = self.instrument.f_opt
+            else:
+                raise ValueError(
+                    "No GW frequency or instrument assigned, please fix it. "
+                    "Try: assigning source.f_gw or source.instrument."
+                )
+        return self._f_gw
+
+    @f_gw.setter
+    def f_gw(self, value):
+        self._f_gw = value
+
+    @f_gw.deleter
+    def f_gw(self):
+        del self._f_gw
 
     @property
     def h_f(self):
@@ -257,48 +282,80 @@ class BBHFrequencyDomain(BinaryBlackHole):
             self.Get_Fitcoeffs()
         [self._phenomD_f, self._phenomD_h] = Get_Waveform(self)
 
-    def Get_Time_From_Merger(self, f_obs):
-        """Calculates the time from merger of a binary black hole given an observed frequency.
+    def Get_Time_From_Merger(self, freq, frame="observer"):
+        """Calculates the time from merger of a binary black hole given a frequency.
 
         Parameters
         ----------
-        f_obs : float
-            the initially observed frequency in the instrument frame.
+        freq : float
+            the binary GW frequency in the corresponding frame.
+        frame : str, {'observer','source'}
+            Determines whether the given frequency is in the source or observer frame.
 
         """
+        freq = utils.make_quant(freq, "1/s")
         m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
         eta = self.q / (1 + self.q) ** 2
 
         M_time = self.M.to("kg") * m_conv
         M_chirp = eta ** (3 / 5) * M_time
 
-        f_obs_source = f_obs * (1 + self.z)
+        if frame == "observer":
+            f_obs_source = freq * (1 + self.z)
+        elif frame == "source":
+            f_obs_source = freq
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
         return 5 * (M_chirp) ** (-5 / 3) * (8 * np.pi * f_obs_source) ** (-8 / 3)
 
-    def Get_Source_Freq(self, tau):
+    def Get_Source_Freq(self, tau, frame="observer"):
         """Calculates the binary black hole's gravitational wave frequency given a time from merger
 
         Parameters
         ----------
-        tau : float
-            the time from merger in the source frame
+        tau : int, float, Quantity
+            the time from merger in the respective frame.
+            If not an astropy quantity, assumed to be a time in seconds
+        frame : str, {'observer','source'}
+            Determines whether the given frequency is in the source or observer frame.
 
         """
+        tau = utils.make_quant(tau, "s")
+        if frame == "observer":
+            tau_source = tau / (1 + self.z)
+        elif frame == "source":
+            tau_source = tau
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
         m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
         eta = self.q / (1 + self.q) ** 2
 
         M_time = self.M.to("kg") * m_conv
         M_chirp = eta ** (3 / 5) * M_time
 
-        return 1.0 / 8.0 / np.pi / M_chirp * (5 * M_chirp / tau) ** (3.0 / 8.0)
+        return 1.0 / 8.0 / np.pi / M_chirp * (5 * M_chirp / tau_source) ** (3.0 / 8.0)
 
-    def Check_Freq_Evol(self):
+    def Check_Freq_Evol(
+        self, T_evol=None, T_evol_frame="observer", f_gw_frame="source"
+    ):
         """Checks the frequency evolution of the black hole binary.
+        
+        Parameters
+        ----------
+        T_evol : int,float, Quantity
+            The length of time the binary may evolve
+        T_evol_frame : str, {'observer','source'}
+            Determines whether the given T_evol is in the source or observer frame.
+        f_gw_frame : str, {'observer','source'}
+            Determines whether the frequency is in the source or observer frame. 
+            May not be used if source has an instrument assigned.
 
         Notes
         -----
         If the frequency of the binary does evolve over more than one bin,
-        (ie f(T_obs)-f(t_init) = delf_obs < 1/T_obs), it is monochromatic, so we set the frequency
+        (ie f(T_evol)-f(t_init) = delf_obs < 1/T_evol), it is monochromatic, so we set the frequency
         to the optimal frequency of the detector
 
         Otherwise it is chirping and evolves over the observation and we
@@ -306,28 +363,66 @@ class BBHFrequencyDomain(BinaryBlackHole):
         frequency at an observation time before merger
 
         To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) <https://arxiv.org/abs/1907.04341>
-        which uses binomial expansion of f_T_obs_inst - f_init_inst and thus will never be imaginary
+        which uses binomial expansion of f_T_evol_inst - f_init_inst and thus will never be imaginary
 
         """
+
         m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
         eta = self.q / (1 + self.q) ** 2
 
         M_time = self.M.to("kg") * m_conv
         M_chirp_source = eta ** (3 / 5) * M_time
 
-        T_obs = utils.make_quant(self.instrument.T_obs, "s")
-        T_obs_source = T_obs / (1 + self.z)
+        if T_evol is not None:
+            T_evol = utils.make_quant(T_evol, "s")
+            if hasattr(self, "_instrument"):
+                if hasattr(self, "_f_gw"):
+                    t_init_source = self.Get_Time_From_Merger(
+                        self.f_gw, frame=f_gw_frame
+                    )
+                else:
+                    # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
+                    t_init_source = self.Get_Time_From_Merger(
+                        self.instrument.f_opt, frame="observer"
+                    )
+                # f(T_evol), the frequency of the source at T_evol before merger
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame=T_evol_frame)
+            elif hasattr(self, "_f_gw") and not hasattr(self, "_instrument"):
+                t_init_source = self.Get_Time_From_Merger(self.f_gw, frame=f_gw_frame)
+                # f(T_evol), the frequency of the source at T_evol before merger
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame=T_evol_frame)
+            else:
+                raise ValueError(
+                    "Must either assign T_evol a value, or assign the source an instrument."
+                )
+        else:
+            if hasattr(self, "instrument"):
+                T_evol = utils.make_quant(np.max(self.instrument.T_obs), "s")
+                # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
+                t_init_source = self.Get_Time_From_Merger(
+                    self.instrument.f_opt, frame="observer"
+                )
+                # f(T_evol), the frequency of the source at T_evol before merger
+                f_T_evol_source = self.Get_Source_Freq(T_evol, frame="observer")
+            else:
+                raise ValueError(
+                    "Must either assign T_evol a value, or assign the source an instrument."
+                )
 
         # Assumes t_init is in source frame, can either be randomly drawn
         # t_init_source = np.random.uniform(0,100)*u.yr
 
-        # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
-        t_init_source = self.Get_Time_From_Merger(self.instrument.f_opt)
+        if T_evol_frame == "observer":
+            T_obs = T_evol
+            T_evol_source = T_evol / (1 + self.z)
+        elif T_evol_frame == "source":
+            T_obs = T_evol * (1 + self.z)
+            T_evol_source = T_evol
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
 
-        # f(T_obs), the frequency of the source at T_obs before merger
-        f_T_obs_source = self.Get_Source_Freq(T_obs_source)
-        # f(T_obs) in the instrument frame
-        self.f_T_obs = f_T_obs_source / (1 + self.z)
+        # f(T_evol) in the instrument frame (ie. the observed frequency)
+        self.f_T_obs = f_T_evol_source / (1 + self.z)
 
         # t_init_source = make_quant(t_init_source,'s')
         # f_init_source = self.Get_Source_Freq(t_init_source)
@@ -342,7 +437,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
             / np.pi
             / M_chirp_source
             * (5 * M_chirp_source / t_init_source) ** (3.0 / 8.0)
-            * (3 * T_obs_source / 8 / t_init_source)
+            * (3 * T_evol_source / 8 / t_init_source)
         )
         delf_obs = delf_obs_source_approx / (1 + self.z)
 
@@ -535,69 +630,56 @@ def Get_Char_Strain(source):
     return h_char
 
 
-def Get_Mono_Char_Strain(source, instrument):
-    """Converts source strain to characteristic strain
+def Get_Mono_Strain(source, inc=None, frame="source"):
+    """Calculates the strain from a binary black hole.
 
     Parameters
     ----------
     source : object
         Instance of gravitational wave source class
-    instrument : object
-        Instance of a gravitational wave detector class
-
-    """
-    h_char_mono = source.h_gw * np.sqrt(instrument.T_obs.to("s"))
-    return h_char_mono.value
-
-
-def Get_Mono_Strain(source, f_gw, strain_const="Averaged"):
-    """Calculates the strain from a binary black hole.
-
-    Parameters
-    ----------
-    f_gw : float
-        The source frequency of the gravitational wave.
-    strain_const : {'Averaged','Optimal'}
-        'Averaged' gives the sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
-        'Optimal' gives the optimally oriented, face-on, inclination (ie. inc=0) value
+    inc : float, optional
+        The inclination of the source in radians. If inc is None, the strain is \
+        sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
+    frame : str, {'source','observer'}
+        Determines whether the frequency is in the source or observer frame. \
+        May not be used if source has an instrument assigned.
 
     Returns
     -------
     float
-        the strain of a monochromatic source in the dector frame
+        The strain of a monochromatic source in the dector frame.
 
     """
-    f_gw = utils.make_quant(f_gw, "Hz")
-    if isinstance(strain_const, str):
-        DL = cosmo.luminosity_distance(source.z)
-        DL = DL.to("m")
-
-        # Converts M = [M] to M = [sec]
-        m_conv = const.G / const.c ** 3
-
-        eta = source.q / (1 + source.q) ** 2
-        M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
-        M_chirp = eta ** (3 / 5) * M_redshifted_time
-
-        if strain_const == "Optimal":
-            inc = 0.0
-            a = 1 + np.cos(inc) ** 2
-            b = -2 * np.cos(inc)
-            const_val = 2 * np.sqrt(0.5 * (a ** 2 + b ** 2))
-        elif strain_const == "Averaged":
-            const_val = 8 / np.sqrt(5)
-        else:
-            raise ValueError(
-                'Can only use "Averaged", or "Optimal" monochromatic strain calculation.'
-            )
-
-        return (
-            const_val
-            * (const.c / DL)
-            * (np.pi * f_gw) ** (2.0 / 3.0)
-            * M_chirp ** (5.0 / 3.0)
-        )
+    f_gw = utils.make_quant(source.f_gw, "Hz")
+    if frame == "observer":
+        f_gw = f_gw * (1 + source.z)
+    elif frame == "source":
+        f_obs_source = f_gw
     else:
-        raise ValueError(
-            'Can only use "Averaged", or "Optimal" monochromatic strain calculation.'
-        )
+        raise ValueError("The reference frame can only be observer or source.")
+
+    DL = cosmo.luminosity_distance(source.z)
+    DL = DL.to("m")
+
+    # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c ** 3
+
+    eta = source.q / (1 + source.q) ** 2
+    M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
+    M_chirp = eta ** (3 / 5) * M_redshifted_time
+
+    if inc is not None:
+        if inc > np.pi or inc < -np.pi:
+            raise ValueError("Inclination must be between -pi and pi.")
+        a = 1 + np.cos(inc) ** 2
+        b = -2 * np.cos(inc)
+        const_val = 2 * np.sqrt(0.5 * (a ** 2 + b ** 2))
+    else:
+        const_val = 8 / np.sqrt(5)
+
+    return (
+        const_val
+        * (const.c / DL)
+        * (np.pi * f_gw) ** (2.0 / 3.0)
+        * M_chirp ** (5.0 / 3.0)
+    )
