@@ -30,6 +30,7 @@ Features
 --------
 Calculates the sensitivity curves for various designs of pulsar timing arrays, space-based detectors, and ground-based detectors.
 This includes:
+
 * NANOGrav
 * SKA
 * LISA
@@ -38,11 +39,14 @@ This includes:
 * and more!
 
 Calculates the strain from coalescing black hole binaries. It contains functionality for different source descriptions:
+
 * Slowly-evolving sources, ie. BHBs early in their inspiral where they appear to not change in frequency.
 * Rapidly-evolving sources, ie. BHBs in the final stages of coalescence. 
-** Uses a fully Pythonic implementation of the phenomenological model `IMRPhenomD` to accurately represent the inspiral, merger, and ringdown of the BHB.
+
+	* Uses a fully Pythonic implementation of the phenomenological model `IMRPhenomD` to accurately represent the inspiral, merger, and ringdown of the BHB.
 
 Calculates the matched-filtered signal-to-noise ratio (SNR) to help assess the detectability of any BHB source configuration by any represented gravitational wave detector.
+
 * Includes robust plotting methods to represent these SNRs.
 
 
