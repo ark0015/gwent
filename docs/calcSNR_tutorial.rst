@@ -1,3 +1,4 @@
+
 .. module:: hasasia
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
@@ -32,6 +33,10 @@ First, we import important modules.
     import gwent.detector as detector
     import gwent.snr as snr
     from gwent.snrplot import Plot_SNR
+    
+    #Turn off warnings for tutorial
+    import warnings
+    warnings.filterwarnings('ignore')
 
 Setting matplotlib preferences and adding a pretty plot function for fig
 sizes
@@ -350,9 +355,9 @@ them all at once.
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_chi1 ,  done. t = :  17.051253080368042
-    Model:  aLIGO_M_vs_q ,  done. t = :  17.81633687019348
-    Model:  aLIGO_M_vs_z ,  done. t = :  14.062479972839355
+    Model:  aLIGO_M_vs_chi1 ,  done. t = :  18.480900287628174
+    Model:  aLIGO_M_vs_q ,  done. t = :  19.485161066055298
+    Model:  aLIGO_M_vs_z ,  done. t = :  15.475419044494629
 
 
 Plotting SNRs
@@ -410,7 +415,7 @@ Varying Instrument Parameters
 
 This is very similar to the previous example, but with varying the
 instrument parameters ``Infrastructure Length``, ``Seismic Gamma``, and
-``Laser Power``\ vs. ``M``.
+``Laser Power``\ vs. ``M``.
 
 One thing to note is that we moved the instrument initialization inside
 the for loop this time since we don’t want the parameters to stay at the
@@ -442,27 +447,9 @@ max value from the previous run.
 
 .. parsed-literal::
 
-    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:40: RuntimeWarning: invalid value encountered in sqrt
-      waist = waist * sqrt(((g1*g2)*(1-g1*g2))/((g1+g2-2*g1*g2)**2))
-    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:54: RuntimeWarning: invalid value encountered in less
-      zint[zint < 0] = 0
-
-
-.. parsed-literal::
-
-    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  14.259448051452637
-
-
-.. parsed-literal::
-
-    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/newtonian.py:52: RuntimeWarning: invalid value encountered in true_divide
-      coeff = 3**(-gamma*f)/(3**(-gamma*f) + 3**(-gamma*fk))
-
-
-.. parsed-literal::
-
-    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  14.215790033340454
-    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  14.641427993774414
+    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  0.6834201812744141
+    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  0.7128200531005859
+    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  0.686460018157959
 
 
 .. code:: python
