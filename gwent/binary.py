@@ -282,6 +282,33 @@ class BBHFrequencyDomain(BinaryBlackHole):
             self.Get_Fitcoeffs()
         [self._phenomD_f, self._phenomD_h] = Get_Waveform(self)
 
+    def Get_F_Dot(self,freq, frame="observer"):
+        """Calculates the change in frequency of a binary black hole at a given frequency.
+
+        Parameters
+        ----------
+        freq : float
+            the binary GW frequency in the corresponding frame.
+        frame : str, {'observer','source'}
+            Determines whether the given frequency is in the source or observer frame.
+
+        """
+        freq = utils.make_quant(freq, "1/s")
+        m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+        eta = self.q / (1 + self.q) ** 2
+
+        M_time = self.M.to("kg") * m_conv
+        M_chirp = eta ** (3 / 5) * M_time
+
+        if frame == "observer":
+            f_obs_source = freq * (1 + self.z)
+        elif frame == "source":
+            f_obs_source = freq
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
+        return 96/5 * np.pi**(8/3) * (M_chirp ** (5 / 3)) * (f_obs_source ** (11 / 3))
+
     def Get_Time_From_Merger(self, freq, frame="observer"):
         """Calculates the time from merger of a binary black hole given a frequency.
 
@@ -397,7 +424,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
                 )
         else:
             if hasattr(self, "instrument"):
-                T_evol = utils.make_quant(np.max(self.instrument.T_obs), "s")
+                T_evol_frame == "observer"
+                T_evol = utils.make_quant(np.max(np.unique(self.instrument.T_obs)), "s")
                 # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
                 t_init_source = self.Get_Time_From_Merger(
                     self.instrument.f_opt, frame="observer"
@@ -431,7 +459,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         # self.f_T_obs = f_after_T_obs_source/(1+self.z)
         # delf_obs_source_exact = f_after_T_obs_source-f_init_source
 
-        delf_obs_source_approx = (
+        delf_source = (
             1.0
             / 8.0
             / np.pi
@@ -439,7 +467,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
             * (5 * M_chirp_source / t_init_source) ** (3.0 / 8.0)
             * (3 * T_evol_source / 8 / t_init_source)
         )
-        delf_obs = delf_obs_source_approx / (1 + self.z)
+        delf_obs = delf_source / (1 + self.z)
 
         if delf_obs < (1 / T_obs):
             self.ismono = True
@@ -629,9 +657,56 @@ def Get_Char_Strain(source):
     h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
     return h_char
 
+def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_frame="observer"):
+    """Calculates the characteristic strain from a binary black hole observed for some observation time.
+
+    Parameters
+    ----------
+    source : object
+        Instance of gravitational wave source class
+    T_obs : int,float, Quantity
+        The length of time for which the binary is observed
+    inc : float, optional
+        The inclination of the source in radians. If inc is None, the strain is \
+        sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
+    T_evol_frame : str, {'observer','source'}
+        Determines whether the given T_evol is in the source or observer frame.
+    f_gw_frame : str, {'observer','source'}
+        Determines whether the frequency is in the source or observer frame. 
+        May not be used if source has an instrument assigned.
+
+    Returns
+    -------
+    float
+        The characteristic strain of a monochromatic source in the source frame.
+    """
+    strain_amp = Get_Mono_Strain(source, inc=inc, frame= f_gw_frame)
+
+    f_gw = utils.make_quant(source.f_gw, "Hz")
+    if f_gw_frame == "observer":
+        f_obs_source = f_gw * (1 + source.z)
+    elif f_gw_frame == "source":
+        f_obs_source = f_gw
+    else:
+        raise ValueError("The reference frame can only be observer or source.")
+
+    f_dot_source = source.Get_F_Dot(f_obs_source,frame="source")
+    print(f_dot_source)
+    """
+    T_obs = utils.make_quant(T_obs, "s")
+    if T_evol_frame == "observer":
+        T_obs_source = T_obs / (1 + source.z)
+    elif T_evol_frame == "source":
+        T_obs_source = T_obs
+    else:
+        raise ValueError("The reference frame can only be observer or source.")
+
+    return np.sqrt(f_obs_source*T_obs_source)*strain_amp
+    """
+    return f_obs_source*np.sqrt(2/f_dot_source)*strain_amp
 
 def Get_Mono_Strain(source, inc=None, frame="source"):
-    """Calculates the strain from a binary black hole.
+    """Calculates the fourier domain strain from a monochromatic binary black hole.
 
     Parameters
     ----------
@@ -647,12 +722,12 @@ def Get_Mono_Strain(source, inc=None, frame="source"):
     Returns
     -------
     float
-        The strain of a monochromatic source in the dector frame.
+        The strain of a monochromatic source in the source frame.
 
     """
     f_gw = utils.make_quant(source.f_gw, "Hz")
     if frame == "observer":
-        f_gw = f_gw * (1 + source.z)
+        f_obs_source = f_gw * (1 + source.z)
     elif frame == "source":
         f_obs_source = f_gw
     else:
@@ -671,15 +746,15 @@ def Get_Mono_Strain(source, inc=None, frame="source"):
     if inc is not None:
         if inc > np.pi or inc < -np.pi:
             raise ValueError("Inclination must be between -pi and pi.")
-        a = 1 + np.cos(inc) ** 2
-        b = -2 * np.cos(inc)
-        const_val = 2 * np.sqrt(0.5 * (a ** 2 + b ** 2))
+        a = (1 + np.cos(inc) ** 2)/2
+        b = np.cos(inc)
+        const_val = 4.*np.sqrt(a ** 2 + b ** 2)
     else:
         const_val = 8 / np.sqrt(5)
 
     return (
         const_val
         * (const.c / DL)
-        * (np.pi * f_gw) ** (2.0 / 3.0)
+        * (np.pi * f_obs_source) ** (2.0 / 3.0)
         * M_chirp ** (5.0 / 3.0)
     )

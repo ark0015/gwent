@@ -334,8 +334,8 @@ class PTA:
 
     @property
     def f_opt(self):
-        """The optimal frequency of the instrument ie. the frequecy at the lowest strain"""
-        self._f_opt = self.fT[np.argmin(self.h_n_f)]
+        """The optimal frequency of the instrument ie. the frequecy at the lowest strain noise PSD"""
+        self._f_opt = self.fT[np.argmin(self.S_n_f)]
         return self._f_opt
 
     def Load_NANOGrav_11yr_Params(self):
@@ -607,7 +607,7 @@ class PTA:
                             setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
 
         if hasattr(self, "rn_amp"):
-            """
+            
             if hasattr(self, "sb_amp"):
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
@@ -622,18 +622,18 @@ class PTA:
                     freqs=self.fT.value,
                 )
             else:
-            """
-            psrs = hassim.sim_pta(
-                timespan=self.T_obs.value,
-                cad=self.cadence.value,
-                sigma=self.sigma.value,
-                phi=self.phi,
-                theta=self.theta,
-                Npsrs=self.n_p,
-                A_rn=self.rn_amp,
-                alpha=self.rn_alpha,
-                freqs=self.fT.value,
-            )
+            
+                psrs = hassim.sim_pta(
+                    timespan=self.T_obs.value,
+                    cad=self.cadence.value,
+                    sigma=self.sigma.value,
+                    phi=self.phi,
+                    theta=self.theta,
+                    Npsrs=self.n_p,
+                    A_rn=self.rn_amp,
+                    alpha=self.rn_alpha,
+                    freqs=self.fT.value,
+                )
         elif hasattr(self, "sb_amp"):
             if not hasattr(self, "sb_alpha"):
                 self.sb_alpha = -2 / 3.0
@@ -706,7 +706,6 @@ class Interferometer:
     def __init__(self, name, T_obs, **kwargs):
         self.name = name
         self.T_obs = T_obs
-
         for keys, value in kwargs.items():
             if keys == "load_location":
                 self.load_location = value
@@ -769,8 +768,8 @@ class Interferometer:
 
     @property
     def f_opt(self):
-        """The optimal frequency of the instrument ie. the frequecy at the lowest strain"""
-        self._f_opt = self.fT[np.argmin(self.h_n_f)]
+        """The optimal frequency of the instrument ie. the frequecy at the lowest strain noise PSD"""
+        self._f_opt = self.fT[np.argmin(self.S_n_f)]
         return self._f_opt
 
     @property
@@ -905,8 +904,7 @@ class GroundBased(Interferometer):
             )
             self._base_inst = "aLIGO"
 
-        if not any(hasattr(self, attr) for attr in ["_noise_budget", "_init_ifo"]):
-            self._noise_budget, self._init_ifo, _, _ = gwinc.load_ifo(self._base_inst)
+        self._noise_budget, self._init_ifo, _, _ = gwinc.load_ifo(self._base_inst)
         self._ifo = gwinc.precompIFO(self.fT.value, self._init_ifo)
 
     def Set_Noise_Dict(self, noise_dict):
@@ -951,6 +949,7 @@ class GroundBased(Interferometer):
                                         sub_sub_noise,
                                         self._return_value,
                                     )
+                                    self._ifo = gwinc.precompIFO(self.fT.value, self._ifo)
                             else:
                                 self.var_dict = [
                                     base_noise + " " + sub_noise,
@@ -961,6 +960,7 @@ class GroundBased(Interferometer):
                                     sub_noise,
                                     self._return_value,
                                 )
+                                self._ifo = gwinc.precompIFO(self.fT.value, self._ifo)
                         else:
                             raise ValueError(
                                 sub_noise

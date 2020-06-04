@@ -151,6 +151,10 @@ def Plot_SNR(
                 )
                 * x_scale
             )
+            if x_labels[0] < xlabel_min:
+                x_labels[0] = xlabel_min
+            if x_labels[-1] > xlabel_max:
+                x_labels[-1] = xlabel_max
 
     if ylabel_max < 0.0 or ylabel_min < 0.0 or var_y in ["n_p", "T_obs"]:
         yaxis_type = "lin"
@@ -173,6 +177,10 @@ def Plot_SNR(
                 )
                 * y_scale
             )
+            if y_labels[0] < ylabel_min:
+                y_labels[0] = ylabel_min
+            if y_labels[-1] > ylabel_max:
+                y_labels[-1] = ylabel_max
 
     # Set axis scales based on what data sampling we used
     if yaxis_type == "lin" and xaxis_type == "log":
@@ -241,8 +249,8 @@ def Plot_SNR(
         ax.set_xlim(np.log10(xlabel_min), np.log10(xlabel_max))
         ax.set_ylim(np.log10(ylabel_min), np.log10(ylabel_max))
 
-    Get_Axes_Labels(ax, "x", var_x, x_labels, xlabels_kwargs, xticklabels_kwargs)
-    Get_Axes_Labels(ax, "y", var_y, y_labels, ylabels_kwargs, yticklabels_kwargs)
+    Get_Axes_Labels(ax, "x", var_x, xaxis_type, x_labels, xlabels_kwargs, xticklabels_kwargs)
+    Get_Axes_Labels(ax, "y", var_y, yaxis_type, y_labels, ylabels_kwargs, yticklabels_kwargs)
 
     if not x_axis_label:
         ax.set_xticklabels("")
@@ -397,7 +405,7 @@ def Plot_SNR(
         plt.show()
 
 
-def Get_Axes_Labels(ax, var_axis, var, orig_labels, label_kwargs, tick_label_kwargs):
+def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tick_label_kwargs):
     """Gives paper plot labels for given axis
 
     Parameters
@@ -507,7 +515,7 @@ def Get_Axes_Labels(ax, var_axis, var, orig_labels, label_kwargs, tick_label_kwa
         ax_dict[var_axis + "ticks"] = new_labels
         ax_dict[var_axis + "label"] = r"$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
-        # ax.axvline(x=2.*u.mHz.to('Hz'),linestyle='--',color='k',label='Proposed Value')
+        #ax.axvline(x=2.*u.mHz.to('Hz'),linestyle='--',color='k',label='Proposed Value')
     elif var == "n_p":
         sample_range = max(orig_labels) - min(orig_labels)
         sample_rate = max(2, int(sample_range / 10))
@@ -539,35 +547,93 @@ def Get_Axes_Labels(ax, var_axis, var, orig_labels, label_kwargs, tick_label_kwa
         ax_dict[var_axis + "label"] = r"${\rm T_{obs}}$ $[\mathrm{yr}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%i$" % int(x) for x in new_labels]
     elif var == "Infrastructure Length":
-        ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"Infrastructure Length [km]"
-        ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
-            for y in np.log10(orig_labels)
-        ]
+        if var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = r"Infrastructure Length"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                for y in np.log10(orig_labels)
+            ]
+            #ax.axhline(x=np.log10(3995),linestyle='--',color='k',label='Proposed Value') #aLIGO, Voyager
+            #ax.axhline(y=np.log10(40000),linestyle='--',color='k',label='Proposed Value') #CE1
+        elif var_scale == 'lin':
+            ax_dict[var_axis + "ticks"] = orig_labels
+            ax_dict[var_axis + "label"] = r"Infrastructure Length [km]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$%.1f$" % (x / 1e3) for x in orig_labels
+            ]
+            #ax.axhline(y=3995,linestyle='--',color='k',label='Proposed Value') #aLIGO, Voyager
+            #ax.axhline(y=40000,linestyle='--',color='k',label='Proposed Value') #CE1
     elif var == "Laser Power":
-        ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"Laser Power [W]"
-        ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%.0f}$" % x if abs(int(x)) > 1 else r"$%.1f$" % (10 ** x)
-            for x in np.log10(orig_labels)
-        ]
+        if var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = r"Laser Power [W]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % x if abs(int(x)) > 1 else r"$%.1f$" % (10 ** x)
+                for x in np.log10(orig_labels)
+            ]
+            #ax.axhline(y=np.log10(125),linestyle='--',color='k',label='Proposed Value') #aLIGO
+            #ax.axhline(y=np.log10(145),linestyle='--',color='k',label='Proposed Value') #Voyager
+            #ax.axhline(y=np.log10(150),linestyle='--',color='k',label='Proposed Value') #CE1
+        elif var_scale == 'lin':
+            ax_dict[var_axis + "ticks"] = orig_labels
+            ax_dict[var_axis + "label"] = r"Laser Power [W]"
+            ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in orig_labels]
+            #ax.axhline(y=125,linestyle='--',color='k',label='Proposed Value') #aLIGO
+            #ax.axhline(y=145,linestyle='--',color='k',label='Proposed Value') #Voyager
+            #ax.axhline(y=150,linestyle='--',color='k',label='Proposed Value') #CE1
     elif var == "Seismic Gamma":
-        ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"Seismic Gamma"
-        ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
-            for y in np.log10(orig_labels)
-        ]
+        if var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = r"Seismic Gamma"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                for y in np.log10(orig_labels)
+            ]
+            #ax.axhline(y=np.log10(0.8),linestyle='--',color='k',label='Proposed Value')
+        elif var_scale == 'lin':
+            ax_dict[var_axis + "ticks"] = orig_labels
+            ax_dict[var_axis + "label"] = r"Seismic Gamma"
+            ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" %y for y in orig_labels]
+            #ax.axhline(y=0.8,linestyle='--',color='k',label='Proposed Value')
+    elif var == "Materials Substrate Temp":
+        if var_scale == 'lin':
+            ax_dict[var_axis + "ticks"] = orig_labels
+            ax_dict[var_axis + "label"] = r"Materials Substrate Temp [K]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$%.1f \times 10^{%i}$" % (x / 10 ** int(np.log10(x)), np.log10(x))
+                if np.abs(int(np.log10(x))) > 1
+                else "{:g}".format(x)
+                for x in orig_labels
+            ]
+            #ax.axhline(y=295,linestyle='--',color='k',label='Proposed Value') #aLIGO, CE1
+            #ax.axhline(y=123,linestyle='--',color='k',label='Proposed Value') #Voyager
+        elif var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = r"Materials Substrate Temp [K]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                for y in np.log10(orig_labels)
+            ]
+            #ax.axhline(y=np.log10(295),linestyle='--',color='k',label='Proposed Value') #aLIGO, CE1
+            #ax.axhline(y=np.log10(123),linestyle='--',color='k',label='Proposed Value') #Voyager
     else:
-        ax_dict[var_axis + "ticks"] = orig_labels
-        ax_dict[var_axis + "label"] = str(var)
-        ax_dict[var_axis + "ticklabels"] = [
-            r"$%.1f \times 10^{%i}$" % (x / 10 ** int(np.log10(x)), np.log10(x))
-            if np.abs(int(np.log10(x))) > 1
-            else "{:g}".format(x)
-            for x in orig_labels
-        ]
+        if var_scale == 'lin':
+            ax_dict[var_axis + "ticks"] = orig_labels
+            ax_dict[var_axis + "label"] = str(var)
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$%.1f \times 10^{%i}$" % (x / 10 ** int(np.log10(x)), np.log10(x))
+                if np.abs(int(np.log10(x))) > 1
+                else "{:g}".format(x)
+                for x in orig_labels
+            ]
+        elif var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = str(var)
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                for y in np.log10(orig_labels)
+            ]
 
     ax.update(ax_dict)
     if label_kwargs:

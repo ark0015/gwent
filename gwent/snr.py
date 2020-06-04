@@ -89,7 +89,10 @@ def Get_SNR_Matrix(
             # Update Attribute (also updates dictionary)
             if isinstance(instrument, detector.GroundBased):
                 var_x_names = var_x.split()
-                updated_dict_x = {var_x_names[0]: {var_x_names[1]: sample_x[i]}}
+                if len(var_x_names) == 2:
+                    updated_dict_x = {var_x_names[0]: {var_x_names[1]: sample_x[i]}}
+                elif len(var_x_names) == 3:
+                    updated_dict_x = {var_x_names[0]: {var_x_names[1]: {var_x_names[2]:sample_x[i]}}}
                 instrument.Set_Noise_Dict(updated_dict_x)
             else:
                 setattr(instrument, var_x, sample_x[i])
@@ -106,7 +109,10 @@ def Get_SNR_Matrix(
                 # Update Attribute (also updates dictionary)
                 if isinstance(instrument, detector.GroundBased):
                     var_y_names = var_y.split()
-                    updated_dict_y = {var_y_names[0]: {var_y_names[1]: sample_y[i]}}
+                    if len(var_y_names) == 2:
+                        updated_dict_y = {var_y_names[0]: {var_y_names[1]: sample_y[i]}}
+                    elif len(var_y_names) == 3:
+                        updated_dict_y = {var_y_names[0]: {var_y_names[1]: {var_y_names[2]: sample_y[i]}}}
                     instrument.Set_Noise_Dict(updated_dict_y)
                 else:
                     setattr(instrument, var_y, sample_y[j])
@@ -331,17 +337,12 @@ def Calc_Mono_SNR(source, instrument, inc=None):
     if not hasattr(source, "instrument"):
         source.instrument = instrument
 
-    if not isinstance(instrument, detector.PTA):
-        source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
-    else:
-        if inc is not None:
-            source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
-        else:
-            source.h_gw = binary.Get_Mono_Strain(source, inc=0.0)
+    #Assumes mass and frequency in source class are in the source frame
+    source.h_gw = binary.Get_Mono_Strain(source, inc=inc, frame="source")
     indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
 
     return source.h_gw * np.sqrt(
-        np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw]
+        np.max(np.unique(instrument.T_obs.to("s"))) / instrument.S_n_f[indxfgw]
     )
 
 
