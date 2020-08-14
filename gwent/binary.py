@@ -468,7 +468,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
             * (3 * T_evol_source / 8 / t_init_source)
         )
         delf_obs = delf_source / (1 + self.z)
-
+        #print('delf_obs: ',delf_obs)
+        #print('1/T_obs: ',1/T_obs)
         if delf_obs < (1 / T_obs):
             self.ismono = True
         else:
@@ -636,9 +637,8 @@ def Strain_Conv(source, natural_f, natural_h):
 
     # frequency and strain of source in detector frame
     freq_conv = 1 / M_redshifted_time
-    # Normalized factor to match Stationary phase approx at low frequencies?
-    # Changed from sqrt(5/16/pi)
-    strain_conv = np.sqrt(1 / 4 / np.pi) * (const.c / DL) * M_redshifted_time ** 2
+    # Normalized factor to match Stationary phase approx at low frequencies
+    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_redshifted_time ** 2
 
     f = natural_f * freq_conv
     h_f = natural_h * strain_conv
@@ -691,7 +691,7 @@ def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_f
         raise ValueError("The reference frame can only be observer or source.")
 
     f_dot_source = source.Get_F_Dot(f_obs_source,frame="source")
-    print(f_dot_source)
+    #print(f_dot_source)
     """
     T_obs = utils.make_quant(T_obs, "s")
     if T_evol_frame == "observer":

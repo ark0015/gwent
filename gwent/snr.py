@@ -120,6 +120,7 @@ def Get_SNR_Matrix(
 
             source.Check_Freq_Evol()
             if source.ismono:  # Monochromatic Source and not diff EOB SNR
+                print(var_x,' ',var_y)
                 if hasattr(source, "h_gw"):
                     del source.h_gw
                 SNRMatrix[j, i] = Calc_Mono_SNR(source, instrument, inc=inc)

@@ -20,11 +20,13 @@ def Plot_SNR(
     display=True,
     dl_axis=False,
     lb_axis=False,
-    smooth_contours=False,
+    smooth_contours=True,
     cfill=True,
     display_cbar=True,
     x_axis_label=True,
     y_axis_label=True,
+    x_axis_line = None,
+    y_axis_line = None,
     logLevels_min=-1.0,
     logLevels_max=0.0,
     hspace=0.15,
@@ -33,8 +35,10 @@ def Plot_SNR(
     contourf_kwargs={},
     xticklabels_kwargs={},
     xlabels_kwargs={},
+    xline_kwargs={},
     yticklabels_kwargs={},
     ylabels_kwargs={},
+    yline_kwargs={}
 ):
     """Plots the SNR contours from calcSNR
 
@@ -69,6 +73,10 @@ def Plot_SNR(
         Option to display the x axis label
     y_axis_label : bool, optional
         Option to display the y axis label
+    x_axis_line : int,float, optional
+        Option to display a line on the x axis if not None
+    y_axis_line : int,float, optional
+        Option to display a line on the y axis if not None
     logLevels_min : float, optional
         Sets the minimum log level of the colorbar, default is -1.0
     logLevels_max : float, optional
@@ -85,10 +93,14 @@ def Plot_SNR(
         Sets additional kwargs taken by xticklabel in matplotlib
     xlabels_kwargs= : dict, optional
         Sets additional kwargs taken by xlabel in matplotlib
+    xline_kwargs : dict, optional
+        Sets additional kwargs taken by ax.axvline in matplotlib
     yticklabels_kwargs : dict, optional
         Sets additional kwargs taken by yticklabel in matplotlib
     ylabels_kwargs : dict, optional
         Sets additional kwargs taken by ylabel in matplotlib
+    yline_kwargs : dict, optional
+        Sets additional kwargs taken by ax.axhline in matplotlib
 
     """
     if fig is not None:
@@ -119,10 +131,8 @@ def Plot_SNR(
     print_logLevels = np.concatenate(
         (logLevels_min, logLevels_add, np.arange(2.0, logLevels_max + 1.0))
     )
-    if smooth_contours:
-        logLevels = np.linspace(logLevels_min, logLevels_max, 100)[:, 0]
-    else:
-        logLevels = print_logLevels
+
+    logLevels = print_logLevels
 
     ylabel_min = min(sample_y)
     ylabel_max = max(sample_y)
@@ -189,9 +199,15 @@ def Plot_SNR(
                 np.log10(sample_x), sample_y, logSNR, print_logLevels, **contour_kwargs
             )
         else:
-            CS1 = ax.contourf(
-                np.log10(sample_x), sample_y, logSNR, logLevels, **contourf_kwargs
-            )
+            if smooth_contours:
+                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap.set_under(color='white')
+                CS1 = ax.imshow(logSNR,extent=[np.log10(xlabel_min),np.log10(xlabel_max),ylabel_min,ylabel_max],
+                    vmin=logLevels_min,vmax=logLevels_max, origin='lower',aspect='auto',cmap=cmap)
+            else:
+                CS1 = ax.contourf(
+                    np.log10(sample_x), sample_y, logSNR, logLevels, **contourf_kwargs
+                )
             ax.contour(
                 np.log10(sample_x), sample_y, logSNR, print_logLevels, **contour_kwargs
             )
@@ -204,9 +220,15 @@ def Plot_SNR(
                 sample_x, np.log10(sample_y), logSNR, print_logLevels, **contour_kwargs
             )
         else:
-            CS1 = ax.contourf(
-                sample_x, np.log10(sample_y), logSNR, logLevels, **contourf_kwargs
-            )
+            if smooth_contours:
+                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap.set_under(color='white')
+                CS1 = ax.imshow(logSNR,extent=[xlabel_min,xlabel_max,np.log10(ylabel_min),np.log10(ylabel_max)],
+                    vmin=logLevels_min,vmax=logLevels_max, origin='lower',aspect='auto',cmap=cmap)
+            else:
+                CS1 = ax.contourf(
+                    sample_x, np.log10(sample_y), logSNR, logLevels, **contourf_kwargs
+                )
             ax.contour(
                 sample_x, np.log10(sample_y), logSNR, print_logLevels, **contour_kwargs
             )
@@ -218,7 +240,13 @@ def Plot_SNR(
                 sample_x, sample_y, logSNR, print_logLevels, **contour_kwargs
             )
         else:
-            CS1 = ax.contourf(sample_x, sample_y, logSNR, logLevels, **contourf_kwargs)
+            if smooth_contours:
+                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap.set_under(color='white')
+                CS1 = ax.imshow(logSNR,extent=[xlabel_min,xlabel_max,ylabel_min,ylabel_max],
+                    vmin=logLevels_min,vmax=logLevels_max, origin='lower',aspect='auto',cmap=cmap)
+            else:
+                CS1 = ax.contourf(sample_x, sample_y, logSNR, logLevels, **contourf_kwargs)
             ax.contour(sample_x, sample_y, logSNR, print_logLevels, **contour_kwargs)
         ax.set_xlim(xlabel_min, xlabel_max)
         ax.set_ylim(ylabel_min, ylabel_max)
@@ -232,13 +260,19 @@ def Plot_SNR(
                 **contour_kwargs
             )
         else:
-            CS1 = ax.contourf(
-                np.log10(sample_x),
-                np.log10(sample_y),
-                logSNR,
-                logLevels,
-                **contourf_kwargs
-            )
+            if smooth_contours:
+                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap.set_under(color='white')
+                CS1 = ax.imshow(logSNR,extent=[np.log10(xlabel_min),np.log10(xlabel_max),np.log10(ylabel_min),np.log10(ylabel_max)],
+                    vmin=logLevels_min,vmax=logLevels_max, origin='lower',aspect='auto',cmap=cmap,interpolation='None')
+            else:
+                CS1 = ax.contourf(
+                    np.log10(sample_x),
+                    np.log10(sample_y),
+                    logSNR,
+                    logLevels,
+                    **contourf_kwargs
+                )
             ax.contour(
                 np.log10(sample_x),
                 np.log10(sample_y),
@@ -249,8 +283,8 @@ def Plot_SNR(
         ax.set_xlim(np.log10(xlabel_min), np.log10(xlabel_max))
         ax.set_ylim(np.log10(ylabel_min), np.log10(ylabel_max))
 
-    Get_Axes_Labels(ax, "x", var_x, xaxis_type, x_labels, xlabels_kwargs, xticklabels_kwargs)
-    Get_Axes_Labels(ax, "y", var_y, yaxis_type, y_labels, ylabels_kwargs, yticklabels_kwargs)
+    Get_Axes_Labels(ax, "x", var_x, xaxis_type, x_labels, x_axis_line, xlabels_kwargs, xticklabels_kwargs, xline_kwargs)
+    Get_Axes_Labels(ax, "y", var_y, yaxis_type, y_labels, y_axis_line, ylabels_kwargs, yticklabels_kwargs, yline_kwargs)
 
     if not x_axis_label:
         ax.set_xticklabels("")
@@ -405,7 +439,7 @@ def Plot_SNR(
         plt.show()
 
 
-def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tick_label_kwargs):
+def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, line_val, label_kwargs, tick_label_kwargs, line_kwargs):
     """Gives paper plot labels for given axis
 
     Parameters
@@ -418,10 +452,14 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         The variable to label
     orig_labels: list,np.ndarray
         The original labels for the particular axis, may be updated depending on parameter
+    line_val: int,float
+        Value of line plotted on var_axis if not None. Assumed to be non-log10 value
     label_kwargs: dict
         The dictionary adjusting the particular axis' label kwargs
     tick_label_kwargs: dict
         The dictionary adjusting the particular axis' tick label kwargs
+    line_kwargs: dict
+        The dictionary associated with the line displayed on var_axis
 
     """
 
@@ -459,28 +497,29 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         ax_dict[var_axis + "label"] = r"$\mathrm{Spin}$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels]
     elif var == "L":
+        #Proposed Value = 2.5Gm: L3 LISA
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
         ax_dict[var_axis + "label"] = r"Arm Length $[\mathrm{m}]$"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
             for x in np.log10(orig_labels)
         ]
-        # ax.axvline(x=np.log10(2.5*u.Gm.to('m')),linestyle='--',color='k',label='Proposed Value')
     elif var == "A_acc":
+        #Proposed Value = 3x10^{-15}: L3 LISA
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
         ax_dict[var_axis + "label"] = r"$A_{\mathrm{acc}}[\mathrm{m~s^{-2}}]$"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%.0f}$" % x for x in np.log10(orig_labels)
         ]
-        # ax.axvline(x=np.log10(3e-15),linestyle='--',color='k',label='Proposed Value')
     elif var == "A_IFO":
+        #Proposed Value = 10^{-12}: L3 LISA
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
         ax_dict[var_axis + "label"] = r"$A_{\mathrm{IFO}}$ [m]"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%.0f}$" % x for x in np.log10(orig_labels)
         ]
-        # ax.axvline(x=np.log10(10e-12),linestyle='--',color='k',label='Proposed Value')
     elif var == "f_acc_break_low":
+        #Proposed Value = 0.4mHz: L3 LISA
         scale = 10 ** round(np.log10(min(orig_labels)))
         new_labels = (
             np.arange(
@@ -491,8 +530,8 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         ax_dict[var_axis + "ticks"] = new_labels
         ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,low}}$ $[\mathrm{mHz}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
-        # ax.axvline(x=.4*u.mHz.to('Hz'),linestyle='--',color='k',label='Proposed Value')
     elif var == "f_acc_break_high":
+        #Proposed Value = 8mHz: L3 LISA
         scale = 10 ** round(np.log10(min(orig_labels)))
         new_labels = (
             np.arange(
@@ -503,8 +542,8 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         ax_dict[var_axis + "ticks"] = new_labels
         ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,high}}$ $[\mathrm{mHz}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
-        # ax.axvline(x=8.*u.mHz.to('Hz'),linestyle='--',color='k',label='Proposed Value')
     elif var == "f_IFO_break":
+        #Proposed Value = 2mHz: L3 LISA
         scale = 10 ** round(np.log10(min(orig_labels)))
         new_labels = (
             np.arange(
@@ -515,7 +554,6 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         ax_dict[var_axis + "ticks"] = new_labels
         ax_dict[var_axis + "label"] = r"$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
-        #ax.axvline(x=2.*u.mHz.to('Hz'),linestyle='--',color='k',label='Proposed Value')
     elif var == "n_p":
         sample_range = max(orig_labels) - min(orig_labels)
         sample_rate = max(2, int(sample_range / 10))
@@ -547,6 +585,8 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
         ax_dict[var_axis + "label"] = r"${\rm T_{obs}}$ $[\mathrm{yr}]$"
         ax_dict[var_axis + "ticklabels"] = [r"$%i$" % int(x) for x in new_labels]
     elif var == "Infrastructure Length":
+        #Proposed Value = 3995: aLIGO, Voyager
+        #Proposed Value = 40000: CE1
         if var_scale == 'log':
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Infrastructure Length"
@@ -554,17 +594,16 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
                 r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
                 for y in np.log10(orig_labels)
             ]
-            #ax.axhline(x=np.log10(3995),linestyle='--',color='k',label='Proposed Value') #aLIGO, Voyager
-            #ax.axhline(y=np.log10(40000),linestyle='--',color='k',label='Proposed Value') #CE1
         elif var_scale == 'lin':
             ax_dict[var_axis + "ticks"] = orig_labels
             ax_dict[var_axis + "label"] = r"Infrastructure Length [km]"
             ax_dict[var_axis + "ticklabels"] = [
                 r"$%.1f$" % (x / 1e3) for x in orig_labels
             ]
-            #ax.axhline(y=3995,linestyle='--',color='k',label='Proposed Value') #aLIGO, Voyager
-            #ax.axhline(y=40000,linestyle='--',color='k',label='Proposed Value') #CE1
     elif var == "Laser Power":
+        #Proposed Value = 125: aLIGO
+        #Proposed Value = 145: Voyager
+        #Proposed Value = 150: CE1
         if var_scale == 'log':
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Laser Power [W]"
@@ -572,17 +611,12 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
                 r"$10^{%.0f}$" % x if abs(int(x)) > 1 else r"$%.1f$" % (10 ** x)
                 for x in np.log10(orig_labels)
             ]
-            #ax.axhline(y=np.log10(125),linestyle='--',color='k',label='Proposed Value') #aLIGO
-            #ax.axhline(y=np.log10(145),linestyle='--',color='k',label='Proposed Value') #Voyager
-            #ax.axhline(y=np.log10(150),linestyle='--',color='k',label='Proposed Value') #CE1
         elif var_scale == 'lin':
             ax_dict[var_axis + "ticks"] = orig_labels
             ax_dict[var_axis + "label"] = r"Laser Power [W]"
             ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in orig_labels]
-            #ax.axhline(y=125,linestyle='--',color='k',label='Proposed Value') #aLIGO
-            #ax.axhline(y=145,linestyle='--',color='k',label='Proposed Value') #Voyager
-            #ax.axhline(y=150,linestyle='--',color='k',label='Proposed Value') #CE1
     elif var == "Seismic Gamma":
+        #Proposed Value = 0.8: aLIGO, Voyager, CE1
         if var_scale == 'log':
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Seismic Gamma"
@@ -590,33 +624,29 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
                 r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
                 for y in np.log10(orig_labels)
             ]
-            #ax.axhline(y=np.log10(0.8),linestyle='--',color='k',label='Proposed Value')
         elif var_scale == 'lin':
             ax_dict[var_axis + "ticks"] = orig_labels
             ax_dict[var_axis + "label"] = r"Seismic Gamma"
             ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" %y for y in orig_labels]
-            #ax.axhline(y=0.8,linestyle='--',color='k',label='Proposed Value')
     elif var == "Materials Substrate Temp":
+        #Proposed Value = 295: aLIGO, CE1
+        #Proposed Value = 123: Voyager
         if var_scale == 'lin':
             ax_dict[var_axis + "ticks"] = orig_labels
-            ax_dict[var_axis + "label"] = r"Materials Substrate Temp [K]"
+            ax_dict[var_axis + "label"] = r"Mirror Substrate Temp [K]"
             ax_dict[var_axis + "ticklabels"] = [
                 r"$%.1f \times 10^{%i}$" % (x / 10 ** int(np.log10(x)), np.log10(x))
                 if np.abs(int(np.log10(x))) > 1
                 else "{:g}".format(x)
                 for x in orig_labels
             ]
-            #ax.axhline(y=295,linestyle='--',color='k',label='Proposed Value') #aLIGO, CE1
-            #ax.axhline(y=123,linestyle='--',color='k',label='Proposed Value') #Voyager
         elif var_scale == 'log':
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-            ax_dict[var_axis + "label"] = r"Materials Substrate Temp [K]"
+            ax_dict[var_axis + "label"] = r"Mirror Substrate Temp [K]"
             ax_dict[var_axis + "ticklabels"] = [
                 r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
                 for y in np.log10(orig_labels)
             ]
-            #ax.axhline(y=np.log10(295),linestyle='--',color='k',label='Proposed Value') #aLIGO, CE1
-            #ax.axhline(y=np.log10(123),linestyle='--',color='k',label='Proposed Value') #Voyager
     else:
         if var_scale == 'lin':
             ax_dict[var_axis + "ticks"] = orig_labels
@@ -634,6 +664,24 @@ def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, label_kwargs, tic
                 r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
                 for y in np.log10(orig_labels)
             ]
+    if line_val is not None:
+        if 'linestyle' not in line_kwargs.keys():
+            line_kwargs['linestyle'] = '--'
+        if 'color' not in line_kwargs.keys():
+            line_kwargs['color'] = 'k'
+        if 'label' not in line_kwargs.keys():
+            line_kwargs['label'] = 'Proposed Value'
+
+        if var_scale == 'log':
+            if var_axis == "y":
+                ax.axhline(y=np.log10(line_val),**line_kwargs)
+            elif var_axis == "x":
+                ax.axvline(x=np.log10(line_val),**line_kwargs)
+        elif var_scale == 'lin':
+            if var_axis == "y":
+                ax.axhline(y=line_val,**line_kwargs)
+            elif var_axis == "x":
+                ax.axvline(x=line_val,**line_kwargs)
 
     ax.update(ax_dict)
     if label_kwargs:
