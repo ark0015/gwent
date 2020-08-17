@@ -120,7 +120,6 @@ def Get_SNR_Matrix(
 
             source.Check_Freq_Evol()
             if source.ismono:  # Monochromatic Source and not diff EOB SNR
-                print(var_x,' ',var_y)
                 if hasattr(source, "h_gw"):
                     del source.h_gw
                 SNRMatrix[j, i] = Calc_Mono_SNR(source, instrument, inc=inc)
@@ -304,15 +303,16 @@ def Recalculate_Noise(source, instrument):
     if hasattr(instrument, "I_type") or hasattr(instrument, "load_location"):
         raise ValueError("Cannot vary a loaded instrument's parameters")
 
-    if not isinstance(instrument, detector.GroundBased):
-        if hasattr(instrument, "P_n_f"):
-            del instrument.P_n_f
+    if hasattr(instrument, "fT"):
+        del instrument.fT
     if hasattr(instrument, "S_n_f"):
         del instrument.S_n_f
     if hasattr(instrument, "h_n_f"):
         del instrument.h_n_f
-    if hasattr(instrument, "fT"):
-        del instrument.fT
+        
+    if not isinstance(instrument, detector.GroundBased):
+        if hasattr(instrument, "P_n_f"):
+            del instrument.P_n_f
 
     if isinstance(instrument, detector.PTA) and hasattr(
         instrument, "_sensitivitycurve"
