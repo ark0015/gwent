@@ -18,6 +18,7 @@ def Plot_SNR(
     fig=None,
     ax=None,
     display=True,
+    return_plt = False,
     dl_axis=False,
     lb_axis=False,
     smooth_contours=True,
@@ -61,6 +62,8 @@ def Plot_SNR(
 
     display : bool, optional
         Option to turn off display if saving multiple plots to a file
+    return_plt : bool, optional
+        Option to return fig and ax
     dl_axis : bool, optional
         Option to turn on the right hand side labels of luminosity distance
     smooth_contours : bool, optional
@@ -437,6 +440,8 @@ def Plot_SNR(
         # fig.tight_layout()
         fig.subplots_adjust(hspace=hspace, wspace=wspace)
         plt.show()
+    if return_plt:
+        return fig,ax
 
 
 def Get_Axes_Labels(ax, var_axis, var, var_scale, orig_labels, line_val, label_kwargs, tick_label_kwargs, line_kwargs):

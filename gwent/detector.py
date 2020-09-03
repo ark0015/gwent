@@ -1182,11 +1182,11 @@ class SpaceBased(Interferometer):
                 elif self._I_Type == "h":
                     self._S_n_f = self.h_n_f ** 2 / self.fT
             else:
-                S_n_f = self.P_n_f / self.transferfunction ** 2
                 if self.Background:
-                    self._S_n_f = S_n_f + self.Add_Background()
+                    self._S_n_f = (self.P_n_f + self.Add_Background())/ self.transferfunction ** 2
                 else:
-                    self._S_n_f = S_n_f
+                    self._S_n_f = self.P_n_f / self.transferfunction ** 2
+
         return self._S_n_f
 
     @S_n_f.deleter
@@ -1220,7 +1220,7 @@ class SpaceBased(Interferometer):
         )
         self.fT = LISA_Transfer_Function_f[idx_f_5:idx_f_1]
 
-    def Get_Analytic_Transfer_Function(self):
+    def Get_Analytic_Transfer_Function(self,openingangle=None):
         # Response function approximation from Calculation described by Cornish, Robson, Liu 2019
         self.fT = (
             np.logspace(
@@ -1230,7 +1230,10 @@ class SpaceBased(Interferometer):
         )
         f_L = const.c / 2 / np.pi / self.L  # Transfer frequency
         # 3/10 is normalization 2/5sin(openingangle)
-        R_f = 3 / 10 / (1 + 0.6 * (self.fT / f_L) ** 2)
+        if isinstance(openingangle,(int,float,u.Quantity)):
+            R_f = (2*np.sin(openingangle)**2) / 5 / (1 + 0.6 * (self.fT / f_L) ** 2)
+        else:
+            R_f = 3 / 10 / (1 + 0.6 * (self.fT / f_L) ** 2)
         self.transferfunction = np.sqrt(R_f)
 
     def Set_T_Function_Type(self):
@@ -1256,34 +1259,19 @@ class SpaceBased(Interferometer):
 
     def Add_Background(self):
         """
-        Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
-        corresponding to array index 0,1,2,3 respectively
+        Galactic confusions noise parameters as a function of T_obs
         """
-        A = 9e-45
-        a = np.array([0.133, 0.171, 0.165, 0.138])
-        b = np.array([243, 292, 299, -221])
-        k = np.array([482, 1020, 611, 521])
-        g = np.array([917, 1680, 1340, 1680])
-        f_k = np.array([0.00258, 0.00215, 0.00173, 0.00113])
+        A = 1.4e-44
+        agam = 1100
+        bgam = 3/10
+        afk = 0.0016
+        bfk = -2/9
+        f_k = afk*self.T_obs**bfk
+        gamma = agam*self.T_obs**bgam
 
-        if self.T_obs < 1.0 * u.yr:
-            index = 0
-        elif self.T_obs >= 1.0 * u.yr and self.T_obs < 2.0 * u.yr:
-            index = 1
-        elif self.T_obs >= 2.0 * u.yr and self.T_obs < 4.0 * u.yr:
-            index = 2
-        else:
-            index = 3
         f = self.fT.value
-        S_c_f = (
-            A
-            * np.exp(-(f ** a[index]) + (b[index] * f * np.sin(k[index] * f)))
-            * (f ** (-7 / 3))
-            * (1 + np.tanh(g[index] * (f_k[index] - f)))
-            * (1 / u.Hz)
-        )  # White Dwarf Background Noise
+        S_c_f = A*(f**(-7/3))*(1 + np.tanh(gamma.value*(f_k.value-f)))*(1/u.Hz) #White Dwarf Background Noise
         return S_c_f
-
 
 def Load_Data(detector):
     """

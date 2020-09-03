@@ -303,16 +303,16 @@ def Recalculate_Noise(source, instrument):
     if hasattr(instrument, "I_type") or hasattr(instrument, "load_location"):
         raise ValueError("Cannot vary a loaded instrument's parameters")
 
+    if not isinstance(instrument, detector.GroundBased):
+        if hasattr(instrument, "P_n_f"):
+            del instrument.P_n_f
+            
     if hasattr(instrument, "fT"):
         del instrument.fT
     if hasattr(instrument, "S_n_f"):
         del instrument.S_n_f
     if hasattr(instrument, "h_n_f"):
         del instrument.h_n_f
-        
-    if not isinstance(instrument, detector.GroundBased):
-        if hasattr(instrument, "P_n_f"):
-            del instrument.P_n_f
 
     if isinstance(instrument, detector.PTA) and hasattr(
         instrument, "_sensitivitycurve"
@@ -420,28 +420,3 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
         SNRsqrd = integral_consts * np.trapz(integrand, f_cut, axis=0)  # SNR**2
 
     return np.sqrt(SNRsqrd)
-
-
-def Save_SNR(
-    sample_x, sample_y, SNRMatrix, save_location, SNR_filename, sample_filename
-):
-    """Saves SNR Matrix
-
-    Parameters
-    ----------
-    sample_x : array
-        samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    SNRMatrix : array-like
-        the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
-    save_location : str
-        the directory to which the Samples and SNR are saved
-    SNR_filename : str
-        the name of the SNR file
-    sample_filename : str
-        the name of the sample file
-
-    """
-    np.savetxt(save_location + SNR_filename, SNRMatrix)
-    np.savetxt(save_location + sample_filename, np.transpose([sample_x, sample_y]))
