@@ -180,7 +180,7 @@ def DA_insp(freqs, eta, x1, x2, X_PN):
 
 def A_MR(freqs, f_RD, f_damp, Gammas):
     """Calculates the Normalized Merger-Ringdown Amplitude
-    
+
     Parameters
     ----------
     freqs : array
@@ -204,7 +204,7 @@ def A_MR(freqs, f_RD, f_damp, Gammas):
 
 def DA_MR(freqs, f_RD, f_damp, Gammas):
     """Calculates Derivative of the Merger-Ringdown Amplitude
-    
+
     Parameters
     ----------
     freqs : array
@@ -480,10 +480,10 @@ def Calc_f_peak(f_RD, f_damp, Gammas):
         Damping frequency
     Gammas : array-like
         Normalizes lorentzian to correct shape
-    
+
     Notes
     -----
-    There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1 
+    There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1
     so if gamma2 >= 1 then set the square root term to zero.
 
     """
@@ -509,8 +509,8 @@ def Find_Cutoff_Freq(f_RD, f_damp, Gammas, pct_of_peak=0.0001):
         Normalizes lorentzian to correct shape
 
     pct_of_peak : float, optional
-        the percentange of the strain at merger that dictates the maximum 
-        frequency the waveform is calculated at in geometrized units (G=c=1) 
+        the percentange of the strain at merger that dictates the maximum
+        frequency the waveform is calculated at in geometrized units (G=c=1)
 
     """
     tempfreqs = np.logspace(np.log10(f_RD), np.log10(10 * f_RD), 100)

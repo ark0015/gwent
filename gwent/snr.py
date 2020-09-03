@@ -66,7 +66,7 @@ def Get_SNR_Matrix(
 
     switch = False
     if recalculate_noise == "y":
-        """Calculation runs much faster when it doesn't recalculate 
+        """Calculation runs much faster when it doesn't recalculate
         the noise every time."""
         switch = True
         recalculate_noise = "x"
@@ -92,7 +92,9 @@ def Get_SNR_Matrix(
                 if len(var_x_names) == 2:
                     updated_dict_x = {var_x_names[0]: {var_x_names[1]: sample_x[i]}}
                 elif len(var_x_names) == 3:
-                    updated_dict_x = {var_x_names[0]: {var_x_names[1]: {var_x_names[2]:sample_x[i]}}}
+                    updated_dict_x = {
+                        var_x_names[0]: {var_x_names[1]: {var_x_names[2]: sample_x[i]}}
+                    }
                 instrument.Set_Noise_Dict(updated_dict_x)
             else:
                 setattr(instrument, var_x, sample_x[i])
@@ -112,7 +114,11 @@ def Get_SNR_Matrix(
                     if len(var_y_names) == 2:
                         updated_dict_y = {var_y_names[0]: {var_y_names[1]: sample_y[i]}}
                     elif len(var_y_names) == 3:
-                        updated_dict_y = {var_y_names[0]: {var_y_names[1]: {var_y_names[2]: sample_y[i]}}}
+                        updated_dict_y = {
+                            var_y_names[0]: {
+                                var_y_names[1]: {var_y_names[2]: sample_y[i]}
+                            }
+                        }
                     instrument.Set_Noise_Dict(updated_dict_y)
                 else:
                     setattr(instrument, var_y, sample_y[j])
@@ -306,7 +312,7 @@ def Recalculate_Noise(source, instrument):
     if not isinstance(instrument, detector.GroundBased):
         if hasattr(instrument, "P_n_f"):
             del instrument.P_n_f
-            
+
     if hasattr(instrument, "fT"):
         del instrument.fT
     if hasattr(instrument, "S_n_f"):
@@ -338,7 +344,7 @@ def Calc_Mono_SNR(source, instrument, inc=None):
     if not hasattr(source, "instrument"):
         source.instrument = instrument
 
-    #Assumes mass and frequency in source class are in the source frame
+    # Assumes mass and frequency in source class are in the source frame
     source.h_gw = binary.Get_Mono_Strain(source, inc=inc, frame="source")
     indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
 

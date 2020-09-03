@@ -67,20 +67,20 @@ class PTA:
     phi : list, array, optional
         Individual pulsar longitude in ecliptic coordinates.
         If not defined, NANOGrav 11yr pulsar locations are used.
-        If n_p > 34 (the number of pulsars in the 11yr dataset), 
+        If n_p > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
     theta : array, list, optional
         Individual pulsar colatitude in ecliptic coordinates.
         If not defined, NANOGrav 11yr pulsar locations are used.
-        If n_p > 34 (the number of pulsars in the 11yr dataset), 
+        If n_p > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
     use_11yr : bool, optional
-        Uses the NANOGrav 11yr noise as the individual pulsar noises, 
-        if n_p > 34 (the number of pulsars in the 11yr dataset), 
+        Uses the NANOGrav 11yr noise as the individual pulsar noises,
+        if n_p > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
     use_rn : bool, optional
-        If no rn_amp assigned, uses the NANOGrav 11yr noise as the individual pulsar RN noises, 
-        if n_p > 34 (the number of pulsars in the 11yr dataset), 
+        If no rn_amp assigned, uses the NANOGrav 11yr noise as the individual pulsar RN noises,
+        if n_p > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
     load_location : string, optional
         If you want to load a PTA curve from a file, it's the file path
@@ -96,7 +96,7 @@ class PTA:
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated
     nbins : int, optional
-        Used to add values to every bin for sampled parameters. Default is 8 for smooth, non-zero distributions. 
+        Used to add values to every bin for sampled parameters. Default is 8 for smooth, non-zero distributions.
         Changing this could change distribution, so be wary, not sure how much it affects anything.
     """
 
@@ -344,7 +344,7 @@ class PTA:
         Notes
         -----
         The file is in the form of observation times (T_obs) in the first column,
-        sky locations (phi,theta) in the second and third columns, 
+        sky locations (phi,theta) in the second and third columns,
         Individual Pulsar cadences and WN RMS (sigmas) in the fourth and fifth,
         RN Amplitudes, and RN Alphas in the last two columns.
         """
@@ -376,7 +376,9 @@ class PTA:
                 return np.append(
                     samp_var,
                     np.logspace(
-                        min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins,
+                        min(np.log10(samp_var)),
+                        max(np.log10(samp_var)),
+                        self.nbins,
                     ),
                 )
             else:
@@ -557,7 +559,9 @@ class PTA:
                                 n_added_p = self.n_p - len(prev_var)
                                 var_draw = self.Get_Sample_Draws(var, n_added_p)
                                 setattr(
-                                    self, var, np.append(prev_var, var_draw),
+                                    self,
+                                    var,
+                                    np.append(prev_var, var_draw),
                                 )
                             else:
                                 pass
@@ -607,7 +611,7 @@ class PTA:
                             setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
 
         if hasattr(self, "rn_amp"):
-            
+
             if hasattr(self, "sb_amp"):
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
@@ -622,7 +626,7 @@ class PTA:
                     freqs=self.fT.value,
                 )
             else:
-            
+
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
                     cad=self.cadence.value,
@@ -909,7 +913,7 @@ class GroundBased(Interferometer):
 
     def Set_Noise_Dict(self, noise_dict):
         """Sets new values in the nested dictionary of variable noise values
-        
+
         Parameters
         ----------
 
@@ -949,7 +953,9 @@ class GroundBased(Interferometer):
                                         sub_sub_noise,
                                         self._return_value,
                                     )
-                                    self._ifo = gwinc.precompIFO(self.fT.value, self._ifo)
+                                    self._ifo = gwinc.precompIFO(
+                                        self.fT.value, self._ifo
+                                    )
                             else:
                                 self.var_dict = [
                                     base_noise + " " + sub_noise,
@@ -1183,7 +1189,9 @@ class SpaceBased(Interferometer):
                     self._S_n_f = self.h_n_f ** 2 / self.fT
             else:
                 if self.Background:
-                    self._S_n_f = (self.P_n_f + self.Add_Background())/ self.transferfunction ** 2
+                    self._S_n_f = (
+                        self.P_n_f + self.Add_Background()
+                    ) / self.transferfunction ** 2
                 else:
                     self._S_n_f = self.P_n_f / self.transferfunction ** 2
 
@@ -1220,7 +1228,7 @@ class SpaceBased(Interferometer):
         )
         self.fT = LISA_Transfer_Function_f[idx_f_5:idx_f_1]
 
-    def Get_Analytic_Transfer_Function(self,openingangle=None):
+    def Get_Analytic_Transfer_Function(self, openingangle=None):
         # Response function approximation from Calculation described by Cornish, Robson, Liu 2019
         self.fT = (
             np.logspace(
@@ -1230,8 +1238,8 @@ class SpaceBased(Interferometer):
         )
         f_L = const.c / 2 / np.pi / self.L  # Transfer frequency
         # 3/10 is normalization 2/5sin(openingangle)
-        if isinstance(openingangle,(int,float,u.Quantity)):
-            R_f = (2*np.sin(openingangle)**2) / 5 / (1 + 0.6 * (self.fT / f_L) ** 2)
+        if isinstance(openingangle, (int, float, u.Quantity)):
+            R_f = (2 * np.sin(openingangle) ** 2) / 5 / (1 + 0.6 * (self.fT / f_L) ** 2)
         else:
             R_f = 3 / 10 / (1 + 0.6 * (self.fT / f_L) ** 2)
         self.transferfunction = np.sqrt(R_f)
@@ -1263,15 +1271,21 @@ class SpaceBased(Interferometer):
         """
         A = 1.4e-44
         agam = 1100
-        bgam = 3/10
+        bgam = 3 / 10
         afk = 0.0016
-        bfk = -2/9
-        f_k = afk*self.T_obs**bfk
-        gamma = agam*self.T_obs**bgam
+        bfk = -2 / 9
+        f_k = afk * self.T_obs ** bfk
+        gamma = agam * self.T_obs ** bgam
 
         f = self.fT.value
-        S_c_f = A*(f**(-7/3))*(1 + np.tanh(gamma.value*(f_k.value-f)))*(1/u.Hz) #White Dwarf Background Noise
+        S_c_f = (
+            A
+            * (f ** (-7 / 3))
+            * (1 + np.tanh(gamma.value * (f_k.value - f)))
+            * (1 / u.Hz)
+        )  # White Dwarf Background Noise
         return S_c_f
+
 
 def Load_Data(detector):
     """

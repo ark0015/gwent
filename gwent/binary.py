@@ -282,7 +282,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
             self.Get_Fitcoeffs()
         [self._phenomD_f, self._phenomD_h] = Get_Waveform(self)
 
-    def Get_F_Dot(self,freq, frame="observer"):
+    def Get_F_Dot(self, freq, frame="observer"):
         """Calculates the change in frequency of a binary black hole at a given frequency.
 
         Parameters
@@ -307,7 +307,13 @@ class BBHFrequencyDomain(BinaryBlackHole):
         else:
             raise ValueError("The reference frame can only be observer or source.")
 
-        return 96/5 * np.pi**(8/3) * (M_chirp ** (5 / 3)) * (f_obs_source ** (11 / 3))
+        return (
+            96
+            / 5
+            * np.pi ** (8 / 3)
+            * (M_chirp ** (5 / 3))
+            * (f_obs_source ** (11 / 3))
+        )
 
     def Get_Time_From_Merger(self, freq, frame="observer"):
         """Calculates the time from merger of a binary black hole given a frequency.
@@ -368,7 +374,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         self, T_evol=None, T_evol_frame="observer", f_gw_frame="source"
     ):
         """Checks the frequency evolution of the black hole binary.
-        
+
         Parameters
         ----------
         T_evol : int,float, Quantity
@@ -376,7 +382,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         T_evol_frame : str, {'observer','source'}
             Determines whether the given T_evol is in the source or observer frame.
         f_gw_frame : str, {'observer','source'}
-            Determines whether the frequency is in the source or observer frame. 
+            Determines whether the frequency is in the source or observer frame.
             May not be used if source has an instrument assigned.
 
         Notes
@@ -468,8 +474,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
             * (3 * T_evol_source / 8 / t_init_source)
         )
         delf_obs = delf_source / (1 + self.z)
-        #print('delf_obs: ',delf_obs)
-        #print('1/T_obs: ',1/T_obs)
+        # print('delf_obs: ',delf_obs)
+        # print('1/T_obs: ',1/T_obs)
         if delf_obs < (1 / T_obs):
             self.ismono = True
         else:
@@ -657,7 +663,10 @@ def Get_Char_Strain(source):
     h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
     return h_char
 
-def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_frame="observer"):
+
+def Get_Mono_Char_Strain(
+    source, T_obs, inc=None, T_evol_frame="observer", f_gw_frame="observer"
+):
     """Calculates the characteristic strain from a binary black hole observed for some observation time.
 
     Parameters
@@ -680,7 +689,7 @@ def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_f
     float
         The characteristic strain of a monochromatic source in the source frame.
     """
-    strain_amp = Get_Mono_Strain(source, inc=inc, frame= f_gw_frame)
+    strain_amp = Get_Mono_Strain(source, inc=inc, frame=f_gw_frame)
 
     f_gw = utils.make_quant(source.f_gw, "Hz")
     if f_gw_frame == "observer":
@@ -690,8 +699,8 @@ def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_f
     else:
         raise ValueError("The reference frame can only be observer or source.")
 
-    f_dot_source = source.Get_F_Dot(f_obs_source,frame="source")
-    #print(f_dot_source)
+    f_dot_source = source.Get_F_Dot(f_obs_source, frame="source")
+    # print(f_dot_source)
     """
     T_obs = utils.make_quant(T_obs, "s")
     if T_evol_frame == "observer":
@@ -703,7 +712,8 @@ def Get_Mono_Char_Strain(source,T_obs, inc=None, T_evol_frame="observer", f_gw_f
 
     return np.sqrt(f_obs_source*T_obs_source)*strain_amp
     """
-    return f_obs_source*np.sqrt(2/f_dot_source)*strain_amp
+    return f_obs_source * np.sqrt(2 / f_dot_source) * strain_amp
+
 
 def Get_Mono_Strain(source, inc=None, frame="source"):
     """Calculates the fourier domain strain from a monochromatic binary black hole.
@@ -746,9 +756,9 @@ def Get_Mono_Strain(source, inc=None, frame="source"):
     if inc is not None:
         if inc > np.pi or inc < -np.pi:
             raise ValueError("Inclination must be between -pi and pi.")
-        a = (1 + np.cos(inc) ** 2)/2
+        a = (1 + np.cos(inc) ** 2) / 2
         b = np.cos(inc)
-        const_val = 4.*np.sqrt(a ** 2 + b ** 2)
+        const_val = 4.0 * np.sqrt(a ** 2 + b ** 2)
     else:
         const_val = 8 / np.sqrt(5)
 
