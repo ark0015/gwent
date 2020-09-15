@@ -493,7 +493,7 @@ def Plot_SNR(
                 # Make colorbar
                 cbar = fig.colorbar(CS1, cax=cbar_ax, ticks=print_logLevels)
 
-        # cbar.set_label(r'$SNR$')
+        cbar.set_label(r'SNR')
         cbar.ax.set_yticklabels(
             [
                 r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
@@ -506,8 +506,7 @@ def Plot_SNR(
         # fig.tight_layout()
         fig.subplots_adjust(hspace=hspace, wspace=wspace)
         plt.show()
-    else:
-        fig.clf()
+
     if return_plt:
         return fig, ax
 
@@ -554,7 +553,7 @@ def Get_Axes_Labels(
 
     if var == "M":
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"$M_{\rm tot}$ $[\mathrm{M_{\odot}}]$"
+        ax_dict[var_axis + "label"] = r"$M_{\mathrm{tot}}~[M_{\odot}]$"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
             for x in np.log10(orig_labels)
@@ -562,11 +561,11 @@ def Get_Axes_Labels(
     elif var == "q":
         new_labels = orig_labels[::2]
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"$\mathrm{Mass~Ratio}$"
+        ax_dict[var_axis + "label"] = r"$\mathrm{Mass~Ratio}~q$"
         ax_dict[var_axis + "ticklabels"] = [r"$%i$" % int(x) for x in new_labels]
     elif var == "z":
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"$\mathrm{Redshift}$"
+        ax_dict[var_axis + "label"] = r"$\mathrm{Redshift}~z$"
         ax_dict[var_axis + "ticklabels"] = [
             x if int(x) < 1 else int(x) for x in orig_labels
         ]
@@ -577,12 +576,12 @@ def Get_Axes_Labels(
         )
         new_labels = new_labels[::2]
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"$\mathrm{Spin}$"
+        ax_dict[var_axis + "label"] = r"$\mathrm{Spin}~\chi_{i}$"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels]
     elif var == "L":
         # Proposed Value = 2.5Gm: L3 LISA
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"Arm Length $[\mathrm{m}]$"
+        ax_dict[var_axis + "label"] = r"Arm Length [m]"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
             for x in np.log10(orig_labels)
@@ -590,7 +589,7 @@ def Get_Axes_Labels(
     elif var == "A_acc":
         # Proposed Value = 3x10^{-15}: L3 LISA
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"$A_{\mathrm{acc}}[\mathrm{m~s^{-2}}]$"
+        ax_dict[var_axis + "label"] = r"$A_{\mathrm{acc}} [\mathrm{m~s^{-2}}]$"
         ax_dict[var_axis + "ticklabels"] = [
             r"$10^{%.0f}$" % x for x in np.log10(orig_labels)
         ]
@@ -611,7 +610,7 @@ def Get_Axes_Labels(
             * scale
         )
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,low}}$ $[\mathrm{mHz}]$"
+        ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,low}}$ [mHz]"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
     elif var == "f_acc_break_high":
         # Proposed Value = 8mHz: L3 LISA
@@ -623,7 +622,7 @@ def Get_Axes_Labels(
             * scale
         )
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,high}}$ $[\mathrm{mHz}]$"
+        ax_dict[var_axis + "label"] = r"$f_{\mathrm{acc,high}}$ [mHz]"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
     elif var == "f_IFO_break":
         # Proposed Value = 2mHz: L3 LISA
@@ -635,7 +634,7 @@ def Get_Axes_Labels(
             * scale
         )
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"$f_{\mathrm{IFO,break}}$ $[\mathrm{mHz}]$"
+        ax_dict[var_axis + "label"] = r"$f_{\mathrm{IFO,break}}$ [mHz]"
         ax_dict[var_axis + "ticklabels"] = [r"$%.1f$" % x for x in new_labels * 1e3]
     elif var == "n_p":
         sample_range = max(orig_labels) - min(orig_labels)
@@ -660,19 +659,19 @@ def Get_Axes_Labels(
             * scale
         )
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"TOA Error RMS $[\mathrm{ns}]$"
+        ax_dict[var_axis + "label"] = r"TOA Error RMS [ns]"
         ax_dict[var_axis + "ticklabels"] = [r"$%.0f$" % x for x in new_labels * 1e9]
     elif var == "T_obs":
         new_labels = orig_labels[::2]
         ax_dict[var_axis + "ticks"] = new_labels
-        ax_dict[var_axis + "label"] = r"${\rm T_{obs}}$ $[\mathrm{yr}]$"
+        ax_dict[var_axis + "label"] = r"${\rm T_{obs}}$ [yr]"
         ax_dict[var_axis + "ticklabels"] = [r"$%i$" % int(x) for x in new_labels]
     elif var == "Infrastructure Length":
         # Proposed Value = 3995: aLIGO, Voyager
         # Proposed Value = 40000: CE1
         if var_scale == "log":
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-            ax_dict[var_axis + "label"] = r"Infrastructure Length"
+            ax_dict[var_axis + "label"] = r"Infrastructure Length [m]"
             ax_dict[var_axis + "ticklabels"] = [
                 r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
                 for y in np.log10(orig_labels)
