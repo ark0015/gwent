@@ -17,6 +17,7 @@ requirements = [
     "astropy",
     "hasasia",
     "matplotlib",
+    'pygwinc @ git+https://git.ligo.org/gwinc/pygwinc.git@65396ee42e851ab7189618cabe1c12081b5d982e'
 ]
 
 setup_requirements = [
