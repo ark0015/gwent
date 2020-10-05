@@ -493,7 +493,7 @@ def Plot_SNR(
                 # Make colorbar
                 cbar = fig.colorbar(CS1, cax=cbar_ax, ticks=print_logLevels)
 
-        cbar.set_label(r'SNR')
+        cbar.set_label(r"SNR")
         cbar.ax.set_yticklabels(
             [
                 r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)

@@ -441,6 +441,13 @@ def test_BBHStrain(LISA_prop1, aLIGO, SKA_WN, ET):
     source_4 = binary.BBHFrequencyDomain(M[1], q[0], z[1], x1[1], x2[1], instrument=ET)
     binary.Get_Char_Strain(source_1)
     source_2.Get_Time_From_Merger(1 / u.yr, frame="source").to("yr")
+    binary.Get_Mono_Char_Strain(
+        source_2,
+        np.max(source_2.instrument.T_obs).to("s"),
+        inc=np.pi / 2,
+        T_evol_frame="observer",
+        f_gw_frame="observer",
+    )
     source_3.Check_Freq_Evol(
         T_evol=np.max(source_3.instrument.T_obs).to("s"), T_evol_frame="source"
     )
