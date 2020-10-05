@@ -1,0 +1,7 @@
+include CONTRIBUTIONS.md
+include setup.cfg
+include tox.ini
+
+recursive-include gwinc *.yaml
+recursive-include matlab *.m
+recursive-include docs *

@@ -1,0 +1,104 @@
+# HDF5 Schema for GWINC noise trace storage
+
+
+This file describes a schemata for HDF5 storage of noise trace data
+and plot styling GWINC noise budgets.
+
+HDF5 is a heirarchical, structured data storage format [0].  Content
+is organized into a heirarchical folder-like structure, with two
+types of named objects:
+
+ * groups: holder of other objects (like folders)
+ * datasets: holder of data arrays (like files)
+
+Objects can also have attributes as (almost) arbitrary key:value
+pairs.
+
+Bindings are available for most platforms including Python [1] and
+Matlab.
+
+[0] https://en.wikipedia.org/wiki/Hierarchical_Data_Format
+[1] http://www.h5py.org/
+
+
+## version history
+
+v1
+- first versioned schema release
+
+
+## schema
+
+The following describes the noise budget schema.  Specific strings are
+enclosed in single quotes (''), and variables are described in
+brackets (<>).  Group objects are indicated by a closing '/'
+separator, data set are indicated by a closing ':' followed by a
+specification of their length and type (e.g. "(N),float"), and
+attributes are specified in the .attrs[] dictionary format.  Optional
+elements are enclosed in parentheses.
+
+A single trace is a length N array (with optional plot style specified
+in attributes:
+```
+/<trace>: (N),float
+(/<trace>.attrs['label'] = <label>)
+(/<trace>.attrs['color] = <color>)
+...
+```
+
+A budget item, i.e. a collection of noises is structured as follows:
+```
+/<budget>/
+    /'Total': (N),float
+    /<trace_0>: (N),float
+    (/<trace_1>: (N),float)
+```
+<!-- ``` -->
+<!--     /'noises'/ -->
+<!--         /*<noise_0>: (N),float -->
+<!--         ... -->
+<!--     /\*'references'/ -->
+<!--         /*<ref_0>: (N),float -->
+<!--         ... -->
+<!-- ``` -->
+
+
+## Top-level Budget
+
+The following two root attributes expected: a string describing the schema,
+and an int schema version number:
+```
+/.attrs['SCHEMA'] = 'GWINC Noise Budget'
+/.attrs['SCHEMA_VERSION'] = 1
+```
+
+Top-level attributes are generally used for specifying overall plot styling, but the
+following root attributes are typically defined:
+```
+/.attrs['title'] = <experiment description string (e.g. 'H1 Strain Budget')>
+/.attrs['date'] = <ISO-formatted string (e.g. '2015-10-24T20:30:00.000000Z')>
+```
+
+The budget frequency array is defined in a 'Freq' dataset:
+```
+/'Freq': (N), float
+```
+
+The budget traces are defined a traces group.  The overall structure
+looks something like this:
+```
+/.attrs['SCHEMA'] = 'GWINC Noise Budget'
+/.attrs['SCHEMA_VERSION'] = 1
+/.attrs['title'] = <experiment description string (e.g. 'H1 Strain Budget')>
+/.attrs['date'] = <ISO-formatted string (e.g. '2015-10-24T20:30:00.000000Z')>
+/'Freq': (N), float
+/traces/
+    /'Total': (N),float
+    /<noise_0>: (N),float
+    /<noise_1>: (N),float
+    /<noise_2>/
+        /'Total': (N),float
+        /<noise_3>: (N),float
+        /<noise_4>: (N),float
+    ...
+```
