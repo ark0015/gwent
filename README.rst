@@ -72,6 +72,7 @@ If you are looking for quick data, we conveniently place the figure above in the
 
 Credits
 -------
+We utilize and include within the package a specific commit of ``pygwinc`` found at https://git.ligo.org/gwinc/pygwinc to create many of the ground-based gravitational wave detector sensitivity curves. At the time of creation, there is no ``pygwinc`` availability on PyPI, so we explicitly include the necessary portions of the code within.
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
