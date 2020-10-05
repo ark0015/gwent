@@ -7,17 +7,18 @@
 
 import numpy as np
 import astropy.units as u
-
+import matplotlib.pyplot as plt
 import pytest
 
+
+import os, sys
 """
-import os,sys
 current_path = os.getcwd()
 splt_path = current_path.split("/")
-top_path_idx = splt_path.index('Research')
-top_directory = "/".join(splt_path[0:top_path_idx+1])
-gwent_path = top_directory + '/gwent/'
-sys.path.insert(0,gwent_path)
+top_path_idx = splt_path.index("Research")
+top_directory = "/".join(splt_path[0 : top_path_idx + 1])
+gwent_path = top_directory + "/gwent/"
+sys.path.insert(0, gwent_path)
 """
 
 import gwent
@@ -110,7 +111,12 @@ def source_ground_based():
 T_obs = 4.0 * u.yr  # Observing time in years
 T_obs_min = 1.0 * u.yr
 T_obs_max = 10.0 * u.yr
-noise_dict = {"Infrastructure": {"Length": [3995, 3000, 5000], "Temp": [290, 200, 400]}}
+noise_dict = {
+    "Infrastructure": {"Length": [3995, 2250, 4160], "Temp": [295, 100, 1e4]},
+    "Laser": {"Power": [125, 10, 1e3]},
+    "Materials": {"Substrate": {"Temp": [295, 10, 1e4]}},
+    "Seismic": {"Gamma": [0.8, 0.1, 1.0], "Rho": [1.8e3, 1500, 2500]},
+}
 
 
 @pytest.fixture
@@ -255,7 +261,24 @@ def test_aLIGO_params_MvIL(source_ground_based, aLIGO_gwinc):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        display_cbar=True,
+        y_axis_label=False,
+        smooth_contours=False,
+        logLevels_min=-1.0,
+        logLevels_max=5.0,
+        y_axis_line=295,
+        yticklabels_kwargs={"rotation": 70, "y": 0.02},
+        xlabels_kwargs={"labelpad": 0.45},
+        display=False,
+        return_plt=True,
+    )
+    plt.close(fig)
 
 
 def test_aLIGO_params_ILvIT(source_ground_based, aLIGO_gwinc):
@@ -266,9 +289,106 @@ def test_aLIGO_params_ILvIT(source_ground_based, aLIGO_gwinc):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(
-        var_x, sample_x, var_y, sample_y, SNRMatrix, cfill=False, display=False
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
+        x_axis_line=3995,
     )
+    plt.close(fig)
+
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        smooth_contours=False,
+        cfill=True,
+        display=False,
+        return_plt=True,
+        x_axis_label=False,
+        y_axis_label=False,
+    )
+    plt.close(fig)
+
+
+def test_aLIGO_params_LPvz(source_ground_based, aLIGO_gwinc):
+    # Variable on x-axis
+    var_x = "Laser Power"
+    # Variable on y-axis
+    var_y = "z"
+    [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
+        source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
+    )
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
+        x_axis_line=125,
+    )
+    plt.close(fig)
+
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        smooth_contours=False,
+        cfill=True,
+        display=False,
+        return_plt=True,
+        x_axis_label=False,
+        y_axis_label=False,
+    )
+    plt.close(fig)
+
+
+def test_aLIGO_params_SGvMST(source_ground_based, aLIGO_gwinc):
+    # Variable on x-axis
+    var_x = "Seismic Gamma"
+    # Variable on y-axis
+    var_y = "Materials Substrate Temp"
+    [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
+        source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
+    )
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
+    )
+    plt.close(fig)
+
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        smooth_contours=False,
+        cfill=True,
+        display=False,
+        return_plt=True,
+        x_axis_label=False,
+        y_axis_label=False,
+    )
+    plt.close(fig)
 
 
 # ### PTA Only Params
@@ -286,7 +406,10 @@ def test_NANOGrav_WN_params_Mvq(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_NANOGrav_WN_params_Mvchi1(source_pta, NANOGrav_WN):
@@ -297,9 +420,30 @@ def test_NANOGrav_WN_params_Mvchi1(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(
-        var_x, sample_x, var_y, sample_y, SNRMatrix, cfill=False, display=False
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
     )
+    plt.close(fig)
+
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        smooth_contours=False,
+        cfill=True,
+        display=False,
+        return_plt=True,
+    )
+    plt.close(fig)
 
 
 def test_NANOGrav_WN_params_MvTobs(source_pta, NANOGrav_WN):
@@ -310,16 +454,18 @@ def test_NANOGrav_WN_params_MvTobs(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(
+    fig, ax = snrplot.Plot_SNR(
         var_x,
         sample_x,
         var_y,
         sample_y,
         SNRMatrix,
         display=False,
+        return_plt=True,
         xticklabels_kwargs={"rotation": 70, "y": 0.02},
         ylabels_kwargs={"labelpad": -5},
     )
+    plt.close(fig)
 
 
 def test_NANOGrav_WN_params_MvNp(source_pta, NANOGrav_WN):
@@ -330,7 +476,10 @@ def test_NANOGrav_WN_params_MvNp(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_NANOGrav_WN_params_Mvsigma(source_pta, NANOGrav_WN):
@@ -341,7 +490,10 @@ def test_NANOGrav_WN_params_Mvsigma(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
@@ -352,7 +504,10 @@ def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 # ### LISA Only Params
@@ -373,9 +528,17 @@ def test_LISA_params_LvM(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(
-        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, smooth_contours=True
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        display=False,
+        return_plt=True,
+        smooth_contours=False,
     )
+    plt.close(fig)
 
 
 def test_LISA_params_Aaccvz(source_space_based, LISA_ESA):
@@ -386,12 +549,30 @@ def test_LISA_params_Aaccvz(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(
-        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, dl_axis=True
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        display=False,
+        return_plt=True,
+        dl_axis=True,
     )
-    snrplot.Plot_SNR(
-        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, lb_axis=True
+    plt.close(fig)
+
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        display=False,
+        return_plt=True,
+        lb_axis=True,
+        smooth_contours=False,
     )
+    plt.close(fig)
 
 
 def test_LISA_params_AIFOvq(source_space_based, LISA_ESA):
@@ -402,7 +583,10 @@ def test_LISA_params_AIFOvq(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_faccbreaklowvchi1(source_space_based, LISA_ESA):
@@ -413,7 +597,10 @@ def test_LISA_params_faccbreaklowvchi1(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_faccbreakhighvfaccbreaklow(source_space_based, LISA_ESA):
@@ -424,7 +611,10 @@ def test_LISA_params_faccbreakhighvfaccbreaklow(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_Tobsvfaccbreakhigh(source_space_based, LISA_ESA):
@@ -435,7 +625,10 @@ def test_LISA_params_Tobsvfaccbreakhigh(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_fIFObreakvL(source_space_based, LISA_ESA):
@@ -446,7 +639,10 @@ def test_LISA_params_fIFObreakvL(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_paramsMvfIFObreak(source_space_based, LISA_ESA):
@@ -457,7 +653,10 @@ def test_LISA_paramsMvfIFObreak(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_MvAacc(source_space_based, LISA_ESA):
@@ -475,7 +674,10 @@ def test_LISA_params_MvAacc(source_space_based, LISA_ESA):
         inc=0.0,
         integral_consts=4.0,
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)
 
 
 def test_LISA_params_MvAIFO(source_space_based, LISA_ESA):
@@ -486,4 +688,7 @@ def test_LISA_params_MvAIFO(source_space_based, LISA_ESA):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_space_based, LISA_ESA, var_x, sampleRate_x, var_y, sampleRate_y
     )
-    snrplot.Plot_SNR(var_x, sample_x, var_y, sample_y, SNRMatrix, display=False)
+    fig, ax = snrplot.Plot_SNR(
+        var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
+    )
+    plt.close(fig)

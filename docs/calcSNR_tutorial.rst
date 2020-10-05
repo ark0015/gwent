@@ -1,5 +1,4 @@
-
-.. module:: hasasia
+.. module:: gwent
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
           downloaded `here <_static/notebooks/calcSNR_tutorial.ipynb>`_.
@@ -15,7 +14,6 @@ Einstein Telescope) with the signal being an array of coalescing Binary
 Black Holes.
 
 First, we import important modules.
-
 
 .. code:: python
 
@@ -200,7 +198,7 @@ Ground Based Detectors
         T_obs_ground_list = [4*u.yr,1*u.yr,10*u.yr]
         #aLIGO
         noise_dict_aLIGO = {'Infrastructure':
-                      {'Length':[3995,1000,1e5]},
+                      {'Length':[3995,2250,4160]},
                       'Laser':
                       {'Power':[125,10,1e3]},
                       'Seismic':
@@ -215,6 +213,7 @@ Space Based Detectors
 .. code:: python
 
     def Initialize_LISA():
+        #Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017 (https://arxiv.org/abs/1702.00786)
         T_obs_space_list = [4*u.yr,1*u.yr,10*u.yr]
     
         #armlength in meters
@@ -253,9 +252,10 @@ Space Based Detectors
         A_IFO_max = 1.0e-10*u.m
         A_IFO_list = [A_IFO,A_IFO_min,A_IFO_max]
     
+        #Unresolved Galactic WD Background
         Background = False
     
-        #Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017 (https://arxiv.org/abs/1702.00786)
+        #Numerical Transfer Function
         T_type = 'N'
     
         LISA_prop1 = detector.SpaceBased('LISA_prop1',
@@ -309,9 +309,9 @@ won’t tell you what to do!
 .. code:: python
 
     #Number of SNRMatrix rows
-    sampleRate_y = 50
+    sampleRate_y = 100
     #Number of SNRMatrix columns
-    sampleRate_x = 50
+    sampleRate_x = 100
 
 We now use ``Get_SNR_Matrix`` with the variables given and the data
 range to sample the space either logrithmically or linearly based on the
@@ -355,9 +355,9 @@ them all at once.
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_chi1 ,  done. t = :  18.480900287628174
-    Model:  aLIGO_M_vs_q ,  done. t = :  19.485161066055298
-    Model:  aLIGO_M_vs_z ,  done. t = :  15.475419044494629
+    Model:  aLIGO_M_vs_chi1 ,  done. t = :  41.35525178909302
+    Model:  aLIGO_M_vs_q ,  done. t = :  40.72077178955078
+    Model:  aLIGO_M_vs_z ,  done. t = :  31.168396711349487
 
 
 Plotting SNRs
@@ -369,45 +369,41 @@ for simple plots most of them are unneccessary.
 
 .. code:: python
 
-    figsize = get_fig_size()
-    fig, axes = plt.subplots(1,3,figsize=figsize)
-    loglevelMin=-1.0
+    fig, axes = plt.subplots(1,3,figsize=get_fig_size())
     loglevelMax=4.0
     hspace = .1
     wspace = .45
-    
-    ii = 0
     for i,ax in enumerate(axes):
-        if ii == (len(axes))-1:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+        if i == (len(axes)-1):
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=True,display_cbar=True,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,
                      xticklabels_kwargs={'rotation':70,'y':0.02},
                      ylabels_kwargs={'labelpad':-5})
         else:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=False,display_cbar=False,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
-        ii += 1
+        i += 1
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_27_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_26_0.png
 
 
 A simple example for just one figure.
 
 .. code:: python
 
-    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1])
+    Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],smooth_contours=False)
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_29_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_28_0.png
 
 
 Varying Instrument Parameters
@@ -447,41 +443,38 @@ max value from the previous run.
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  0.6834201812744141
-    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  0.7128200531005859
-    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  0.686460018157959
+    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  31.27728819847107
+    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  31.22858500480652
+    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  30.76893949508667
 
 
 .. code:: python
 
     figsize = get_fig_size()
     fig, axes = plt.subplots(1,3,figsize=figsize)
-    loglevelMin=-1.0
     loglevelMax=3.0
     
     wspace = .5
     
-    ii = 0
     for i,ax in enumerate(axes):
-        if ii == (len(axes))-1:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+        if i == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=True,display_cbar=True,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,
                      xticklabels_kwargs={'rotation':70,'y':0.02},ylabels_kwargs={'labelpad':-5})
         else:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=False,display_cbar=False,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      xticklabels_kwargs={'rotation':70,'y':0.02},
                      ylabels_kwargs={'labelpad':1})
-        ii += 1
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_32_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_31_0.png
 
 
 LISA SNR
@@ -516,41 +509,38 @@ parameters.
 
 .. parsed-literal::
 
-    Model:  LISA_prop1_M_vs_chi1 ,  done. t = :  22.185662031173706
-    Model:  LISA_prop1_M_vs_q ,  done. t = :  22.43631887435913
-    Model:  LISA_prop1_M_vs_z ,  done. t = :  18.2937490940094
+    Model:  LISA_prop1_M_vs_chi1 ,  done. t = :  50.03253507614136
+    Model:  LISA_prop1_M_vs_q ,  done. t = :  48.90465474128723
+    Model:  LISA_prop1_M_vs_z ,  done. t = :  40.506542921066284
 
 
 .. code:: python
 
     figsize = get_fig_size()
     fig, axes = plt.subplots(1,3,figsize=figsize)
-    loglevelMin=-1.0
     loglevelMax=7.0
     hspace = .1
     wspace = .45
     
-    ii = 0
     for i,ax in enumerate(axes):
-        if ii == (len(axes))-1:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+        if i == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=True,display_cbar=True,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,
                      xticklabels_kwargs={'rotation':70,'y':0.02},
                      ylabels_kwargs={'labelpad':-5})
         else:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=False,display_cbar=False,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
-        ii += 1
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_35_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_34_0.png
 
 
 Another included feature is the ability to add luminosity distance or
@@ -563,16 +553,17 @@ plots.
     fig, axes = plt.subplots(1,2,figsize=figsize)
     wspace = 0.6
     Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],fig=fig,ax=axes[0],
-             display=False,display_cbar=False,dl_axis=True,
+             display=False,display_cbar=False,dl_axis=True,smooth_contours=False,
              xticklabels_kwargs={'rotation':70,'y':0.02},
              ylabels_kwargs={'labelpad':-3})
     Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],fig=fig,ax=axes[1],
-             lb_axis=True,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02},
+             lb_axis=True,wspace=wspace,smooth_contours=False,
+             xticklabels_kwargs={'rotation':70,'y':0.02},
              ylabels_kwargs={'labelpad':-3})
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_37_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_36_0.png
 
 
 .. code:: python
@@ -601,23 +592,24 @@ plots.
 
 .. parsed-literal::
 
-    Model:  LISA_prop1_M_vs_L ,  done. t = :  17.450850009918213
-    Model:  LISA_prop1_M_vs_A_acc ,  done. t = :  17.71195697784424
-    Model:  LISA_prop1_M_vs_A_IFO ,  done. t = :  18.5645112991333
-    Model:  LISA_prop1_M_vs_f_acc_break_low ,  done. t = :  18.719192028045654
-    Model:  LISA_prop1_M_vs_f_acc_break_high ,  done. t = :  17.924755096435547
-    Model:  LISA_prop1_M_vs_f_IFO_break ,  done. t = :  17.63184094429016
+    Model:  LISA_prop1_M_vs_L ,  done. t = :  39.371663093566895
+    Model:  LISA_prop1_M_vs_A_acc ,  done. t = :  40.02059864997864
+    Model:  LISA_prop1_M_vs_A_IFO ,  done. t = :  39.97913455963135
+    Model:  LISA_prop1_M_vs_f_acc_break_low ,  done. t = :  40.6117742061615
+    Model:  LISA_prop1_M_vs_f_acc_break_high ,  done. t = :  41.86841011047363
+    Model:  LISA_prop1_M_vs_f_IFO_break ,  done. t = :  40.63132047653198
 
 
 .. code:: python
 
     figsize = get_fig_size(scale=1.0)
-    fig, axes = plt.subplots(2,3,figsize=figsize)
+    fig, axes = plt.subplots(3,2,figsize=figsize)
     
-    loglevelMin=-1.0
-    loglevelMax=6.0
-    hspace = .1
-    wspace = .55
+    #Can add lines on plot
+    fiducial_lines = [2.5e9,3e-15,1e-12,0.4*u.mHz.to('Hz'),8*u.mHz.to('Hz'),2*u.mHz.to('Hz')]
+    loglevelMax=5.0
+    hspace = .15
+    wspace = .35
     
     ii = 0
     for i in range(np.shape(axes)[0]):
@@ -626,31 +618,32 @@ plots.
                 Plot_SNR('M',sample_x_array[ii],var_ys[ii],
                          sample_y_array[ii],SNR_array[ii],
                          fig=fig,ax=axes[i,j],display=True,display_cbar=True,
-                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         logLevels_max=loglevelMax,y_axis_line=fiducial_lines[ii],
                          hspace=hspace,wspace=wspace,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
-                         ylabels_kwargs={'labelpad':1})
-            elif ii in [(np.shape(axes)[0]*np.shape(axes)[1])-2,(np.shape(axes)[0]*np.shape(axes)[1])-3]:
+                         ylabels_kwargs={'labelpad':5})
+            elif ii == (np.shape(axes)[0]*np.shape(axes)[1])-2:
                 Plot_SNR('M',sample_x_array[ii],var_ys[ii],
                          sample_y_array[ii],SNR_array[ii],
                          fig=fig,ax=axes[i,j],display=False,display_cbar=False,
-                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         logLevels_max=loglevelMax,y_axis_line=fiducial_lines[ii],
                          hspace=hspace,wspace=wspace,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
-                         ylabels_kwargs={'labelpad':0})
+                         ylabels_kwargs={'labelpad':5})
             else:
                 Plot_SNR('M',sample_x_array[ii],var_ys[ii],
                          sample_y_array[ii],SNR_array[ii],
-                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,x_axis_label=False,
-                         logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                         fig=fig,ax=axes[i,j],display=False,display_cbar=False,
+                         logLevels_max=loglevelMax,y_axis_line=fiducial_lines[ii],
+                         x_axis_label = False,
                          hspace=hspace,wspace=wspace,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
-                         ylabels_kwargs={'labelpad':1})
+                         ylabels_kwargs={'labelpad':5})
             ii += 1
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_39_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_38_0.png
 
 
 PTA SNRs
@@ -684,41 +677,38 @@ Same as the rest, just for example purposes!
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_chi1 ,  done. t = :  15.365206003189087
-    Model:  NANOGrav_WN_M_vs_q ,  done. t = :  10.81308102607727
-    Model:  NANOGrav_WN_M_vs_z ,  done. t = :  15.231884002685547
+    Model:  NANOGrav_WN_M_vs_chi1 ,  done. t = :  27.372398853302002
+    Model:  NANOGrav_WN_M_vs_q ,  done. t = :  23.18591332435608
+    Model:  NANOGrav_WN_M_vs_z ,  done. t = :  23.842024326324463
 
 
 .. code:: python
 
     figsize = get_fig_size()
     fig, axes = plt.subplots(1,3,figsize=figsize)
-    loglevelMin=-1.0
     loglevelMax=5.0
     hspace = .1
     wspace = .45
     
-    ii = 0
     for i,ax in enumerate(axes):
-        if ii == (len(axes))-1:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+        if i == (len(axes))-1:
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=True,display_cbar=True,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,
                      xticklabels_kwargs={'rotation':70,'y':0.02},
                      ylabels_kwargs={'labelpad':-5})
         else:
-            Plot_SNR('M',sample_x_array[ii],var_ys[ii],
-                     sample_y_array[ii],SNR_array[ii],
+            Plot_SNR('M',sample_x_array[i],var_ys[i],
+                     sample_y_array[i],SNR_array[i],
                      fig=fig,ax=ax,display=False,display_cbar=False,
-                     logLevels_min=loglevelMin,logLevels_max=loglevelMax,
+                     logLevels_max=loglevelMax,
                      hspace=hspace,wspace=wspace,xticklabels_kwargs={'rotation':70,'y':0.02})
-        ii += 1
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_42_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_41_0.png
 
 
 There is also functionality to plot two different plots together for
@@ -743,11 +733,16 @@ eazy comparison.
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_45_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_44_0.png
 
 
 These can take a long time if you vary the instrument parameters. Be
 careful with your sample rates!
+
+.. code:: python
+
+    sampleRate_x = 50
+    sampleRate_y = 50
 
 .. code:: python
 
@@ -775,10 +770,10 @@ careful with your sample rates!
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_n_p ,  done. t = :  204.38892197608948
-    Model:  NANOGrav_WN_M_vs_sigma ,  done. t = :  230.15640377998352
-    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  285.314738035202
-    Model:  NANOGrav_WN_M_vs_T_obs ,  done. t = :  451.1644449234009
+    Model:  NANOGrav_WN_M_vs_n_p ,  done. t = :  141.06110644340515
+    Model:  NANOGrav_WN_M_vs_sigma ,  done. t = :  159.12187552452087
+    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  163.1423692703247
+    Model:  NANOGrav_WN_M_vs_T_obs ,  done. t = :  254.33116555213928
 
 
 .. code:: python
@@ -789,6 +784,7 @@ careful with your sample rates!
     loglevelMax=4.0
     hspace = .2
     wspace = .3
+    smooth = False
     
     ii = 0
     for i in range(np.shape(axes)[0]):
@@ -799,6 +795,7 @@ careful with your sample rates!
                          fig=fig,ax=axes[i,j],
                          logLevels_max=loglevelMax,
                          hspace=hspace,wspace=wspace,
+                         smooth_contours=smooth,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
                          ylabels_kwargs={'labelpad':5})
             elif ii == (np.shape(axes)[0]*np.shape(axes)[1])-2:
@@ -807,6 +804,7 @@ careful with your sample rates!
                          fig=fig,ax=axes[i,j],display=False,display_cbar=False,
                          logLevels_max=loglevelMax,
                          hspace=hspace,wspace=wspace,
+                         smooth_contours=smooth,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
                          ylabels_kwargs={'labelpad':2})
             else:
@@ -815,6 +813,7 @@ careful with your sample rates!
                          fig=fig,ax=axes[i,j],display=False,display_cbar=False,x_axis_label=False,
                          logLevels_max=loglevelMax,
                          hspace=hspace,wspace=wspace,
+                         smooth_contours=smooth,
                          xticklabels_kwargs={'rotation':70,'y':0.02},
                          ylabels_kwargs={'labelpad':2})
             ii += 1

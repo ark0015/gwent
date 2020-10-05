@@ -21,24 +21,32 @@ The `gwent.detector` module contains the methods necessary for ...
 
 SNR
 ---
+The `gwent.snr` module contains the methods necessary for ...
+
 .. automodule:: gwent.snr
     :members:
     :inherited-members:
 
 SNRPlot
 -------
+The `gwent.snrplot` module contains the methods necessary for ...
+
 .. automodule:: gwent.snrplot
     :members:
     :inherited-members:
 
 Waveform
 --------
+The `gwent.waveform` module contains the methods necessary for ...
+
 .. automodule:: gwent.waveform
     :members:
     :inherited-members:
 
 Utils
 -----
+The `gwent.utils` module contains the methods necessary for ...
+
 .. automodule:: gwent.utils
     :members:
     :inherited-members:

@@ -1,4 +1,4 @@
-.. module:: hasasia
+.. module:: gwent
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
           downloaded `here <_static/notebooks/strain_plot_tutorial.ipynb>`_.
@@ -21,19 +21,20 @@ First, we load important packages
     
     import matplotlib as mpl
     import matplotlib.pyplot as plt
-    import matplotlib.colors as colors
-    from matplotlib import cm
     
+    from cycler import cycler
     from scipy.constants import golden_ratio
     
     import astropy.constants as const
     import astropy.units as u
-    from astropy.cosmology import z_at_value
-    from astropy.cosmology import WMAP9 as cosmo
     
     import gwent
     import gwent.detector as detector
     import gwent.binary as binary
+    
+    #Turn off warnings for tutorial
+    import warnings
+    warnings.filterwarnings('ignore')
 
 Setting matplotlib and plotting preferences
 
@@ -53,7 +54,8 @@ Setting matplotlib and plotting preferences
     mpl.rcParams['xtick.labelsize'] = 12
     mpl.rcParams['ytick.labelsize'] = 12
     mpl.rcParams['legend.fontsize'] = 10
-    colornorm = colors.Normalize(vmin=0.0, vmax=5.0)
+    color_cycle_wong = ['#000000','#E69F00','#56B4E9','#009E73','#F0E442','#0072B2','#D55E00','#CC79A7']
+    mpl.rcParams['axes.prop_cycle'] = cycler(color=color_cycle_wong)
 
 We need to get the file directories to load in the instrument files.
 
@@ -198,6 +200,7 @@ Plots of loaded LISA examples.
     plt.xlabel(r'Frequency [Hz]')
     plt.ylabel(r'Characteristic Strain')
     plt.tick_params(axis = 'both',which = 'major')
+    plt.legend()
     plt.show()
 
 
@@ -260,12 +263,16 @@ the NANOGrav 11yr continuous wave upper limit.
 NANOGrav 11yr Characteristic Strain
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Using real NANOGrav 11yr data put through ``hasasia``
+Using real NANOGrav 11yr data put through ``hasasia``. We need to
+initialize and fill the values used in the plots (i.e.,
+``NANOGrav_11yr_hasasia.T_obs`` isn’t known until we set the values
+since we loaded it from a file.
 
 .. code:: python
 
     NANOGrav_11yr_hasasia_file = NANOGrav_filedirectory + 'NANOGrav_11yr_S_eff.txt'
     NANOGrav_11yr_hasasia = detector.PTA('NANOGrav 11yr',load_location=NANOGrav_11yr_hasasia_file,I_type='E')
+    NANOGrav_11yr_hasasia.T_obs = 11.4*u.yr
 
 Plots of the loaded PTAs
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -273,18 +280,18 @@ Plots of the loaded PTAs
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(NANOGrav_cw_GWB.fT,NANOGrav_cw_GWB.h_n_f,label = NANOGrav_cw_GWB.name)
-    plt.loglog(NANOGrav_cw_no_GWB.fT,NANOGrav_cw_no_GWB.h_n_f, label = NANOGrav_cw_no_GWB.name)
-    plt.loglog(NANOGrav_cw_ul.fT,NANOGrav_cw_ul.h_n_f, label = NANOGrav_cw_ul.name)
-    plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f, color='C6',
-               label = r'NANOGrav: 11yr with \texttt{hasasia}')
+    plt.loglog(NANOGrav_cw_GWB.fT,NANOGrav_cw_GWB.h_n_f,label = r'Mingarelli et al. (2017), CW Detection Probability w/GWB')
+    plt.loglog(NANOGrav_cw_no_GWB.fT,NANOGrav_cw_no_GWB.h_n_f, label =r'Mingarelli et al. (2017), CW Detection Probability w/o GWB')
+    plt.loglog(NANOGrav_cw_ul.fT,NANOGrav_cw_ul.h_n_f, label = r'Aggarwal et al. (2018), CW Upper Limit')
+    plt.loglog(NANOGrav_11yr_hasasia.fT,np.sqrt(NANOGrav_11yr_hasasia.S_n_f/np.max(np.unique(NANOGrav_11yr_hasasia.T_obs.to('s').value))),
+               label = r'NANOGrav: 11yr Data  corresponding to a source strain with SNR of one')
     
     plt.tick_params(axis = 'both',which = 'major')
-    plt.ylim([1e-15,1e-12])
-    plt.xlim([9e-10,5e-7])
+    plt.ylim([2e-15,6e-12])
+    plt.xlim([4e-10,4e-7])
     plt.xlabel(r'Frequency [Hz]')
-    plt.ylabel('Characteristic Strain')
-    plt.legend(loc='lower right')
+    plt.ylabel('Strain')
+    plt.legend(loc='upper left',fontsize=8)
     plt.show()
 
 
@@ -345,10 +352,10 @@ Plots for Simulated SKA PTAs
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(SKA_WN.fT,SKA_WN.h_n_f, color = 'C0',label = SKA_WN.name)
-    plt.loglog(SKA_WN_GWB.fT,SKA_WN_GWB.h_n_f, linestyle=':', color = 'C1',label = SKA_WN_GWB.name)
-    plt.loglog(SKA_WN_RN.fT,SKA_WN_RN.h_n_f, linestyle='-.', color = 'C3',label = SKA_WN_RN.name)
-    plt.loglog(SKA_Sampled_Noise.fT,SKA_Sampled_Noise.h_n_f, color = 'C6',linestyle='--',label=SKA_Sampled_Noise.name)
+    plt.loglog(SKA_WN.fT,SKA_WN.h_n_f,label = SKA_WN.name)
+    plt.loglog(SKA_WN_GWB.fT,SKA_WN_GWB.h_n_f, linestyle=':',label = SKA_WN_GWB.name)
+    plt.loglog(SKA_WN_RN.fT,SKA_WN_RN.h_n_f, linestyle='-.',label = SKA_WN_RN.name)
+    plt.loglog(SKA_Sampled_Noise.fT,SKA_Sampled_Noise.h_n_f,linestyle='--',label=SKA_Sampled_Noise.name)
     
     plt.tick_params(axis = 'both',which = 'major')
     plt.ylim([1e-18,2e-11])
@@ -411,16 +418,16 @@ Plots for Simulated NANOGrav PTAs
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(NANOGrav_WN.fT,NANOGrav_WN.h_n_f,color = 'C0',
+    plt.loglog(NANOGrav_WN.fT,NANOGrav_WN.h_n_f,
                label=NANOGrav_WN.name)
-    plt.loglog(NANOGrav_WN_GWB.fT,NANOGrav_WN_GWB.h_n_f,color = 'C1',
+    plt.loglog(NANOGrav_WN_GWB.fT,NANOGrav_WN_GWB.h_n_f,
                linestyle=':',label=NANOGrav_WN_GWB.name)
-    plt.loglog(NANOGrav_WN_RN.fT,NANOGrav_WN_RN.h_n_f,color = 'C3',
+    plt.loglog(NANOGrav_WN_RN.fT,NANOGrav_WN_RN.h_n_f,
                linestyle='-.',label=NANOGrav_WN_RN.name)
-    plt.loglog(NANOGrav_Sampled_Noise.fT,NANOGrav_Sampled_Noise.h_n_f,color = 'C4',
+    plt.loglog(NANOGrav_Sampled_Noise.fT,NANOGrav_Sampled_Noise.h_n_f,
                linestyle='--',label=NANOGrav_Sampled_Noise.name)
     
-    plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f, color = 'C6',
+    plt.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f,
                label = r'NANOGrav: 11yr Data')
     
     plt.tick_params(axis = 'both',which = 'major')
@@ -515,11 +522,10 @@ Plots of Generated LISA Detectors
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,label=r'LISA: L3 Proposal, Amaro-Seoane et al., (2017)',color='k')
+    plt.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,label=r'LISA: L3 Proposal, Amaro-Seoane et al., (2017)')
     plt.loglog(LISA_prop1_w_background.fT,LISA_prop1_w_background.h_n_f,label=r'LISA: L3 Proposal + Background',
-               linestyle='--',color=cm.hsv(colornorm(0.8)))
-    plt.loglog(LISA_prop2.fT,LISA_prop2.h_n_f,label=r'Robson et al., (2019)',
-               color='b',zorder=-1)
+               linestyle='--')
+    plt.loglog(LISA_prop2.fT,LISA_prop2.h_n_f,label=r'Robson et al., (2019)',zorder=-1)
     plt.xlabel(r'Frequency [Hz]')
     plt.ylabel(r'Characteristic Strain')
     plt.tick_params(axis = 'both',which = 'major')
@@ -555,7 +561,7 @@ values.
 .. code:: python
 
     noise_dict = {'Infrastructure':
-                    {'Length':1e4},
+                    {'Length':2500},
                   'Materials':
                     {'Substrate':{'Temp':500}}}
     aLIGO_prop2 = detector.GroundBased('aLIGO prop 2',Ground_T_obs,noise_dict=noise_dict)
@@ -779,15 +785,15 @@ Plots of Generated Ground Based Detectors
 .. code:: python
 
     fig = plt.figure()
-    plt.loglog(aLIGO_prop1.fT,aLIGO_prop1.h_n_f,label='Advanced LIGO Prop 1',color='k')
-    plt.loglog(aLIGO_prop2.fT,aLIGO_prop2.h_n_f,label='Advanced LIGO Prop 2',color='C6')
+    plt.loglog(aLIGO_prop1.fT,aLIGO_prop1.h_n_f,label='Advanced LIGO Prop 1')
+    plt.loglog(aLIGO_prop2.fT,aLIGO_prop2.h_n_f,label='Advanced LIGO Prop 2')
     
-    plt.loglog(ET_D.fT,ET_D.h_n_f,label='Hild et al., (2011) ET Design D',color='r')
+    plt.loglog(ET_D.fT,ET_D.h_n_f,label='Hild et al., (2011) ET Design D')
     plt.loglog(Aplus_prop1.fT,Aplus_prop1.h_n_f,label='LIGO A+',
-               linestyle=':',color='b')
+               linestyle=':')
     plt.loglog(Voyager_prop1.fT,Voyager_prop1.h_n_f,label='Voyager',
-               linestyle='--',color=cm.hsv(colornorm(0.8)))
-    plt.loglog(CE1_prop1.fT,CE1_prop1.h_n_f,label='Cosmic Explorer Proposal 1',color=cm.hsv(colornorm(2.8)))
+               linestyle='--')
+    plt.loglog(CE1_prop1.fT,CE1_prop1.h_n_f,label='Cosmic Explorer Proposal 1')
     plt.xlabel(r'Frequency [Hz]')
     plt.ylabel(r'Characteristic Strain')
     plt.tick_params(axis = 'both',which = 'major')
@@ -795,16 +801,8 @@ Plots of Generated Ground Based Detectors
     plt.show()
 
 
-.. parsed-literal::
 
-    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:40: RuntimeWarning: invalid value encountered in sqrt
-      waist = waist * sqrt(((g1*g2)*(1-g1*g2))/((g1+g2-2*g1*g2)**2))
-    /Users/andrewkaiser/anaconda3/envs/gwent-dev/lib/python3.7/site-packages/gwinc/noise/residualgas.py:54: RuntimeWarning: invalid value encountered in less
-      zint[zint < 0] = 0
-
-
-
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_83_1.png
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_83_0.png
 
 
 Generating Binary Black Holes with ``gwent`` in the Frequency Domain
@@ -867,24 +865,20 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 
     fig,ax = plt.subplots()
     
-    ax.loglog(SKA_WN.fT,SKA_WN.h_n_f,color = cm.hsv(colornorm(0.0)),label = r'IPTA ($\sim$2030s)')
-    ax.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f,color = cm.hsv(colornorm(0.5)),label = 'NANOGrav (2018)')
-    ax.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,color = cm.hsv(colornorm(1.75)),label = 'LISA ($\sim$2030s)')
-    ax.loglog(aLIGO_1.fT,aLIGO_1.h_n_f,color = cm.hsv(colornorm(2.8)),label = 'aLIGO (2016)')
-    ax.loglog(ET_D.fT,ET_D.h_n_f,color = cm.hsv(colornorm(2.5)),label = 'Einstein Telescope ($\sim$2030s)')
+    ax.loglog(SKA_WN.fT,SKA_WN.h_n_f,label = r'IPTA ($\sim$2030s)')
+    ax.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f,label = 'NANOGrav (2018)')
+    ax.loglog(LISA_prop1.fT,LISA_prop1.h_n_f,label = 'LISA ($\sim$2030s)')
+    ax.loglog(aLIGO_1.fT,aLIGO_1.h_n_f,label = 'aLIGO (2016)')
+    ax.loglog(ET_D.fT,ET_D.h_n_f,label = 'Einstein Telescope ($\sim$2030s)')
     
-    ax.loglog(source_3.f,binary.Get_Char_Strain(source_3),color = cm.hsv(colornorm(4.5)),\
+    ax.loglog(source_3.f,binary.Get_Char_Strain(source_3),
               label = r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(np.log10(M[2]),q[2],z[2],x1[2]))
-    ax.scatter(source_3.instrument.f_opt,source_3.h_gw,color = cm.hsv(colornorm(4.5)))
     
-    ax.loglog(source_1.f,binary.Get_Char_Strain(source_1),color = cm.hsv(colornorm(0.8)),\
+    ax.loglog(source_1.f,binary.Get_Char_Strain(source_1),
               label = r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.2f$' %(np.log10(M[0]),q[0],z[0],x1[0]))
-    ax.scatter(source_1.instrument.f_opt,source_1.h_gw,color = cm.hsv(colornorm(0.8)))
     
-    ax.loglog(source_2.f,binary.Get_Char_Strain(source_2),color = cm.hsv(colornorm(3.0)),\
+    ax.loglog(source_2.f,binary.Get_Char_Strain(source_2),
               label = r'$M = %.0f$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.1f$' %(M[1],q[1],z[1],x1[1]))
-    ax.scatter(source_2.instrument.f_opt,source_2.h_gw,color = cm.hsv(colornorm(3.0)))
-    
     
     xlabel_min = -10
     xlabel_max = 4

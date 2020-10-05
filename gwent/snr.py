@@ -66,7 +66,7 @@ def Get_SNR_Matrix(
 
     switch = False
     if recalculate_noise == "y":
-        """Calculation runs much faster when it doesn't recalculate 
+        """Calculation runs much faster when it doesn't recalculate
         the noise every time."""
         switch = True
         recalculate_noise = "x"
@@ -89,7 +89,12 @@ def Get_SNR_Matrix(
             # Update Attribute (also updates dictionary)
             if isinstance(instrument, detector.GroundBased):
                 var_x_names = var_x.split()
-                updated_dict_x = {var_x_names[0]: {var_x_names[1]: sample_x[i]}}
+                if len(var_x_names) == 2:
+                    updated_dict_x = {var_x_names[0]: {var_x_names[1]: sample_x[i]}}
+                elif len(var_x_names) == 3:
+                    updated_dict_x = {
+                        var_x_names[0]: {var_x_names[1]: {var_x_names[2]: sample_x[i]}}
+                    }
                 instrument.Set_Noise_Dict(updated_dict_x)
             else:
                 setattr(instrument, var_x, sample_x[i])
@@ -106,7 +111,14 @@ def Get_SNR_Matrix(
                 # Update Attribute (also updates dictionary)
                 if isinstance(instrument, detector.GroundBased):
                     var_y_names = var_y.split()
-                    updated_dict_y = {var_y_names[0]: {var_y_names[1]: sample_y[i]}}
+                    if len(var_y_names) == 2:
+                        updated_dict_y = {var_y_names[0]: {var_y_names[1]: sample_y[i]}}
+                    elif len(var_y_names) == 3:
+                        updated_dict_y = {
+                            var_y_names[0]: {
+                                var_y_names[1]: {var_y_names[2]: sample_y[i]}
+                            }
+                        }
                     instrument.Set_Noise_Dict(updated_dict_y)
                 else:
                     setattr(instrument, var_y, sample_y[j])
@@ -300,12 +312,13 @@ def Recalculate_Noise(source, instrument):
     if not isinstance(instrument, detector.GroundBased):
         if hasattr(instrument, "P_n_f"):
             del instrument.P_n_f
+
+    if hasattr(instrument, "fT"):
+        del instrument.fT
     if hasattr(instrument, "S_n_f"):
         del instrument.S_n_f
     if hasattr(instrument, "h_n_f"):
         del instrument.h_n_f
-    if hasattr(instrument, "fT"):
-        del instrument.fT
 
     if isinstance(instrument, detector.PTA) and hasattr(
         instrument, "_sensitivitycurve"
@@ -331,17 +344,12 @@ def Calc_Mono_SNR(source, instrument, inc=None):
     if not hasattr(source, "instrument"):
         source.instrument = instrument
 
-    if not isinstance(instrument, detector.PTA):
-        source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
-    else:
-        if inc is not None:
-            source.h_gw = binary.Get_Mono_Strain(source, inc=inc)
-        else:
-            source.h_gw = binary.Get_Mono_Strain(source, inc=0.0)
+    # Assumes mass and frequency in source class are in the source frame
+    source.h_gw = binary.Get_Mono_Strain(source, inc=inc, frame="source")
     indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
 
     return source.h_gw * np.sqrt(
-        np.max(instrument.T_obs.to("s")) / instrument.S_n_f[indxfgw]
+        np.max(np.unique(instrument.T_obs.to("s"))) / instrument.S_n_f[indxfgw]
     )
 
 
@@ -418,28 +426,3 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
         SNRsqrd = integral_consts * np.trapz(integrand, f_cut, axis=0)  # SNR**2
 
     return np.sqrt(SNRsqrd)
-
-
-def Save_SNR(
-    sample_x, sample_y, SNRMatrix, save_location, SNR_filename, sample_filename
-):
-    """Saves SNR Matrix
-
-    Parameters
-    ----------
-    sample_x : array
-        samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    SNRMatrix : array-like
-        the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
-    save_location : str
-        the directory to which the Samples and SNR are saved
-    SNR_filename : str
-        the name of the SNR file
-    sample_filename : str
-        the name of the sample file
-
-    """
-    np.savetxt(save_location + SNR_filename, SNRMatrix)
-    np.savetxt(save_location + sample_filename, np.transpose([sample_x, sample_y]))
