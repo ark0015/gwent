@@ -611,7 +611,6 @@ class PTA:
                             setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
 
         if hasattr(self, "rn_amp"):
-
             if hasattr(self, "sb_amp"):
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
@@ -626,7 +625,6 @@ class PTA:
                     freqs=self.fT.value,
                 )
             else:
-
                 psrs = hassim.sim_pta(
                     timespan=self.T_obs.value,
                     cad=self.cadence.value,
