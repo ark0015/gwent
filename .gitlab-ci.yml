@@ -1,0 +1,60 @@
+image: ligo/software:stretch
+
+stages:
+- test
+- deploy
+
+test:
+  stage: test
+  before_script:
+  - echo $CI_COMMIT_SHA | cut -b1-8 > gitID.txt
+  script:
+  - apt-get update -qq
+  - apt-get install -y -qq python3-yaml python3-scipy python3-matplotlib python3-ipython lalsimulation-python3
+  - git clone https://gitlab-ci-token:ci_token@git.ligo.org/gwinc/inspiral_range.git
+  - export PYTHONPATH=inspiral_range
+  - export MPLBACKEND=agg
+  - python3 -m gwinc aLIGO -s aLIGO.png
+  - python3 -m gwinc Aplus -s Aplus.png
+  - python3 -m gwinc Voyager -s Voyager.png
+  - python3 -m gwinc.test aLIGO -t 10e-6 -k Seismic -k "Substrate Thermo-Elastic" -p -s aLIGO_test.png
+  - python3 -m gwinc.test -t 100e-6 -k Seismic -k "Substrate Thermo-Elastic" Aplus -p -s Aplus_test.png
+  after_script:
+  - rm gitID.txt
+  cache:
+    key: "$CI_PROJECT_NAMESPACE:$CI_PROJECT_NAME:$CI_JOB_NAME"
+    untracked: true
+  artifacts:
+    when: always
+    expire_in: 4w
+    paths:
+    - aLIGO.png
+    - Aplus.png
+    - Voyager.png
+    - aLIGO_test.png
+    - Aplus_test.png
+
+pages:
+  stage: deploy
+  dependencies:
+  - test
+  script:
+  - mkdir public
+  - mv aLIGO.png public/
+  - mv Aplus.png public/
+  - mv Voyager.png public/
+  - mv aLIGO_test.png public/ || true
+  - mv Aplus_test.png public/ || true
+  - apt-get install -y -qq python3-pip python3-dev make
+  - pip3 install sphinx sphinx-rtd-theme
+  - cd docs
+  - make html
+  - cd ..
+  - mv ./build/sphinx/html/* public/
+
+  artifacts:
+    paths:
+    - public
+    expire_in: 4w
+  only:
+  - master
