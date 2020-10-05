@@ -1,5 +1,5 @@
 import numpy as np
-import os
+import os, sys
 import astropy.constants as const
 import astropy.units as u
 import scipy.interpolate as interp
@@ -11,11 +11,13 @@ from astropy.cosmology import WMAP9 as cosmo
 import gwent
 from . import utils
 
-import gwinc
 import hasasia.sensitivity as hassens
 import hasasia.sim as hassim
 
 current_path = os.path.abspath(gwent.__path__[0])
+sys.path.insert(0, current_path + "/vendor/github.com/ark0015/pygwinc_clone")
+import gwinc
+
 load_directory = os.path.join(current_path, "LoadFiles/")
 
 

@@ -17,7 +17,6 @@ requirements = [
     "astropy",
     "hasasia",
     "matplotlib",
-    "pygwinc @ git+https://git.ligo.org/gwinc/pygwinc.git@65396ee42e851ab7189618cabe1c12081b5d982e",
 ]
 
 setup_requirements = [
@@ -53,6 +52,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/ark0015/gwent",
-    version="0.2.1",
+    version="0.3.0",
     zip_safe=False,
 )

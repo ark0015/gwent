@@ -1,6 +1,10 @@
 =======
 History
 =======
+0.3.0 (2020-10-5)
+-------------------
+* Turning pygwinc install into vendor inside gwent
+
 0.2.1 (2020-10-5)
 -------------------
 * Update to ground-based SNR calculation
