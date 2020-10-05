@@ -17,6 +17,8 @@ requirements = [
     "astropy",
     "hasasia",
     "matplotlib",
+    "h5py",
+    "pyyaml"
 ]
 
 setup_requirements = [
