@@ -23,10 +23,10 @@ def load_module(name_or_path):
 
     """
     if os.path.exists(name_or_path):
-        path = name_or_path.rstrip('/')
+        path = name_or_path.rstrip("/")
         modname = os.path.splitext(os.path.basename(path))[0]
         if os.path.isdir(path):
-            path = os.path.join(path, '__init__.py')
+            path = os.path.join(path, "__init__.py")
         spec = importlib.util.spec_from_file_location(modname, path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)

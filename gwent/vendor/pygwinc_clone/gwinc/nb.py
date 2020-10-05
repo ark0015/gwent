@@ -20,15 +20,11 @@ def quadsum(data):
     return np.nansum(data, 0)
 
 
-
 class BudgetItem:
-    """GWINC BudgetItem class
+    """GWINC BudgetItem class"""
 
-    """
     def load(self):
-        """Overload method for initial loading of static data.
-
-        """
+        """Overload method for initial loading of static data."""
         return None
 
     def update(self, **kwargs):
@@ -71,8 +67,8 @@ class BudgetItem:
 
     def __str__(self):
         # FIXME: provide info on internal state (load/update/calc/etc.)
-        return '<{} {}>'.format(
-            ' '.join([c.__name__ for c in self.__class__.__bases__]),
+        return "<{} {}>".format(
+            " ".join([c.__name__ for c in self.__class__.__bases__]),
             self.name,
         )
 
@@ -82,12 +78,11 @@ class BudgetItem:
         return self.__freq
 
     def interpolate(self, freq, data):
-        """Interpolate data to the evaluation frequencies.
-
-        """
+        """Interpolate data to the evaluation frequencies."""
         func = scipy.interpolate.interp1d(
-            freq, data,
-            kind='nearest',
+            freq,
+            data,
+            kind="nearest",
             copy=False,
             assume_sorted=True,
             bounds_error=False,
@@ -106,6 +101,7 @@ class Calibration(BudgetItem):
     (self.freq).
 
     """
+
     def __call__(self, data):
         """Calibrate input data.
 
@@ -114,8 +110,11 @@ class Calibration(BudgetItem):
 
         """
         cal = self.calc()
-        assert data.shape == cal.shape, \
-            "data shape does not match calibration ({} != {})".format(data.shape, cal.shape)
+        assert (
+            data.shape == cal.shape
+        ), "data shape does not match calibration ({} != {})".format(
+            data.shape, cal.shape
+        )
         return data * cal
 
 
@@ -208,8 +207,8 @@ class Budget(Noise):
         # do this because we're not defining a standard way to extract
         # IFO variables that get passed around in a reasonable way.
         # how can we clarify this?
-        if 'ifo' not in kwargs and getattr(self, 'ifo', None):
-            self.kwargs['ifo'] = getattr(self, 'ifo', None)
+        if "ifo" not in kwargs and getattr(self, "ifo", None):
+            self.kwargs["ifo"] = getattr(self, "ifo", None)
         # all noise objects keyed by name
         self._noise_objs = collections.OrderedDict()
         # all cal objects keyed by name
@@ -235,7 +234,9 @@ class Budget(Noise):
             sset = set(noises)
             nset = set([name for name in self._noise_objs.keys()])
             if not sset <= nset:
-                raise AttributeError("unknown noise terms: {}".format(' '.join(sset-nset)))
+                raise AttributeError(
+                    "unknown noise terms: {}".format(" ".join(sset - nset))
+                )
 
     def __init_noise(self, nc):
         cal = None
@@ -243,10 +244,7 @@ class Budget(Noise):
             noise, cal = nc[:2]
         else:
             noise = nc
-        noise_obj = noise(
-            *self.args,
-            **self.kwargs
-        )
+        noise_obj = noise(*self.args, **self.kwargs)
         return noise_obj.name, noise_obj, cal
 
     def __add_noise(self, noise_obj, cal):
@@ -302,9 +300,7 @@ class Budget(Noise):
 
         """
         yield (self,)
-        for item in itertools.chain(
-                self._cal_objs.values(),
-                self._noise_objs.values()):
+        for item in itertools.chain(self._cal_objs.values(), self._noise_objs.values()):
             if isinstance(item, Budget):
                 for i in item.walk():
                     yield (self,) + i
@@ -314,16 +310,16 @@ class Budget(Noise):
     def load(self):
         """Load all noise and cal objects."""
         for name, item in itertools.chain(
-                self._cal_objs.items(),
-                self._noise_objs.items()):
+            self._cal_objs.items(), self._noise_objs.items()
+        ):
             logging.debug("load {}".format(item))
             item.load()
 
     def update(self, **kwargs):
         """Update all noise and cal objects with supplied kwargs."""
         for name, item in itertools.chain(
-                self._cal_objs.items(),
-                self._noise_objs.items()):
+            self._cal_objs.items(), self._noise_objs.items()
+        ):
             logging.debug("update {}".format(item))
             item.update(**kwargs)
 
@@ -351,10 +347,12 @@ class Budget(Noise):
             return nd
 
     def calc(self):
-        """Calculate sum of all noises.
-
-        """
-        data = [self.calc_noise(name) for name in self._noise_objs.keys() if name in self._budget_noises]
+        """Calculate sum of all noises."""
+        data = [
+            self.calc_noise(name)
+            for name in self._noise_objs.keys()
+            if name in self._budget_noises
+        ]
         return quadsum(data)
 
     def calc_trace(self, calibration=None, calc=True):
@@ -387,7 +385,7 @@ class Budget(Noise):
             d[name] = noise.calc_trace(calc=False)
         # allocate total
         if self._budget_noises:
-            d['Total'] = None, self.style
+            d["Total"] = None, self.style
         # allocate constituent
         for name, noise in self._noise_objs.items():
             if name not in self._budget_noises:
@@ -412,9 +410,9 @@ class Budget(Noise):
         constituent_data = []
         for name in self._budget_noises:
             if isinstance(d[name], dict):
-                data = d[name]['Total'][0]
+                data = d[name]["Total"][0]
             else:
                 data = d[name][0]
             constituent_data.append(data)
-        d['Total'] = quadsum(constituent_data), self.style
+        d["Total"] = quadsum(constituent_data), self.style
         return d

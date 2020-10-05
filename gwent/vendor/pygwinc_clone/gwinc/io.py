@@ -2,7 +2,7 @@ import datetime
 import h5py
 
 
-SCHEMA = 'GWINC noise budget'
+SCHEMA = "GWINC noise budget"
 SCHEMA_VERSION = 1
 
 
@@ -24,15 +24,15 @@ def save_hdf5(path, freq, traces, **kwargs):
     See HDF5_SCHEMA.
 
     """
-    with h5py.File(path, 'w') as f:
-        f.attrs['SCHEMA'] = SCHEMA
-        f.attrs['SCHEMA_VERSION'] = SCHEMA_VERSION
+    with h5py.File(path, "w") as f:
+        f.attrs["SCHEMA"] = SCHEMA
+        f.attrs["SCHEMA_VERSION"] = SCHEMA_VERSION
         # FIXME: add budget code hash or something
-        f.attrs['date'] = datetime.datetime.now().isoformat()
+        f.attrs["date"] = datetime.datetime.now().isoformat()
         for key, val in kwargs.items():
             f.attrs[key] = val
-        f.create_dataset('Freq', data=freq)
-        tgrp = f.create_group('traces')
+        f.create_dataset("Freq", data=freq)
+        tgrp = f.create_group("traces")
         _write_trace_recursive(tgrp, traces)
 
 
@@ -52,9 +52,9 @@ def load_hdf5(path):
     Returns a recursive traces dictionary.  See HDF5_SCHEMA.
 
     """
-    with h5py.File(path, 'r') as f:
+    with h5py.File(path, "r") as f:
         # FIXME: check SCHEMA name/version
-        freq = f['Freq'].value
-        traces = _read_trace_recursive(f['/traces'])
+        freq = f["Freq"].value
+        traces = _read_trace_recursive(f["/traces"])
         attrs = dict(f.attrs.items())
         return freq, traces, attrs

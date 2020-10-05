@@ -27,7 +27,7 @@ def susptherm(f, ifo):
     noise = zeros((1, f.size))
 
     # if the temperature is uniform along the suspension
-    if 'Temp' in ifo.Suspension:
+    if "Temp" in ifo.Suspension:
         ##########################################################
         # Suspension TFs
         ##########################################################
@@ -42,10 +42,10 @@ def susptherm(f, ifo):
         # convert to beam line motion
         #  theta is squared because we rotate by theta into the suspension
         #  basis, and by theta to rotate back to the beam line basis
-        dxdF = hForce + theta**2 * vForce
+        dxdF = hForce + theta ** 2 * vForce
 
         # thermal noise (m^2/Hz) for one suspension
-        w = 2*pi*f
+        w = 2 * pi * f
         noise = 4 * kB * ifo.Suspension.Temp * abs(imag(dxdF)) / w
 
     # if the temperature is set for each suspension stage
@@ -68,10 +68,10 @@ def susptherm(f, ifo):
             # convert to beam line motion.  theta is squared because
             # we rotate by theta into the suspension basis, and by
             # theta to rotate back to the beam line basis
-            dxdF[n, :] = hForce[n, :] + theta**2 * vForce[n, :]
+            dxdF[n, :] = hForce[n, :] + theta ** 2 * vForce[n, :]
 
             # thermal noise (m^2/Hz) for one suspension
-            w = 2*pi*f
+            w = 2 * pi * f
             noise += 4 * kB * stage.Temp * abs(imag(dxdF[n, :])) / w
 
     # 4 masses, turn into gravitational wave strain

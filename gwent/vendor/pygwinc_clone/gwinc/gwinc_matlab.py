@@ -13,6 +13,7 @@ from .struct import Struct
 
 MATLAB_ENGINE = None
 
+
 class Matlab:
     def __init__(self, gwincpath=None):
         """Start a MATLAB engine for GWINC processing
@@ -29,8 +30,8 @@ class Matlab:
         import matlab.engine
 
         if not gwincpath:
-            gwincpath = os.path.expanduser(os.getenv('GWINCPATH', 'gwinc'))
-        if not os.path.exists(os.path.join(gwincpath, 'gwinc.m')):
+            gwincpath = os.path.expanduser(os.getenv("GWINCPATH", "gwinc"))
+        if not os.path.exists(os.path.join(gwincpath, "gwinc.m")):
             raise IOError("Invalid MATLAB GWINC path: '{}'".format(gwincpath))
 
         logging.info("starting MATLAB engine...")
@@ -38,7 +39,6 @@ class Matlab:
 
         logging.info("gwinc path: {}".format(gwincpath))
         MATLAB_ENGINE.addpath(gwincpath)
-
 
     @property
     def eng(self):
@@ -54,7 +54,6 @@ class Matlab:
     def eval(self, *args, **kwargs):
         return MATLAB_ENGINE.eval(*args, **kwargs)
 
-
     def load_array(self, var, array):
         """Load numpy array into workspace as vector.
 
@@ -64,8 +63,7 @@ class Matlab:
         """
         # this stupidity because you can't just give the engine a np.ndarray
         MATLAB_ENGINE.workspace[var] = array.tolist()
-        MATLAB_ENGINE.eval('{0} = cell2mat({0});'.format(var), nargout=0)
-
+        MATLAB_ENGINE.eval("{0} = cell2mat({0});".format(var), nargout=0)
 
     def load_struct(self, var, struct):
         """Load pygwinc.Struct array into workspace as vector.
@@ -75,11 +73,10 @@ class Matlab:
 
         """
         # similar stupidity prevents this (this time recarrays in the dict):
-        #matlab.workspace['ifo'] = ifo.to_dict(array=True)
-        with tempfile.NamedTemporaryFile(suffix='.mat') as f:
+        # matlab.workspace['ifo'] = ifo.to_dict(array=True)
+        with tempfile.NamedTemporaryFile(suffix=".mat") as f:
             scipy.io.savemat(f, struct.to_dict(array=True))
             MATLAB_ENGINE.eval("{} = load('{}');".format(var, f.name), nargout=0)
-
 
     def extract(self, *wvars):
         """Extract workspace variables from engine.
@@ -88,7 +85,7 @@ class Matlab:
 
         """
         assert len(wvars) > 0
-        with tempfile.NamedTemporaryFile(suffix='.mat') as f:
+        with tempfile.NamedTemporaryFile(suffix=".mat") as f:
             MATLAB_ENGINE.save(f.name, *wvars, nargout=0)
             data = scipy.io.loadmat(f, squeeze_me=True, struct_as_record=False)
         if len(wvars) == 1:
@@ -96,17 +93,18 @@ class Matlab:
         else:
             return data
 
+
 ##################################################
 
 NOISE_NAME_MAP = {
-    'Quantum': 'Quantum Vacuum',
-    'Newtonian': 'Newtonian Gravity',
-    'CoatBrown': 'Coating Brownian',
-    'CoatTO': 'Coating Thermo-Optic',
-    'SubBrown': 'Substrate Brownian',
-    'SubTE': 'Substrate Thermo-Elastic',
-    'SuspThermal': 'Suspension Thermal',
-    'ResGas': 'Excess Gas',
+    "Quantum": "Quantum Vacuum",
+    "Newtonian": "Newtonian Gravity",
+    "CoatBrown": "Coating Brownian",
+    "CoatTO": "Coating Thermo-Optic",
+    "SubBrown": "Substrate Brownian",
+    "SubTE": "Substrate Thermo-Elastic",
+    "SuspThermal": "Suspension Thermal",
+    "ResGas": "Excess Gas",
 }
 
 
@@ -119,7 +117,7 @@ def ifo_matlab_transform(ifo):
 
     """
     # add constants
-    CONSTS = {k:v for k, v in const.__dict__ if not k.startswith('__')}
+    CONSTS = {k: v for k, v in const.__dict__ if not k.startswith("__")}
     ifo.Constants = Struct.from_dict(CONSTS)
 
     # copy tempurature into Constants
@@ -133,7 +131,7 @@ def ifo_matlab_transform(ifo):
 
 def _rename_noises(d):
     nd = {}
-    for k,v in d.items():
+    for k, v in d.items():
         try:
             nk = NOISE_NAME_MAP[k]
         except KeyError:
@@ -165,29 +163,29 @@ def gwinc_matlab(f, ifoin, plot=False):
 
     matlab = Matlab()
 
-    matlab.load_array('f', f)
-    matlab.load_struct('ifo', ifo)
+    matlab.load_array("f", f)
+    matlab.load_struct("ifo", ifo)
 
     if plot:
-        plot_flag = '3'
+        plot_flag = "3"
     else:
-        plot_flag = '0'
+        plot_flag = "0"
 
     cmd = "[score, noises, ifo] = gwinc(f, [], ifo, SourceModel, {});".format(plot_flag)
     matlab.eval(cmd, nargout=0)
 
-    data = matlab.extract('score', 'noises', 'ifo')
+    data = matlab.extract("score", "noises", "ifo")
 
-    score = data['score']
-    mnoises = Struct.from_matstruct(data['noises']).to_dict()
+    score = data["score"]
+    mnoises = Struct.from_matstruct(data["noises"]).to_dict()
     ##### blow out 'MirrorThermal' sub-dict
-    for n,d in mnoises['MirrorThermal'].items():
-        if n == 'Total':
+    for n, d in mnoises["MirrorThermal"].items():
+        if n == "Total":
             continue
         mnoises[n] = d
-    del mnoises['MirrorThermal']
+    del mnoises["MirrorThermal"]
     #####
     noises = _rename_noises(mnoises)
-    ifo = Struct.from_matstruct(data['ifo'])
+    ifo = Struct.from_matstruct(data["ifo"])
 
     return score, noises, ifo

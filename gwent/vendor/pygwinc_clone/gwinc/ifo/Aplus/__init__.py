@@ -3,7 +3,7 @@ from gwinc.ifo.noises import *
 
 class Aplus(nb.Budget):
 
-    name = 'A+'
+    name = "A+"
 
     noises = [
         QuantumVacuum,

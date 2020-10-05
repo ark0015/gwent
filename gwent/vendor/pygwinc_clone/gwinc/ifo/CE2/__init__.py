@@ -1,15 +1,14 @@
 from gwinc.ifo.noises import *
 
+
 class Newtonian(nb.Budget):
-    """Newtonian Gravity
+    """Newtonian Gravity"""
 
-    """
-
-    name = 'Newtonian'
+    name = "Newtonian"
 
     style = dict(
-        label='Newtonian',
-        color='#15b01a',
+        label="Newtonian",
+        color="#15b01a",
     )
 
     noises = [
@@ -18,16 +17,15 @@ class Newtonian(nb.Budget):
         NewtonianInfrasound,
     ]
 
+
 class Coating(nb.Budget):
-    """Coating Thermal
+    """Coating Thermal"""
 
-    """
-
-    name = 'Coating'
+    name = "Coating"
 
     style = dict(
-        label='Coating Thermal',
-        color='#fe0002',
+        label="Coating Thermal",
+        color="#fe0002",
     )
 
     noises = [
@@ -35,17 +33,16 @@ class Coating(nb.Budget):
         CoatingThermoOptic,
     ]
 
+
 class Substrate(nb.Budget):
-    """Substrate Thermal
+    """Substrate Thermal"""
 
-    """
-
-    name = 'Substrate'
+    name = "Substrate"
 
     style = dict(
-        label='Substrate Thermal',
-        color='#fb7d07',
-        linestyle='--',
+        label="Substrate Thermal",
+        color="#fb7d07",
+        linestyle="--",
     )
 
     noises = [
@@ -55,9 +52,10 @@ class Substrate(nb.Budget):
         SubstrateThermoElastic,
     ]
 
+
 class CE2(nb.Budget):
 
-    name = 'Cosmic Explorer 2'
+    name = "Cosmic Explorer 2"
 
     noises = [
         QuantumVacuum,

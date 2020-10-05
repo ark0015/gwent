@@ -16,15 +16,19 @@ from scipy.io.matlab.mio5_params import mat_struct
 # of the parser that recognize scientific notation appropriately.
 yaml_loader = yaml.SafeLoader
 yaml_loader.add_implicit_resolver(
-    'tag:yaml.org,2002:float',
-    re.compile('''^(?:
+    "tag:yaml.org,2002:float",
+    re.compile(
+        """^(?:
      [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
     |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
     |\\.[0-9_]+(?:[eE][-+][0-9]+)?
     |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
     |[-+]?\\.(?:inf|Inf|INF)
-    |\\.(?:nan|NaN|NAN))$''', re.X),
-    list('-+0123456789.'))
+    |\\.(?:nan|NaN|NAN))$""",
+        re.X,
+    ),
+    list("-+0123456789."),
+)
 
 
 def dictlist2recarray(l):
@@ -33,8 +37,9 @@ def dictlist2recarray(l):
             return float
         else:
             return type(v)
+
     # get dtypes from first element dict
-    dtypes = [(k, dtype(v)) for k,v in l[0].items()]
+    dtypes = [(k, dtype(v)) for k, v in l[0].items()]
     values = [tuple(el.values()) for el in l]
     out = np.array(values, dtype=dtypes)
     return out.view(np.recarray)
@@ -76,38 +81,32 @@ class Struct(object):
     ##########
 
     def __init__(self, **kwargs):
-        """Arguments can pre-fill the structure
-
-        """
+        """Arguments can pre-fill the structure"""
         self.__dict__.update(kwargs)
 
     def __getitem__(self, key):
-        """Get a (possibly nested) value from the struct.
-
-        """
-        if '.' in key:
-            k, r = key.split('.', 1)
+        """Get a (possibly nested) value from the struct."""
+        if "." in key:
+            k, r = key.split(".", 1)
             # FIXME: this is inelegant.  better done with regexp?
-            if len(k.split('[')) > 1:
-                kl, i = k.split('[')
-                i = int(i.strip(']'))
+            if len(k.split("[")) > 1:
+                kl, i = k.split("[")
+                i = int(i.strip("]"))
                 return self.__dict__[kl][i][r]
             return self.__dict__[k][r]
         else:
             return self.__dict__[key]
 
     def get(self, key, default):
-        """Get a (possibly nested) value from the struct, or default.
-
-        """
+        """Get a (possibly nested) value from the struct, or default."""
         try:
             return self[key]
         except KeyError:
             return default
 
     def __setitem__(self, key, value):
-        if '.' in key:
-            k, r = key.split('.', 1)
+        if "." in key:
+            k, r = key.split(".", 1)
             self.__dict__[k][r] = value
         else:
             self.__dict__[key] = value
@@ -127,7 +126,6 @@ class Struct(object):
     def __contains__(self, key):
         return key in self.__dict__
 
-
     def to_dict(self, array=False):
         """Return nested dictionary representation of Struct.
 
@@ -138,7 +136,7 @@ class Struct(object):
 
         """
         d = {}
-        for k,v in self.__dict__.items():
+        for k, v in self.__dict__.items():
             if isinstance(v, type(self)):
                 d[k] = v.to_dict(array=array)
             else:
@@ -166,7 +164,7 @@ class Struct(object):
         """
         y = yaml.dump(self.to_dict(), default_flow_style=False)
         if path:
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 f.write(y)
         else:
             return y
@@ -175,27 +173,24 @@ class Struct(object):
     #     return self.to_yaml().strip('\n')
 
     def __str__(self):
-        return '<GWINC Struct: {}>'.format(list(self.__dict__.keys()))
+        return "<GWINC Struct: {}>".format(list(self.__dict__.keys()))
 
     def __iter__(self):
         return iter(self.__dict__)
 
     def walk(self):
-        """Iterate over all leaves in the struct tree.
-
-        """
-        for k,v in self.__dict__.items():
+        """Iterate over all leaves in the struct tree."""
+        for k, v in self.__dict__.items():
             if isinstance(v, type(self)):
-                for sk,sv in v.walk():
-                    yield k+'.'+sk, sv
+                for sk, sv in v.walk():
+                    yield k + "." + sk, sv
             else:
                 try:
-                    for i,vv in enumerate(v):
-                        for sk,sv in vv.walk():
-                            yield '{}[{}].{}'.format(k,i,sk), sv
+                    for i, vv in enumerate(v):
+                        for sk, sv in vv.walk():
+                            yield "{}[{}].{}".format(k, i, sk), sv
                 except (AttributeError, TypeError):
                     yield k, v
-
 
     def diff(self, other):
         """Return tuple of differences between target IFO.
@@ -215,8 +210,7 @@ class Struct(object):
                 diffs.append((k, v, ov))
         return diffs
 
-
-    def to_txt(self, path=None, fmt='0.6e', delimiter=': ', end=''):
+    def to_txt(self, path=None, fmt="0.6e", delimiter=": ", end=""):
         """Return text represenation of Struct, one element per line.
 
         Struct keys use '.' to indicate hierarchy.  The `fmt` keyword
@@ -235,29 +229,35 @@ class Struct(object):
             elif isinstance(v, (list, np.ndarray)):
                 if isinstance(v, list):
                     v = np.array(v)
-                v = np.array2string(v, separator='', max_line_width=np.Inf, formatter={'all':lambda x: "{:0.6e} ".format(x)})
-                base = 's'
+                v = np.array2string(
+                    v,
+                    separator="",
+                    max_line_width=np.Inf,
+                    formatter={"all": lambda x: "{:0.6e} ".format(x)},
+                )
+                base = "s"
             else:
-                base = 's'
-            txt.write(u'{key}{delimiter}{value:{base}}{end}\n'.format(
-                key=k, value=v, base=base,
-                delimiter=delimiter,
-                end=end,
-            ))
+                base = "s"
+            txt.write(
+                u"{key}{delimiter}{value:{base}}{end}\n".format(
+                    key=k,
+                    value=v,
+                    base=base,
+                    delimiter=delimiter,
+                    end=end,
+                )
+            )
         if path:
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 f.write(txt.getvalue())
         else:
             return txt.getvalue()
 
-
     @classmethod
     def from_dict(cls, d):
-        """Create Struct from nested dict.
-
-        """
+        """Create Struct from nested dict."""
         c = cls()
-        for k,v in d.items():
+        for k, v in d.items():
             if type(v) == dict:
                 c.__dict__[k] = Struct.from_dict(v)
             else:
@@ -267,28 +267,22 @@ class Struct(object):
                     c.__dict__[k] = v
         return c
 
-
     @classmethod
     def from_yaml(cls, y):
-        """Create Struct from YAML string.
-
-        """
+        """Create Struct from YAML string."""
         d = yaml.load(y)
         return cls.from_dict(d)
 
-
     @classmethod
     def from_matstruct(cls, s):
-        """Create Struct from scipy.io.matlab mat_struct object.
-
-        """
+        """Create Struct from scipy.io.matlab mat_struct object."""
         c = cls()
         try:
-            s = s['ifo']
+            s = s["ifo"]
         except:
             pass
-        for k,v in s.__dict__.items():
-            if k in ['_fieldnames']:
+        for k, v in s.__dict__.items():
+            if k in ["_fieldnames"]:
                 # skip these fields
                 pass
             elif type(v) is mat_struct:
@@ -305,7 +299,6 @@ class Struct(object):
                     #     c.__dict__[k] = v
         return c
 
-
     @classmethod
     def from_file(cls, path):
         """Load Struct from .yaml or MATLAB .mat file.
@@ -315,11 +308,11 @@ class Struct(object):
         """
         (root, ext) = os.path.splitext(path)
 
-        with open(path, 'r') as f:
-            if ext in ['.yaml', '.yml']:
+        with open(path, "r") as f:
+            if ext in [".yaml", ".yml"]:
                 d = yaml.load(f, Loader=yaml_loader)
                 return cls.from_dict(d)
-            elif ext == '.mat':
+            elif ext == ".mat":
                 s = loadmat(f, squeeze_me=True, struct_as_record=False)
                 return cls.from_matstruct(s)
             else:
@@ -337,13 +330,14 @@ def load_struct(path):
     """
     root, ext = os.path.splitext(path)
 
-    if ext == '.m':
+    if ext == ".m":
         from ..gwinc_matlab import Matlab
+
         matlab = Matlab()
         matlab.addpath(os.path.dirname(path))
         func_name = os.path.basename(root)
         matlab.eval("ifo = {};".format(func_name), nargout=0)
-        ifo = matlab.extract('ifo')
+        ifo = matlab.extract("ifo")
         return Struct.from_matstruct(ifo)
 
     else:
@@ -351,4 +345,4 @@ def load_struct(path):
 
 
 # accepted extension types for struct files
-STRUCT_EXT = ['.yaml', '.yml', '.mat', '.m']
+STRUCT_EXT = [".yaml", ".yml", ".mat", ".m"]

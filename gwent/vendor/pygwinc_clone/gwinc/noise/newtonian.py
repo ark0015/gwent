@@ -43,34 +43,34 @@ def gravg(f, ifo):
     h = ifo.Seismic.TestMassHeight
     c_rayleigh = ifo.Seismic.RayleighWaveSpeed
 
-    if 'Omicron' in ifo.Seismic:
+    if "Omicron" in ifo.Seismic:
         omicron = ifo.Seismic.Omicron
     else:
         omicron = 1
 
     # a sort of theta function (Fermi distr.)
-    coeff = 3**(-gamma*f)/(3**(-gamma*f) + 3**(-gamma*fk))
+    coeff = 3 ** (-gamma * f) / (3 ** (-gamma * f) + 3 ** (-gamma * fk))
 
     # modelization of seismic noise (vertical)
-    ground = a*coeff + a*(1-coeff)*(fk/f)**2
-    if 'Site' in ifo.Seismic and ifo.Seismic.Site == 'LLO':
-        ground = a*coeff*(fk/f) + a*(1-coeff)*(fk/f)**2
+    ground = a * coeff + a * (1 - coeff) * (fk / f) ** 2
+    if "Site" in ifo.Seismic and ifo.Seismic.Site == "LLO":
+        ground = a * coeff * (fk / f) + a * (1 - coeff) * (fk / f) ** 2
 
     # effective GG spring frequency, with G gravitational
-    fgg = sqrt(ggcst * rho) / (2*pi)
+    fgg = sqrt(ggcst * rho) / (2 * pi)
 
     # fixed numerical factors, 5/9/06, PF
-    n = (beta*4*pi/L*(fgg**2/f**2)*ground)**2
+    n = (beta * 4 * pi / L * (fgg ** 2 / f ** 2) * ground) ** 2
 
     # The following two terms are corrections due to Jan Harms
     # https://git.ligo.org/rana-adhikari/CryogenicLIGO/issues/45
     # (1) projection of NN force onto the direction of the arm
-    n = n * 1/2
+    n = n * 1 / 2
     # (2) exponential cutoff at frequency (seismic speed)/(test mass height)
-    n = n * exp(-4*pi*f*h/c_rayleigh)
+    n = n * exp(-4 * pi * f * h / c_rayleigh)
 
     # Feedforward cancellation
-    n /= (omicron**2)
+    n /= omicron ** 2
 
     return n * ifo.gwinc.sinc_sqr
 
@@ -89,33 +89,33 @@ def gravg_rayleigh(f, ifo):
     h = ifo.Seismic.TestMassHeight
     c_rayleigh = ifo.Seismic.RayleighWaveSpeed
 
-    if 'Omicron' in ifo.Seismic:
+    if "Omicron" in ifo.Seismic:
         omicron = ifo.Seismic.Omicron
     else:
         omicron = 1
 
     # a sort of theta function (Fermi distr.)
-    coeff = 3**(-gamma*f)/(3**(-gamma*f) + 3**(-gamma*fk))
+    coeff = 3 ** (-gamma * f) / (3 ** (-gamma * f) + 3 ** (-gamma * fk))
 
     # modelization of seismic noise (vertical)
-    ground = a*coeff + a*(1-coeff)*(fk/f)**2
-    if 'Site' in ifo.Seismic and ifo.Seismic.Site == 'LLO':
-        ground = a*coeff*(fk/f) + a*(1-coeff)*(fk/f)**2
+    ground = a * coeff + a * (1 - coeff) * (fk / f) ** 2
+    if "Site" in ifo.Seismic and ifo.Seismic.Site == "LLO":
+        ground = a * coeff * (fk / f) + a * (1 - coeff) * (fk / f) ** 2
 
     # Harms LRR eqs. 35, 96, and 98
     w = 2 * pi * f
     k = w / c_rayleigh
     kP = w / ifo.Seismic.pWaveSpeed
     kS = w / ifo.Seismic.sWaveSpeed
-    qzP = sqrt(k**2 - kP**2)
-    qzS = sqrt(k**2 - kS**2)
+    qzP = sqrt(k ** 2 - kP ** 2)
+    qzS = sqrt(k ** 2 - kS ** 2)
     zeta = sqrt(qzP / qzS)
 
     gnu = k * (1 - zeta) / (qzP - k * zeta)
 
-    n = 2 * (2 * pi * ggcst * rho * exp(-h * k) * gnu)**2 * ground**2 / w**4
+    n = 2 * (2 * pi * ggcst * rho * exp(-h * k) * gnu) ** 2 * ground ** 2 / w ** 4
 
-    n /= omicron**2
+    n /= omicron ** 2
 
     return n * ifo.gwinc.dhdl_sqr
 
@@ -131,26 +131,43 @@ def gravg_pwave(f, ifo):
     kP = (2 * pi * f) / cP
 
     rho_ground = ifo.Seismic.Rho
-    psd_ground_pwave = (levelP * seisNLNM(f))**2
+    psd_ground_pwave = (levelP * seisNLNM(f)) ** 2
 
-    tmheight = ifo.Seismic.TestMassHeight 
+    tmheight = ifo.Seismic.TestMassHeight
     xP = np.abs(kP * tmheight)
 
     if tmheight >= 0:
         # Surface facility
         # The P-S conversion at the surface is not implemented
-        height_supp_power = (3 / 2) * np.array([scint.quad(lambda th, x: np.sin(th)**3
-                * np.exp(-2 * x * np.sin(th)), 0, pi / 2, args=(x,))[0]
-                for x in xP])
+        height_supp_power = (3 / 2) * np.array(
+            [
+                scint.quad(
+                    lambda th, x: np.sin(th) ** 3 * np.exp(-2 * x * np.sin(th)),
+                    0,
+                    pi / 2,
+                    args=(x,),
+                )[0]
+                for x in xP
+            ]
+        )
     else:
         # Underground facility
         # The cavity effect is not included
-        height_supp_power = (3 / 4) * np.array([scint.quad(lambda th, x: np.sin(th)**3
-                * (2 - np.exp(-x * np.sin(th)))**2, 0, pi, args=(x,))[0]
-                for x in xP])
-    psd_gravg_pwave = ((2 * pi * ggcst * rho_ground)**2
-            * psd_ground_pwave * height_supp_power)
-    psd_gravg_pwave *= 4 / (2 * pi * f)**4
+        height_supp_power = (3 / 4) * np.array(
+            [
+                scint.quad(
+                    lambda th, x: np.sin(th) ** 3 * (2 - np.exp(-x * np.sin(th))) ** 2,
+                    0,
+                    pi,
+                    args=(x,),
+                )[0]
+                for x in xP
+            ]
+        )
+    psd_gravg_pwave = (
+        (2 * pi * ggcst * rho_ground) ** 2 * psd_ground_pwave * height_supp_power
+    )
+    psd_gravg_pwave *= 4 / (2 * pi * f) ** 4
     return psd_gravg_pwave * ifo.gwinc.dhdl_sqr
 
 
@@ -165,18 +182,27 @@ def gravg_swave(f, ifo):
     kS = (2 * pi * f) / cS
 
     rho_ground = ifo.Seismic.Rho
-    psd_ground_swave = (levelS * seisNLNM(f))**2
+    psd_ground_swave = (levelS * seisNLNM(f)) ** 2
 
-    tmheight = ifo.Seismic.TestMassHeight 
+    tmheight = ifo.Seismic.TestMassHeight
     xS = np.abs(kS * tmheight)
 
     # For both surface and underground facilities
-    height_supp_power = (3 / 2) * np.array([scint.quad(lambda th, x: np.sin(th)**3
-            * np.exp(-2 * x * np.sin(th)), 0, pi / 2, args=(x,))[0]
-            for x in xS])
-    psd_gravg_swave = ((2 * pi * ggcst * rho_ground)**2
-            * psd_ground_swave * height_supp_power)
-    psd_gravg_swave *= 4 / (2 * pi * f)**4
+    height_supp_power = (3 / 2) * np.array(
+        [
+            scint.quad(
+                lambda th, x: np.sin(th) ** 3 * np.exp(-2 * x * np.sin(th)),
+                0,
+                pi / 2,
+                args=(x,),
+            )[0]
+            for x in xS
+        ]
+    )
+    psd_gravg_swave = (
+        (2 * pi * ggcst * rho_ground) ** 2 * psd_ground_swave * height_supp_power
+    )
+    psd_gravg_swave *= 4 / (2 * pi * f) ** 4
 
     return psd_gravg_swave * ifo.gwinc.dhdl_sqr
 
@@ -202,16 +228,18 @@ def atmois(f, ifo):
     try:
         a_if = ifo.Atmospheric.InfrasoundLevel1Hz
         e_if = ifo.Atmospheric.InfrasoundExponent
-        psd_if = (a_if * f**e_if)**2
+        psd_if = (a_if * f ** e_if) ** 2
     except AttributeError:
-        psd_if = atmoBowman(f)**2
+        psd_if = atmoBowman(f) ** 2
 
     # Harms LRR (2015), eq. 172
     # https://doi.org/10.1007/lrr-2015-3
     # With an extra factor 2 for two arms
     # And with the Bessel terms ignored... for 4 km this amounts to a 10%
     # correction at 10 Hz and a 30% correction at 1 Hz
-    coupling_if = 4./3 * (4 * pi / (k * w**2) * ggcst * rho_air / (ai_air * p_air))**2
+    coupling_if = (
+        4.0 / 3 * (4 * pi / (k * w ** 2) * ggcst * rho_air / (ai_air * p_air)) ** 2
+    )
 
     n_if = coupling_if * psd_if
 
@@ -219,16 +247,49 @@ def atmois(f, ifo):
 
 
 def atmoBowman(f):
-    """The Bowman infrasound model
-   
-    """ 
-    freq = np.array([
-                0.01, 0.0155, 0.0239, 0.0367, 0.0567,
-                0.0874, 0.1345, 0.2075, 0.32, 0.5,
-                0.76, 1.17, 1.8, 2.79, 4.3,
-                6.64, 10, 100])
-    pressure_asd = np.sqrt([22.8, 4, 0.7, 0.14, 0.027, 0.004,
-                            0.0029, 0.0039, 7e-4, 1.44e-4, 0.37e-4,
-                            0.12e-4, 0.56e-5, 0.35e-5, 0.26e-5, 0.24e-5,
-                            2e-6, 2e-6])
-    return 10**(np.interp(np.log10(f), np.log10(freq), np.log10(pressure_asd)))
+    """The Bowman infrasound model"""
+    freq = np.array(
+        [
+            0.01,
+            0.0155,
+            0.0239,
+            0.0367,
+            0.0567,
+            0.0874,
+            0.1345,
+            0.2075,
+            0.32,
+            0.5,
+            0.76,
+            1.17,
+            1.8,
+            2.79,
+            4.3,
+            6.64,
+            10,
+            100,
+        ]
+    )
+    pressure_asd = np.sqrt(
+        [
+            22.8,
+            4,
+            0.7,
+            0.14,
+            0.027,
+            0.004,
+            0.0029,
+            0.0039,
+            7e-4,
+            1.44e-4,
+            0.37e-4,
+            0.12e-4,
+            0.56e-5,
+            0.35e-5,
+            0.26e-5,
+            0.24e-5,
+            2e-6,
+            2e-6,
+        ]
+    )
+    return 10 ** (np.interp(np.log10(f), np.log10(freq), np.log10(pressure_asd)))

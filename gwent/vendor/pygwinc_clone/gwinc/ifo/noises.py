@@ -1,13 +1,13 @@
 from .. import nb
 from .. import noise
 
-class QuantumVacuum(nb.Noise):
-    """Quantum Vacuum
 
-    """
+class QuantumVacuum(nb.Noise):
+    """Quantum Vacuum"""
+
     style = dict(
-        label='Quantum',
-        color='#ad03de',
+        label="Quantum",
+        color="#ad03de",
     )
 
     def calc(self):
@@ -15,12 +15,11 @@ class QuantumVacuum(nb.Noise):
 
 
 class Seismic(nb.Noise):
-    """Seismic
+    """Seismic"""
 
-    """
     style = dict(
-        label='Seismic',
-        color='#855700',
+        label="Seismic",
+        color="#855700",
     )
 
     def calc(self):
@@ -28,12 +27,11 @@ class Seismic(nb.Noise):
 
 
 class Newtonian(nb.Noise):
-    """Newtonian Gravity
+    """Newtonian Gravity"""
 
-    """
     style = dict(
-        label='Newtonian',
-        color='#15b01a',
+        label="Newtonian",
+        color="#15b01a",
     )
 
     def calc(self):
@@ -41,12 +39,11 @@ class Newtonian(nb.Noise):
 
 
 class NewtonianRayleigh(nb.Noise):
-    """Newtonian Gravity, Rayleigh waves
+    """Newtonian Gravity, Rayleigh waves"""
 
-    """
     style = dict(
-        label='Newtonian (Rayleigh waves)',
-        color='#1b2431',
+        label="Newtonian (Rayleigh waves)",
+        color="#1b2431",
     )
 
     def calc(self):
@@ -54,26 +51,25 @@ class NewtonianRayleigh(nb.Noise):
 
 
 class NewtonianBody(nb.Noise):
-    """Newtonian Gravity, body waves
+    """Newtonian Gravity, body waves"""
 
-    """
     style = dict(
-        label='Newtonian (body waves)',
-        color='#85a3b2',
+        label="Newtonian (body waves)",
+        color="#85a3b2",
     )
 
     def calc(self):
-        return (noise.newtonian.gravg_pwave(self.freq, self.ifo)
-               + noise.newtonian.gravg_swave(self.freq, self.ifo))
+        return noise.newtonian.gravg_pwave(
+            self.freq, self.ifo
+        ) + noise.newtonian.gravg_swave(self.freq, self.ifo)
 
 
 class NewtonianInfrasound(nb.Noise):
-    """Newtonian Gravity, infrasound
+    """Newtonian Gravity, infrasound"""
 
-    """
     style = dict(
-        label='Newtonian (infrasound)',
-        color='#ffa62b',
+        label="Newtonian (infrasound)",
+        color="#ffa62b",
     )
 
     def calc(self):
@@ -81,12 +77,11 @@ class NewtonianInfrasound(nb.Noise):
 
 
 class SuspensionThermal(nb.Noise):
-    """Suspension Thermal
+    """Suspension Thermal"""
 
-    """
     style = dict(
-        label='Suspension Thermal',
-        color='#0d75f8',
+        label="Suspension Thermal",
+        color="#0d75f8",
     )
 
     def calc(self):
@@ -94,12 +89,11 @@ class SuspensionThermal(nb.Noise):
 
 
 class CoatingBrownian(nb.Noise):
-    """Coating Brownian
+    """Coating Brownian"""
 
-    """
     style = dict(
-        label='Coating Brownian',
-        color='#fe0002',
+        label="Coating Brownian",
+        color="#fe0002",
     )
 
     def calc(self):
@@ -107,13 +101,12 @@ class CoatingBrownian(nb.Noise):
 
 
 class CoatingThermoOptic(nb.Noise):
-    """Coating Thermo-Optic
+    """Coating Thermo-Optic"""
 
-    """
     style = dict(
-        label='Coating Thermo-Optic',
-        color='#02ccfe',
-        linestyle='--',
+        label="Coating Thermo-Optic",
+        color="#02ccfe",
+        linestyle="--",
     )
 
     def calc(self):
@@ -121,13 +114,12 @@ class CoatingThermoOptic(nb.Noise):
 
 
 class ITMThermoRefractive(nb.Noise):
-    """ITM Thermo-Refractive
+    """ITM Thermo-Refractive"""
 
-    """
     style = dict(
-        label='ITM Thermo-Refractive',
-        color='#448ee4',
-        linestyle='--',
+        label="ITM Thermo-Refractive",
+        color="#448ee4",
+        linestyle="--",
     )
 
     def calc(self):
@@ -135,13 +127,12 @@ class ITMThermoRefractive(nb.Noise):
 
 
 class ITMCarrierDensity(nb.Noise):
-    """ITM Carrier Density
+    """ITM Carrier Density"""
 
-    """
     style = dict(
-        label='ITM Carrier Density',
-        color='#929591',
-        linestyle='--',
+        label="ITM Carrier Density",
+        color="#929591",
+        linestyle="--",
     )
 
     def calc(self):
@@ -149,13 +140,12 @@ class ITMCarrierDensity(nb.Noise):
 
 
 class SubstrateBrownian(nb.Noise):
-    """Substrate Brownian
+    """Substrate Brownian"""
 
-    """
     style = dict(
-        label='Substrate Brownian',
-        color='#fb7d07',
-        linestyle='--',
+        label="Substrate Brownian",
+        color="#fb7d07",
+        linestyle="--",
     )
 
     def calc(self):
@@ -163,13 +153,12 @@ class SubstrateBrownian(nb.Noise):
 
 
 class SubstrateThermoElastic(nb.Noise):
-    """Substrate Thermo-Elastic
+    """Substrate Thermo-Elastic"""
 
-    """
     style = dict(
-        label='Substrate Thermo-Elastic',
-        color='#f5bf03',
-        linestyle='--',
+        label="Substrate Thermo-Elastic",
+        color="#f5bf03",
+        linestyle="--",
     )
 
     def calc(self):
@@ -177,13 +166,12 @@ class SubstrateThermoElastic(nb.Noise):
 
 
 class ExcessGas(nb.Noise):
-    """Excess Gas
+    """Excess Gas"""
 
-    """
     style = dict(
-        label='Excess Gas',
-        color='#add00d',
-        linestyle='--',
+        label="Excess Gas",
+        color="#add00d",
+        linestyle="--",
     )
 
     def calc(self):

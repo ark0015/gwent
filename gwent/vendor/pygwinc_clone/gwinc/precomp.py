@@ -23,7 +23,7 @@ def precompIFO(f, ifoin, PRfixed=True):
     """
     ifo = copy.deepcopy(ifoin)
 
-    if 'gwinc' not in ifo:
+    if "gwinc" not in ifo:
         ifo.gwinc = Struct()
 
     ifo.gwinc.PRfixed = PRfixed
@@ -31,13 +31,13 @@ def precompIFO(f, ifoin, PRfixed=True):
     ##############################
     # derived temp
 
-    if 'Temp' not in ifo.Materials.Substrate:
+    if "Temp" not in ifo.Materials.Substrate:
         ifo.Materials.Substrate.Temp = ifo.Infrastructure.Temp
 
     ##############################
     # suspension vertical-horizontal coupling
 
-    if 'VHCoupling' not in ifo.Suspension:
+    if "VHCoupling" not in ifo.Suspension:
         ifo.Suspension.VHCoupling = Struct()
         ifo.Suspension.VHCoupling.theta = ifo.Infrastructure.Length / const.R_earth
 
@@ -45,14 +45,16 @@ def precompIFO(f, ifoin, PRfixed=True):
     # optics values
 
     # calculate optics' parameters
-    ifo.Materials.MirrorVolume = pi*ifo.Materials.MassRadius**2 * \
-                                 ifo.Materials.MassThickness
-    ifo.Materials.MirrorMass = ifo.Materials.MirrorVolume * \
-                               ifo.Materials.Substrate.MassDensity
+    ifo.Materials.MirrorVolume = (
+        pi * ifo.Materials.MassRadius ** 2 * ifo.Materials.MassThickness
+    )
+    ifo.Materials.MirrorMass = (
+        ifo.Materials.MirrorVolume * ifo.Materials.Substrate.MassDensity
+    )
     ifo.Optics.ITM.Thickness = ifo.Materials.MassThickness
 
     # coating layer optical thicknesses - mevans 2 May 2008
-    if 'CoatLayerOpticalThickness' not in ifo.Optics.ITM:
+    if "CoatLayerOpticalThickness" not in ifo.Optics.ITM:
         T = ifo.Optics.ITM.Transmittance
         dL = ifo.Optics.ITM.CoatingThicknessLown
         dCap = ifo.Optics.ITM.CoatingThicknessCap
@@ -74,9 +76,11 @@ def precompIFO(f, ifoin, PRfixed=True):
     gden = g1 - 2 * g1 * g2 + g2
 
     if (g1 * g2 * (1 - g1 * g2)) <= 0:
-        raise Exception('Unstable arm cavity g-factors.  Change ifo.Optics.Curvature')
+        raise Exception("Unstable arm cavity g-factors.  Change ifo.Optics.Curvature")
     elif gcav < 1e-3:
-        logging.warning('Nearly unstable arm cavity g-factors.  Reconsider ifo.Optics.Curvature')
+        logging.warning(
+            "Nearly unstable arm cavity g-factors.  Reconsider ifo.Optics.Curvature"
+        )
 
     ws = sqrt(armlen * ifo.Laser.Wavelength / pi)
     w1 = ws * sqrt(abs(g2) / gcav)
@@ -84,7 +88,7 @@ def precompIFO(f, ifoin, PRfixed=True):
 
     # waist size
     w0 = ws * sqrt(gcav / abs(gden))
-    zr = pi * w0**2 / ifo.Laser.Wavelength
+    zr = pi * w0 ** 2 / ifo.Laser.Wavelength
     z1 = armlen * g2 * (1 - g1) / gden
     z2 = armlen * g1 * (1 - g2) / gden
 
@@ -111,15 +115,15 @@ def precompIFO(f, ifoin, PRfixed=True):
     ##############################
     # saved seismic spectrum
 
-    if 'darmSeiSusFile' in ifo.Seismic and ifo.Seismic.darmSeiSusFile:
+    if "darmSeiSusFile" in ifo.Seismic and ifo.Seismic.darmSeiSusFile:
         darmsei = loadmat(ifo.Seismic.darmSeiSusFile)
-        ifo.Seismic.darmseis_f = darmsei['darmseis_f'][0]
-        ifo.Seismic.darmseis_x = darmsei['darmseis_x'][0]
+        ifo.Seismic.darmseis_f = darmsei["darmseis_f"][0]
+        ifo.Seismic.darmseis_x = darmsei["darmseis_x"][0]
 
     # --------------------------------------------------------
     # Suspension
     # if the suspension code supports different temps for the stages
-    fname = eval('suspension.susp{}'.format(ifo.Suspension.Type))
+    fname = eval("suspension.susp{}".format(ifo.Suspension.Type))
     hForce, vForce, hTable, vTable = fname(f, ifo)
 
     try:
@@ -147,45 +151,45 @@ def precompIFO(f, ifoin, PRfixed=True):
 
 
 def precompPower(ifo, PRfixed=True):
-    """Compute power on beamsplitter, finesse, and power recycling factor.
-
-    """
-    c       = const.c
-    pin     = ifo.Laser.Power
-    t1      = sqrt(ifo.Optics.ITM.Transmittance)
-    r1      = sqrt(1 - ifo.Optics.ITM.Transmittance)
-    r2      = sqrt(1 - ifo.Optics.ETM.Transmittance)
-    t5      = sqrt(ifo.Optics.PRM.Transmittance)
-    r5      = sqrt(1 - ifo.Optics.PRM.Transmittance)
-    loss    = ifo.Optics.Loss                          # single TM loss
-    bsloss  = ifo.Optics.BSLoss
-    acoat   = ifo.Optics.ITM.CoatingAbsorption
-    pcrit   = ifo.Optics.pcrit
+    """Compute power on beamsplitter, finesse, and power recycling factor."""
+    c = const.c
+    pin = ifo.Laser.Power
+    t1 = sqrt(ifo.Optics.ITM.Transmittance)
+    r1 = sqrt(1 - ifo.Optics.ITM.Transmittance)
+    r2 = sqrt(1 - ifo.Optics.ETM.Transmittance)
+    t5 = sqrt(ifo.Optics.PRM.Transmittance)
+    r5 = sqrt(1 - ifo.Optics.PRM.Transmittance)
+    loss = ifo.Optics.Loss  # single TM loss
+    bsloss = ifo.Optics.BSLoss
+    acoat = ifo.Optics.ITM.CoatingAbsorption
+    pcrit = ifo.Optics.pcrit
 
     # Finesse, effective number of bounces in cavity, power recycling factor
-    finesse = 2*pi / (t1**2 + 2*loss)        # arm cavity finesse
-    neff    = 2 * finesse / pi
+    finesse = 2 * pi / (t1 ** 2 + 2 * loss)  # arm cavity finesse
+    neff = 2 * finesse / pi
 
     # Arm cavity reflectivity with finite loss
-    garm = t1 / (1 - r1*r2*sqrt(1-2*loss))  # amplitude gain wrt input field
-    rarm = r1 - t1 * r2 * sqrt(1-2*loss) * garm
+    garm = t1 / (1 - r1 * r2 * sqrt(1 - 2 * loss))  # amplitude gain wrt input field
+    rarm = r1 - t1 * r2 * sqrt(1 - 2 * loss) * garm
 
     if PRfixed:
         Tpr = ifo.Optics.PRM.Transmittance  # use given value
     else:
-        Tpr = 1-(rarm*sqrt(1-bsloss))**2 # optimal recycling mirror transmission
+        Tpr = (
+            1 - (rarm * sqrt(1 - bsloss)) ** 2
+        )  # optimal recycling mirror transmission
         t5 = sqrt(Tpr)
         r5 = sqrt(1 - Tpr)
-    prfactor = t5**2 / (1 + r5 * rarm * sqrt(1-bsloss))**2
+    prfactor = t5 ** 2 / (1 + r5 * rarm * sqrt(1 - bsloss)) ** 2
 
-    pbs  = pin * prfactor          # BS power from input power
-    parm = pbs * garm**2 / 2       # arm power from BS power
+    pbs = pin * prfactor  # BS power from input power
+    parm = pbs * garm ** 2 / 2  # arm power from BS power
 
-    asub = 1.3*2*ifo.Optics.ITM.Thickness*ifo.Optics.SubstrateAbsorption
-    pbsl = 2*pcrit/(asub+acoat*neff) # bs power limited by thermal lensing
+    asub = 1.3 * 2 * ifo.Optics.ITM.Thickness * ifo.Optics.SubstrateAbsorption
+    pbsl = 2 * pcrit / (asub + acoat * neff)  # bs power limited by thermal lensing
 
     if pbs > pbsl:
-        logging.warning('P_BS exceeds BS Thermal limit!')
+        logging.warning("P_BS exceeds BS Thermal limit!")
 
     return pbs, parm, finesse, prfactor, Tpr
 
@@ -205,13 +209,19 @@ def dhdl(f, armlen):
 
     """
     c = const.c
-    nu_small = 15*pi/180
+    nu_small = 15 * pi / 180
     omega_arm = pi * f * armlen / c
     omega_arm_f = (1 - sin(nu_small)) * pi * f * armlen / c
     omega_arm_b = (1 + sin(nu_small)) * pi * f * armlen / c
-    sinc_sqr = 4 / abs(sin(omega_arm_f) * exp(-1j * omega_arm) / omega_arm_f
-                       + sin(omega_arm_b) * exp(1j * omega_arm) / omega_arm_b)**2
+    sinc_sqr = (
+        4
+        / abs(
+            sin(omega_arm_f) * exp(-1j * omega_arm) / omega_arm_f
+            + sin(omega_arm_b) * exp(1j * omega_arm) / omega_arm_b
+        )
+        ** 2
+    )
     # keep DC value equal to 1
     sinc_sqr /= sinc_sqr[0]
-    dhdl_sqr = sinc_sqr / armlen**2
+    dhdl_sqr = sinc_sqr / armlen ** 2
     return dhdl_sqr, sinc_sqr

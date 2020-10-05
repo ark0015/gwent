@@ -24,7 +24,7 @@ MSol = 1.3271244e20 / scipy.constants.G
 # http://physics.nist.gov/cuu/Constants/
 H0 = 67110
 # http://arxiv.org/pdf/1303.5076v3.pdf
-omegaM = 0.3175,
+omegaM = (0.3175,)
 omegaLambda = 1 - 0.3175
 
 # bessel function zeros
