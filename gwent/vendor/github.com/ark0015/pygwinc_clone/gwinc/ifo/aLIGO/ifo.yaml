@@ -1,0 +1,270 @@
+# GWINC aLIGO interferometer parameters
+#
+# parameters for quad pendulum suspension updated 3rd May 2006, NAR
+# References:
+# LIGO-T000012-00-D
+# 	* Differentiate between silica and sapphire substrate absorption
+# 	* Change ribbon suspension aspect ratio
+# 	* Change pendulum frequency
+# References:
+# 1. Electro-Optic Handbook, Waynant & Ediger (McGraw-Hill: 1993)
+# 2. LIGO/GEO data/experience
+# 3. Suspension reference design, LIGO-T000012-00
+# 4. Quartz Glass for Optics Data and Properties, Heraeus data sheet,
+#    numbers for suprasil
+# 5. Y.S. Touloukian (ed), Thermophysical Properties of Matter
+#    (IFI/Plenum,1970)
+# 6. Marvin J. Weber (ed) CRC Handbook of laser science and technology,
+#    Vol 4, Pt 2
+# 7. R.S. Krishnan et al.,Thermal Expansion of Crystals, Pergamon Press
+# 8. P. Klocek, Handbook of infrared and optical materials, Marcel Decker,
+#    1991
+# 9. Rai Weiss, electronic log from 5/10/2006
+# 10. Wikipedia online encyclopedia, 2006
+# 11. D.K. Davies, The Generation and Dissipation of Static Charge on
+# dielectrics in a Vacuum, page 29
+# 12. Gretarsson & Harry, Gretarsson thesis
+# 13. Fejer
+# 14. Braginsky
+#
+# Updated numbers March 2018: LIGO-T1800044
+
+Infrastructure:
+  Length: 3995                    # m
+  Temp: 290                       # K
+  ResidualGas:
+    pressure: 4.0e-7              # Pa
+    mass: 3.35e-27                # kg; Mass of H_2 (ref. 10)
+    polarizability: 7.8e-31       # m^3
+
+TCS:
+  # The presumably dominant effect of a thermal lens in the ITMs is an increased
+  # mode mismatch into the SRC, and thus an increased effective loss of the SRC.
+  # The increase is estimated by calculating the round-trip loss S in the SRC as
+  # 1-S = |<Psi|exp(i*phi)|Psi>|^2, where
+  # |Psi> is the beam hitting the ITM and
+  # phi = P_coat*phi_coat + P_subs*phi_subs
+  # with phi_coat & phi_subs the specific lensing profiles
+  # and P_coat & P_subst the power absorbed in coating and substrate
+  #
+  # This expression can be expanded to 2nd order and is given by
+  # S= s_cc P_coat^2 + 2*s_cs*P_coat*P_subst + s_ss*P_subst^2
+  # s_cc, s_cs and s_ss were calculated analytically by Phil Willems (4/2007)
+  s_cc: 7.024                     # Watt^-2
+  s_cs: 7.321                     # Watt^-2
+  s_ss: 7.631                     # Watt^-2
+  # The hardest part to model is how efficient the TCS system is in
+  # compensating this loss. Thus as a simple Ansatz we define the
+  # TCS efficiency TCSeff as the reduction in effective power that produces
+  # a phase distortion. E.g. TCSeff=0.99 means that the compensated distortion
+  # of 1 Watt absorbed is equivalent to the uncompensated distortion of 10mWatt.
+  # The above formula thus becomes:
+  # S= s_cc P_coat^2 + 2*s_cs*P_coat*P_subst + s_ss*P_subst^2 * (1-TCSeff)^2
+  #
+  # To avoid iterative calculation we define TCS.SCRloss = S as an input
+  # and calculate TCSeff as an output.
+  # TCS.SRCloss is incorporated as an additional loss in the SRC
+  SRCloss: 0.00
+
+Seismic:
+  Site: 'LHO'                     # LHO or LLO (only used for Newtonian noise)
+  # darmSeiSusFile: 'seismic.mat'   # .mat file containing predictions for darm displacement
+  KneeFrequency: 10               # Hz; freq where 'flat' noise rolls off
+  LowFrequencyLevel: 1e-9         # m/rtHz; seismic noise level below f_knee
+  Gamma: 0.8                      # abruptness of change at f_knee
+  Rho: 1.8e3                      # kg/m^3; density of the ground nearby
+  Beta: 0.8                       # quiet times beta: 0.35-0.60
+                                  # noisy times beta: 0.15-1.4
+  Omicron: 1                      # Feedforward cancellation factor
+  TestMassHeight: 1.5             # m
+  RayleighWaveSpeed: 250          # m/s
+
+Suspension:
+  Type: 'Quad'
+  FiberType: 'Tapered'
+  BreakStress: 750e6              # Pa; ref. K. Strain
+  Temp: 290
+  # VHCoupling:
+  #   theta: 1e-3                   # vertical-horizontal x-coupling (computed in precompIFO)
+
+  Silica:
+    Rho   : 2.2e3                 # Kg/m^3;
+    C     : 772                   # J/Kg/K;
+    K     : 1.38                  # W/m/kg;
+    Alpha : 3.9e-7                # 1/K;
+    dlnEdT: 1.52e-4               # (1/K), dlnE/dT
+    Phi   : 4.1e-10               # from G Harry e-mail to NAR 27April06 dimensionless units
+    Y     : 7.2e10                # Pa; Youngs Modulus
+    Dissdepth: 1.5e-2             # from G Harry e-mail to NAR 27April06
+
+  C70Steel:
+    Rho: 7800
+    C: 486
+    K: 49
+    Alpha: 12e-6
+    dlnEdT: -2.5e-4
+    Phi: 2e-4
+    Y: 212e9                      # measured by MB for one set of wires
+
+  MaragingSteel:
+    Rho: 7800
+    C: 460
+    K: 20
+    Alpha: 11e-6
+    dlnEdT: 0
+    Phi: 1e-4
+    Y: 187e9
+
+  # ref http://www.ioffe.ru/SVA/NSM/Semicond/Si/index.html
+  # all properties should be for T ~ 120 K
+  Silicon:
+    Rho: 2329                     # Kg/m^3;  density
+    C: 300                        # J/kg/K   heat capacity
+    K: 700                        # W/m/K    thermal conductivity
+    Alpha: 1e-10                  # 1/K      thermal expansion coeff
+    # from Gysin, et. al. PRB (2004)  E(T): E0 - B*T*exp(-T0/T)
+    # E0: 167.5e9 Pa   T0: 317 K   B: 15.8e6 Pa/K
+    dlnEdT: -2e-5                 # (1/K)    dlnE/dT  T=120K
+    Phi: 2e-9                     # Nawrodt (2010)      loss angle  1/Q
+    Y: 155.8e9                    # Pa       Youngs Modulus
+    Dissdepth: 1.5e-3             # 10x smaller surface loss depth (Nawrodt (2010))
+
+  # Note stage numbering: mirror is at beginning of stack, not end
+  #
+  # last stage length adjusted for d: 10mm and and d_bend = 4mm
+  # (since 602mm is the CoM separation, and d_bend is accounted for
+  # in suspQuad, so including it here would double count)
+  Stage:
+    # Stage1
+    - Mass: 39.6                  # kg; current numbers May 2006 NAR
+      # length adjusted for d = 10mm and d_bend = 4mm
+      # (since 602mm is the CoM separation, and d_bend is accounted for
+      # in suspQuad, so including it here would double count)
+      Length: 0.59                # m
+      Dilution: .nan              #
+      K: .nan                     # N/m; vertical spring constant
+      WireRadius: .nan            # m
+      Blade: .nan                 # blade thickness
+      NWires: 4
+
+    # Stage2
+    - Mass: 39.6
+      Length: 0.341
+      Dilution: 106
+      K: 5200
+      WireRadius: 310e-6
+      Blade: 4200e-6
+      NWires: 4
+
+    # Stage3
+    - Mass: 21.8
+      Length: 0.277
+      Dilution: 80
+      K: 3900
+      WireRadius: 350e-6
+      Blade: 4600e-6
+      NWires: 4
+
+    # Stage4
+    - Mass: 22.1
+      Length: 0.416
+      Dilution: 87
+      K: 3400
+      WireRadius: 520e-6
+      Blade: 4300e-6
+      NWires: 2
+
+  Ribbon:
+    Thickness: 115e-6             # m
+    Width: 1150e-6                # m
+
+  Fiber:
+    Radius: 205e-6                # m
+    # for tapered fibers
+    # EndRadius is tuned to cancel thermo-elastic noise (delta_h in suspQuad)
+    # EndLength is tuned to match bounce mode frequency
+    EndRadius: 400e-6             # m; nominal 400um
+    EndLength: 45e-3              # m; nominal 20mm
+
+## Optic Material -------------------------------------------------------
+Materials:
+  MassRadius: 0.17                # m; 
+  MassThickness: 0.200            # m; Peter F 8/11/2005
+
+  ## Dielectric coating material parameters----------------------------------
+  Coating:
+    ## high index material: tantala
+    Yhighn: 124e9                 # LMA (Granata at LVC) 2017 (was 140)
+    Sigmahighn: 0.28              # LMA (Granata at LVC) 2017 (was 0.23)
+    CVhighn: 2.1e6                # Crooks et al, Fejer et al
+    Alphahighn: 3.6e-6            # 3.6e-6 Fejer et al, 5e-6 from Braginsky
+    Betahighn: 1.4e-5             # dn/dT, value Gretarrson (G070161)
+    ThermalDiffusivityhighn: 33   # Fejer et al
+    Indexhighn: 2.06539
+    Phihighn: 3.6e-4              # loss angle at 100Hz (Gras 2018)
+    Phihighn_slope: 0.1
+
+    ## low index material: silica
+    Ylown: 72e9
+    Sigmalown: 0.17
+    CVlown: 1.6412e6              # Crooks et al, Fejer et al
+    Alphalown: 5.1e-7             # Fejer et al
+    Betalown: 8e-6                # dn/dT,  (ref. 14)
+    ThermalDiffusivitylown: 1.38  # Fejer et al
+    Indexlown: 1.45
+    Philown: 5.0e-5               # loss angle at 100Hz (was 4.0e-5)
+    Philown_slope: 0.4
+
+  ## Substrate Material parameters--------------------------------------------
+  Substrate:
+    Temp: 295
+    c2 : 7.6e-12                  # Coeff of freq depend. term for bulk mechanical loss, 7.15e-12 for Sup2
+    MechanicalLossExponent: 0.77  # Exponent for freq dependence of silica loss, 0.822 for Sup2
+    Alphas: 5.2e-12               # Surface loss limit (ref. 12)
+    MirrorY: 7.27e10              # N/m^2; Youngs modulus (ref. 4)
+    MirrorSigma: 0.167            # Kg/m^3; Poisson ratio (ref. 4)
+    MassDensity: 2.2e3            # Kg/m^3; (ref. 4)
+    MassAlpha: 3.9e-7             # 1/K; thermal expansion coeff. (ref. 4)
+    MassCM: 739                   # J/Kg/K; specific heat (ref. 4)
+    MassKappa: 1.38               # J/m/s/K; thermal conductivity (ref. 4)
+    RefractiveIndex: 1.45         # mevans 25 Apr 2008
+
+## Laser-------------------------------------------------------------------
+Laser:
+  Wavelength: 1.064e-6            # m
+  Power: 125                      # W
+
+## Optics------------------------------------------------------------------
+Optics:
+  Type: 'SignalRecycled'
+  PhotoDetectorEfficiency: 0.9    # photo-detector quantum efficiency
+  Loss: 40e-6                     # average per mirror power loss
+  BSLoss: 0.5e-3                  # power loss near beamsplitter
+  coupling: 1.0                   # mismatch btwn arms & SRC modes; used to
+                                  # calculate an effective r_srm
+  SubstrateAbsorption: 0.5e-4     # 1/m; bulk absorption coef (ref. 2)
+  pcrit: 10                       # W; tolerable heating power (factor 1 ATC)
+  Quadrature:
+    dc: 1.5707963                 # pi/2 # demod/detection/homodyne phase
+
+  ITM:
+    # BeamRadius: 0.055             # m, 1/e^2 power radius, now in precompIFO
+    Transmittance: 0.014
+    CoatingThicknessLown: 0.308
+    CoatingThicknessCap: 0.5
+    CoatingAbsorption: 0.5e-6
+  ETM:
+    # BeamRadius: 0.062             # m, 1/e^2 power radius, now in precompIFO
+    Transmittance: 5e-6
+    CoatingThicknessLown: 0.27
+    CoatingThicknessCap: 0.5
+  PRM:
+    Transmittance: 0.03
+  SRM:
+    Transmittance: 0.325
+    CavityLength: 55              # m, ITM to SRM distance
+    Tunephase: 0.0                # SEC tuning
+
+  Curvature:                      # ROC
+    ITM: 1970
+    ETM: 2192

@@ -1,6 +1,6 @@
 numpy >= 1.14
 scipy >= 1.0
 astropy >= 3.0
-hasasia >= 0.1.6
+hasasia >= 1.0.0
 matplotlib > 3.0
 numpydoc>=0.8.0
