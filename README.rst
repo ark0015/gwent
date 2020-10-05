@@ -18,7 +18,7 @@ Gravitational Wave dEtector desigN Toolkit.
 
 Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
 
-.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/docs/calcSNR_tutorial_files/full_waterfall_plots_lb.png
+.. image:: https://raw.githubusercontent.com/ark0015/gwent/master/data/full_waterfall_plots_lb.png
         :align: center
         :alt: gwent Waterfall Plots
 
@@ -43,7 +43,7 @@ Calculates the strain from coalescing black hole binaries. It contains functiona
 * Slowly-evolving sources, ie. BHBs early in their inspiral where they appear to not change in frequency.
 * Rapidly-evolving sources, ie. BHBs in the final stages of coalescence. 
 
-	* Uses a fully Pythonic implementation of the phenomenological model `IMRPhenomD` to accurately represent the inspiral, merger, and ringdown of the BHB.
+  * Uses a fully Pythonic implementation of the phenomenological model ``IMRPhenomD`` to accurately represent the inspiral, merger, and ringdown of the BHB.
 
 Calculates the matched-filtered signal-to-noise ratio (SNR) to help assess the detectability of any BHB source configuration by any represented gravitational wave detector.
 
@@ -52,18 +52,23 @@ Calculates the matched-filtered signal-to-noise ratio (SNR) to help assess the d
 
 Getting Started
 ---------------
-`gwent` is available on the Python Package Inventory, so the preferred method to install `gwent` is to install it with `pip`, as it will always install the most recent stable release.
+``gwent`` is available on the Python Package Inventory, so the preferred method to install ``gwent`` is to install it with ``pip``, as it will always install the most recent stable release.
 
 .. code-block:: console
 
     $ pip install gwent
 
+README Figure and Data
+----------------------
+If you are looking for quick data, we conveniently place the figure above in the `data <https://github.com/ark0015/gwent/tree/master/data>`_ folder on the Github repo. There you can also find the raw data used for this figure in ``.npz`` format. To load this data, simply use ``np.load(filename)``, and the data can be accessed by the kwargs ``'mass'``, ``'redshift'``, and ``'snr'``. E.g., 
 
-To install `pygwinc`, a GitLab hosted package necessary to fully utilize `gwent`, run this command in your terminal:
+.. code-block:: python
 
-.. code-block:: console
-
-    $ pip install git+https://git.ligo.org/gwinc/pygwinc.git@65396ee42e851ab7189618cabe1c12081b5d982e#egg=pygwinc
+    import numpy as np
+    import gwent
+    from gwent.snrplot import Plot_SNR
+    loaded_file = np.load(filename)
+    Plot_SNR('M',load_file['mass'],'z',load_file['redshift'],load_file['snr'])
 
 Credits
 -------

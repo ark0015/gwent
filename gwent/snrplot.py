@@ -21,7 +21,7 @@ def Plot_SNR(
     return_plt=False,
     dl_axis=False,
     lb_axis=False,
-    smooth_contours=True,
+    smooth_contours=False,
     cfill=True,
     display_cbar=True,
     x_axis_label=True,
@@ -45,10 +45,6 @@ def Plot_SNR(
 
     Parameters
     ----------
-    fig : object
-        matplotlib figure object on which to collate the individual plots
-    ax : object
-        matplotlib axes object on which to plot the individual plot
     var_x : str
         x-axis variable
     sample_x : array
@@ -60,14 +56,20 @@ def Plot_SNR(
     SNRMatrix : array-like
         the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
 
+    fig : object, optional
+        matplotlib figure object on which to collate the individual plots
+    ax : object, optional
+        matplotlib axes object on which to plot the individual plot
     display : bool, optional
         Option to turn off display if saving multiple plots to a file
     return_plt : bool, optional
         Option to return fig and ax
     dl_axis : bool, optional
         Option to turn on the right hand side labels of luminosity distance
+    lb_axis : bool, optional
+        Option to turn on the right hand side labels of lookback time
     smooth_contours : bool, optional
-        Option to interpolate contours to a finer mesh size to appear smooth instead of tiered contours
+        Option to have contours appear smooth instead of tiered (depending on sample size the edges appear boxey).
     cfill : bool, optional
         Option to use filled contours or not, default is True
     display_cbar : bool, optional
@@ -81,11 +83,11 @@ def Plot_SNR(
     y_axis_line : int,float, optional
         Option to display a line on the y axis if not None
     logLevels_min : float, optional
-        Sets the minimum log level of the colorbar, default is -1.0
+        Sets the minimum log level of the colorbar, default is -1.0 which set the minimum to the log minimum of the given SNRMatrix
     logLevels_max : float, optional
-        Sets the maximum log level of the colorbar, default is 0.0, which sets the maximum to the log maximum value of SNRMatrix
+        Sets the maximum log level of the colorbar, default is 0.0, which sets the maximum to the log maximum value of the given SNRMatrix
     hspace : float, optional
-        Sets the horizontal space between axes objects, default is 0.15
+        Sets the vertical space between axes objects, default is 0.15
     wspace : float, optional
         Sets the horizontal space between axes objects, default is 0.1
     contour_kwargs : dict, optional
