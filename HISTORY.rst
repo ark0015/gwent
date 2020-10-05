@@ -1,6 +1,13 @@
 =======
 History
 =======
+0.2.1 (2020-10-5)
+-------------------
+* Update to ground-based SNR calculation
+* Minor changes to snrplot functionality
+* Changed fitting for WD background
+* Misc bug fixing
+
 0.2.0 (2020-4-29)
 -------------------
 * Major Changes to PTA detector setup
