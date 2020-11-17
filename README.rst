@@ -74,7 +74,7 @@ Publication
 -----------
 This work and methodology is available on arXiv_. If you use ``gwent``, please cite this work using the following:
 
-.._arXiv: https://arxiv.org/abs/2010.02135
+.. _arXiv: https://arxiv.org/abs/2010.02135
 
 .. code-block:: tex
 
