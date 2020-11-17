@@ -69,6 +69,30 @@ If you are looking for quick data, we conveniently place the figure above in the
     from gwent.snrplot import Plot_SNR
     loaded_file = np.load(filename)
     Plot_SNR('M',load_file['mass'],'z',load_file['redshift'],load_file['snr'])
+    
+Publication
+-----------
+This work and methodology is available on arXiv_. If you use ``gwent``, please cite this work using the following:
+
+.._arXiv: https://arxiv.org/abs/2010.02135
+
+.. code-block:: tex
+
+    @ARTICLE{2020arXiv201002135K,
+           author = {{Kaiser}, Andrew R. and {McWilliams}, Sean T.},
+            title = "{Sensitivity of present and future black-hole binary observations across the gravitational wave spectrum}",
+          journal = {arXiv e-prints},
+         keywords = {General Relativity and Quantum Cosmology, Astrophysics - High Energy Astrophysical Phenomena, Astrophysics - Instrumentation and Methods for Astrophysics},
+             year = 2020,
+            month = oct,
+              eid = {arXiv:2010.02135},
+            pages = {arXiv:2010.02135},
+    archivePrefix = {arXiv},
+           eprint = {2010.02135},
+     primaryClass = {gr-qc},
+           adsurl = {https://ui.adsabs.harvard.edu/abs/2020arXiv201002135K},
+          adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
 
 Credits
 -------
