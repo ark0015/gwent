@@ -1,7 +1,263 @@
 import numpy as np
+import astropy.constants as const
+import astropy.units as u
+from astropy.cosmology import WMAP9 as cosmo
+
+import lal
+import lalsimulation
+
+import gwent
+from . import utils
+
+def Get_Waveform(
+    source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwargs={}
+):
+    """Gets the frequency domain waveform of a particular source using approximant type in approximant.
+    this can either be the python implementation of IMRPhenomD given below, or a waveform modelled in
+    LIGO's lalsuite package. If a lalsuite approximant is used, source will be given plus and cross
+    properties with their phase and amplitude for user convenience.
+
+    Parameters
+    ----------
+    source : object
+            source object that contains all necessary source parameters
+    approximant : str, optional
+            the approximant used to calculate the frequency domain waveform of the source.
+            Can either be the python implementation of IMRPhenomD ('pyPhenomD', the default) given below,
+            or a waveform modelled in LIGO's lalsuite's lalsimulation package.
+    pct_of_peak : float, optional
+            pyPhenomD kwarg, the percentange of the strain at merger that dictates the maximum frequency the waveform is calculated at in geometrized units (G=c=1)
+    lalsuite_kwargs: dict, optional
+            More specific user-defined kwargs for the different lalsuite waveforms
+
+    Returns
+    -------
+    freqs : numpy array of floats
+        the waveform frequencies in Hertz
+    strain : numpy array of floats
+        the waveform amplitude strain in dimensionless units
+    """
+    if approximant == "pyPhenomD":
+        if not hasattr(source, "_fitcoeffs"):
+            source.Get_Fitcoeffs()
+        [natural_f, natural_h] = Get_PyPhenomD(source, pct_of_peak=pct_of_peak)
+        return Strain_Conv(source, natural_f, natural_h)
+    elif approximant in dir(lalsimulation):
+        waveform_dict = {}
+
+        M_time = source.M.to("kg") * const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+        #Uses source f_low in Mf (default is 1e-5), then we convert to Hz for lalsuite
+        default_f_min = source.f_low/M_time
+        #Uses 5 orders of magnitude larger that f_low in Mf space (default is 1), then convert to Hz for lalsuite
+        default_f_max = source.f_low * 1e5/M_time
+        #Find even spacing given nfreqs of the source (default is 1e3)
+        default_deltaF = (default_f_max-default_f_min)/source.nfreqs
+
+        waveform_dict.update(
+            {
+                "m1": source.M.to("kg").value / (1 + source.q),
+                "m2": source.M.to("kg").value * source.q / (1 + source.q),
+                "S1x": 0,
+                "S1y": 0,
+                "S1z": 0,
+                "S2x": 0,
+                "S2y": 0,
+                "S2z": 0,
+                "distance": cosmo.luminosity_distance(source.z).to("m").value,
+                "inclination": 0,
+                "phiRef": 0,
+                "longAscNodes": 0,
+                "eccentricity": 0,
+                "meanPerAno": 0,
+                "deltaF": default_deltaF.value,
+                "f_min": default_f_min.value,
+                "f_max": default_f_max.value,
+                "f_ref": 0,
+                "LALpars": {},
+                "approximant": getattr(lalsimulation,approximant),
+            }
+        )
+
+        if "m1" in lalsuite_kwargs.keys():
+            waveform_dict["m1"] = lalsuite_kwargs["m1"]
+        if "m2" in lalsuite_kwargs.keys():
+            waveform_dict["m2"] = lalsuite_kwargs["m2"]
+        if "S1x" in lalsuite_kwargs.keys():
+            waveform_dict["S1x"] = lalsuite_kwargs["S1x"]
+        if "S1y" in lalsuite_kwargs.keys():
+            waveform_dict["S1y"] = lalsuite_kwargs["S1y"]
+
+        if "S1z" in lalsuite_kwargs.keys():
+            waveform_dict["S1z"] = lalsuite_kwargs["S1z"]
+        elif "chi1" in lalsuite_kwargs.keys():
+            waveform_dict["S1z"] = lalsuite_kwargs["chi1"]
+        elif hasattr(source, "chi1"):
+            waveform_dict["S1z"] = source.chi1
+
+        if "S2x" in lalsuite_kwargs.keys():
+            waveform_dict["S2x"] = lalsuite_kwargs["S2x"]
+        if "S2y" in lalsuite_kwargs.keys():
+            waveform_dict["S2y"] = lalsuite_kwargs["S2y"]
+
+        if "S2z" in lalsuite_kwargs.keys():
+            waveform_dict["S2z"] = lalsuite_kwargs["S2z"]
+        elif "chi2" in lalsuite_kwargs.keys():
+            waveform_dict["S2z"] = lalsuite_kwargs["chi2"]
+        elif hasattr(source, "chi2"):
+            waveform_dict["S2z"] = source.chi2
+
+        if "distance" in lalsuite_kwargs.keys():
+            waveform_dict["distance"] = lalsuite_kwargs["distance"]
+        if "inclination" in lalsuite_kwargs.keys():
+            waveform_dict["inclination"] = lalsuite_kwargs["inclination"]
+        if "phiRef" in lalsuite_kwargs.keys():
+            waveform_dict["phiRef"] = lalsuite_kwargs["phiRef"]
+        if "longAscNodes" in lalsuite_kwargs.keys():
+            waveform_dict["longAscNodes"] = lalsuite_kwargs["longAscNodes"]
+        if "eccentricity" in lalsuite_kwargs.keys():
+            waveform_dict["eccentricity"] = lalsuite_kwargs["eccentricity"]
+        if "meanPerAno" in lalsuite_kwargs.keys():
+            waveform_dict["meanPerAno"] = lalsuite_kwargs["meanPerAno"]
+
+        if "deltaF" in lalsuite_kwargs.keys():
+            waveform_dict["deltaF"] = lalsuite_kwargs["deltaF"]
+        elif hasattr(source,'instrument'):
+            delT_obs = 1/source.instrument.T_obs.to('s')
+            #If dividing it up into nfreqs makes the resolution smaller than 1/T_obs, swap.
+            if default_deltaF < delT_obs:
+                waveform_dict["deltaF"] = delT_obs.value
+            else:
+                waveform_dict["deltaF"] = default_deltaF.value         
+        else:
+            waveform_dict["deltaF"] = default_deltaF.value
 
 
-def Get_Waveform(source, pct_of_peak=0.01):
+        if "f_min" in lalsuite_kwargs.keys():
+            waveform_dict["f_min"] = lalsuite_kwargs["f_min"]
+        if "f_max" in lalsuite_kwargs.keys():
+            waveform_dict["f_max"] = lalsuite_kwargs["f_max"]
+        elif hasattr(source,'f_high'):
+            waveform_dict["f_max"] = source.f_high.to('Hz').value
+
+        if "f_ref" in lalsuite_kwargs.keys():
+            waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"]
+        if "LALpars" in lalsuite_kwargs.keys():
+            waveform_dict["LALpars"] = lalsuite_kwargs["LALpars"]
+
+        return Get_LALSuite_Waveform(source,waveform_dict)
+    else:
+        raise ValueError("{}, not an available waveform. Must select either pyPhenomD or one from lalsuite's FD waveform approximants".format(approximant))
+
+
+def Get_Amp_Phase(h):
+    amp = np.abs(h)
+    phase = np.unwrap(np.angle(h))
+    return amp, phase
+
+
+def Get_Full_Amp(h_plus_f, h_cross_f):
+    return np.sqrt((np.abs(h_cross_f)) ** 2 + (np.abs(h_plus_f)) ** 2)
+
+
+def Strain_Conv(source, freqs, strain, inverse=False):
+    """Converts frequency and strain in natural units (G=c=1) to Hertz and dimensionless, respectively.
+    If inverse is true, it does the reverse and assumes the strain and frequency are given in the detector frame.
+
+    Parameters
+    ----------
+    source
+        Instance of gravitational wave source class
+    freqs : array
+        the frequency of the source in either natural units (G=c=1) or Hertz
+    strain : array
+        the strain of the source in natural units (G=c=1) or physical dimensionless parameters
+    inverse : bool, optional
+        Converts non-naturalized (Hertz and dimensionless) frequency and strain to Mf and strain in G=c=1 units
+    """
+    DL = cosmo.luminosity_distance(source.z)
+    DL = DL.to("m")
+
+    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
+
+    # frequency and strain of source in detector frame
+    freq_conv = 1 / M_redshifted_time
+    # Normalized factor to match Stationary phase approx at low frequencies
+    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_redshifted_time ** 2
+
+    if inverse:
+        #converted to source frame natural units
+        conv_freqs = freqs / freq_conv
+        conv_strain = strain / strain_conv
+    else:
+        #converted to detector frame physical units
+        conv_freqs = freqs * freq_conv
+        conv_strain = strain * strain_conv
+
+    return [conv_freqs, conv_strain]
+
+def Get_LALSuite_Waveform(source,waveform_dict):
+    """Gets the frequency domain waveform of a particular source using a waveform modelled in
+    LIGO's lalsuite package. The source is given plus and cross
+    properties with their phase and amplitude for user convenience.
+    
+    Parameters
+    ----------
+    source : object
+            source object from StrainandNoise, contains all source parameters
+    waveform_dict : dictionary
+            The dictionary is comprised of necessities for the SimInspiralChooseFDWaveform call in lalsimulation comprised of:
+            m1    mass of companion 1 (kg)
+            m2    mass of companion 2 (kg)
+            S1x    x-component of the dimensionless spin of object 1
+            S1y    y-component of the dimensionless spin of object 1
+            S1z    z-component of the dimensionless spin of object 1
+            S2x    x-component of the dimensionless spin of object 2
+            S2y    y-component of the dimensionless spin of object 2
+            S2z    z-component of the dimensionless spin of object 2
+            distance    distance of source (m)
+            inclination    inclination of source (rad)
+            phiRef    reference orbital phase (rad)
+            longAscNodes    longitude of ascending nodes, degenerate with the polarization angle, Omega in documentation
+            eccentricity    eccentricity at reference epoch
+            meanPerAno    mean anomaly of periastron
+            deltaF    sampling interval (Hz)
+            f_min    starting GW frequency (Hz)
+            f_max    ending GW frequency (Hz)
+            f_ref    Reference frequency (Hz)
+            LALparams    LAL dictionary containing accessory parameters
+            approximant    post-Newtonian approximant to use for waveform production
+    """
+    h_f_plus,h_f_cross = lalsimulation.SimInspiralChooseFDWaveform(**waveform_dict)
+    h_f_plus_amp,h_f_plus_phase = Get_Amp_Phase(h_f_plus.data.data)
+    h_f_cross_amp,h_f_cross_phase = Get_Amp_Phase(h_f_cross.data.data)
+
+    source.h_f_plus_amp=h_f_plus_amp
+    source.h_f_plus_phase=h_f_plus_phase
+    source.h_f_cross_amp=h_f_cross_amp
+    source.h_f_cross_phase=h_f_cross_phase
+
+    full_amp = Get_Full_Amp(h_f_plus_amp,h_f_cross_amp)
+    #Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_low,f_cutoff)
+    trimmed_full_amp = []
+    for amp in full_amp:
+        if not np.isnan(amp) and amp != 0.0:
+            trimmed_full_amp.append(amp)
+    trimmed_full_amp = np.asarray(trimmed_full_amp)
+    lin_freqs = np.arange(0,waveform_dict['f_max'],waveform_dict['deltaF'])
+    trimmed_freqs = lin_freqs[1:trimmed_full_amp.shape[0]+1]
+
+    #The difference between the two is `gwent` has a factor of $\sqrt{\frac{1}{24}}(1+z)^{2}$
+    # and `LALSuite` has a factor of $2\sqrt{\frac{1}{64}}$. 
+    #Thus, $h_{\mathrm{gwent}} = \sqrt{\frac{2}{3}}(1+z)^{2}h_{\mathrm{LAL}}$,
+    # this factor is reduced by $\sqrt{\frac{1}{2}}$ if using the cross and plus polarizations to get the total Fourier strain amplitude.
+
+    # frequency and strain of source in detector frame
+    freqs = trimmed_freqs/(1+source.z)
+    strain = np.sqrt(1 / 3 )*(1+source.z)**2*trimmed_full_amp
+    return [freqs,strain]
+
+def Get_PyPhenomD(source, pct_of_peak=0.01):
     """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown

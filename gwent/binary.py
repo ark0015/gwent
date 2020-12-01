@@ -7,6 +7,7 @@ from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
 import gwent
+from . import waveform
 from .waveform import Get_Waveform
 from . import utils
 
@@ -250,7 +251,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         if not hasattr(self, "_h_f"):
             if not (hasattr(self, "_phenomD_f") and hasattr(self, "_phenomD_h")):
                 self.Get_PhenomD_Strain()
-            [_, self._h_f] = Strain_Conv(self, self._phenomD_f, self._phenomD_h)
+            [_, self._h_f] = waveform.Strain_Conv(self, self._phenomD_f, self._phenomD_h)
         return self._h_f
 
     @h_f.deleter
@@ -262,7 +263,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
         if not hasattr(self, "_f"):
             if not (hasattr(self, "_phenomD_f") and hasattr(self, "_phenomD_h")):
                 self.Get_PhenomD_Strain()
-            [self._f, _] = Strain_Conv(self, self._phenomD_f, self._phenomD_h)
+            [self._f, _] = waveform.Strain_Conv(self, self._phenomD_f, self._phenomD_h)
         return self._f
 
     @f.deleter
@@ -276,11 +277,13 @@ class BBHFrequencyDomain(BinaryBlackHole):
         )
         self._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
 
+#****************************************************************************************************
     def Get_PhenomD_Strain(self):
         """Gets the BBH's frequency and waveform from IMRPhenomD."""
         if not hasattr(self, "_fitcoeffs"):
             self.Get_Fitcoeffs()
-        [self._phenomD_f, self._phenomD_h] = Get_Waveform(self)
+        [self._phenomD_f, self._phenomD_h] = waveform.Get_PyPhenomD(self)
+#****************************************************************************************************
 
     def Get_F_Dot(self, freq, frame="observer"):
         """Calculates the change in frequency of a binary black hole at a given frequency.
@@ -512,7 +515,7 @@ class BBHTimeDomain(BinaryBlackHole):
     def h_f(self):
         if not hasattr(self, "_h_f"):
             [natural_f, natural_h] = self.Get_hf_from_hcross_hplus()
-            [_, self._h_f] = Strain_Conv(self, natural_f, natural_h)
+            [_, self._h_f] = waveform.Strain_Conv(self, natural_f, natural_h)
         return self._h_f
 
     @h_f.deleter
@@ -523,7 +526,7 @@ class BBHTimeDomain(BinaryBlackHole):
     def f(self):
         if not hasattr(self, "_f"):
             [natural_f, natural_h] = self.Get_hf_from_hcross_hplus()
-            [self._f, _] = Strain_Conv(self, natural_f, natural_h)
+            [self._f, _] = waveform.Strain_Conv(self, natural_f, natural_h)
         return self._f
 
     @f.deleter
@@ -620,35 +623,6 @@ class BBHTimeDomain(BinaryBlackHole):
         # Combine them for raw spectral power
         natural_h_f = np.sqrt((np.abs(h_cross_f)) ** 2 + (np.abs(h_plus_f)) ** 2)
         return [natural_f, natural_h_f]
-
-
-def Strain_Conv(source, natural_f, natural_h):
-    """Converts frequency and strain in natural units (G=c=1) to Hertz and dimensionless, respectively.
-
-    Parameters
-    ----------
-    source
-        Instance of gravitational wave source class
-    natural_f : array [Mf]
-        the frequency of the source in natural units (G=c=1)
-    natural_h : array [Mf]
-        the strain of the source in natural units (G=c=1)
-
-    """
-    DL = cosmo.luminosity_distance(source.z)
-    DL = DL.to("m")
-
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
-    M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
-
-    # frequency and strain of source in detector frame
-    freq_conv = 1 / M_redshifted_time
-    # Normalized factor to match Stationary phase approx at low frequencies
-    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_redshifted_time ** 2
-
-    f = natural_f * freq_conv
-    h_f = natural_h * strain_conv
-    return [f, h_f]
 
 
 def Get_Char_Strain(source):
