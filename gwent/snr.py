@@ -100,13 +100,25 @@ def Get_SNR_Matrix(
                 setattr(instrument, var_x, sample_x[i])
             Recalculate_Noise(source, instrument)
         elif recalculate_noise in ["neither"]:
-            # Update Attribute (also updates dictionary)
-            setattr(source, var_x, sample_x[i])
+            if var_x == "chii":
+                # Used to change both spins simultaneously
+                # Update Attribute (also updates dictionary)
+                setattr(source, "chi1", sample_x[i])
+                setattr(source, "chi2", sample_x[i])
+            else:
+                # Update Attribute (also updates dictionary)
+                setattr(source, var_x, sample_x[i])
 
         for j in range(sampleSize_y):
             if recalculate_noise in ["x", "neither"]:
-                # Update Attribute (also updates dictionary)
-                setattr(source, var_y, sample_y[j])
+                if var_y == "chii":
+                    # Used to change both spins simultaneously
+                    # Update Attribute (also updates dictionary)
+                    setattr(source, "chi1", sample_y[j])
+                    setattr(source, "chi2", sample_y[j])
+                else:
+                    # Update Attribute (also updates dictionary)
+                    setattr(source, var_y, sample_y[j])
             elif recalculate_noise in ["both"]:
                 # Update Attribute (also updates dictionary)
                 if isinstance(instrument, detector.GroundBased):
@@ -145,7 +157,6 @@ def Get_SNR_Matrix(
                 SNRMatrix[j, i] = Calc_Chirp_SNR(
                     source, instrument, integral_consts=integral_consts
                 )
-
     if switch:
         return [original_sample_x, original_sample_y, SNRMatrix.T]
     else:
@@ -188,6 +199,12 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
     sample_y = []
     recalculate_strain = False
     recalculate_noise = "neither"
+
+    # Used to change both spins simultaneously, should be arbitary if one uses chi1 or chi2 since they are set to the same value in Get_SNR_Matrix
+    if var_x == "chii":
+        var_x = "chi1"
+    elif var_y == "chii":
+        var_y = "chi1"
 
     if var_x in source.var_dict.keys():
         if isinstance(source.var_dict[var_x]["min"], u.Quantity):
@@ -383,6 +400,14 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
 
     # Only want to integrate from observed frequency (f(T_obs_before_merger)) till merger
     indxfgw_start = np.abs(source.f - source.f_T_obs).argmin()
+    if indxfgw_start == 0:
+        statement_1 = "Uh, you probably should set your source f_low to lower. "
+        statement_1 += (
+            "Your minimum calculated frequency is {} and f(T_obs) is {}".format(
+                source.f[0], source.f_T_obs
+            )
+        )
+        print(statement_1)
     indxfgw_end = len(source.f)
     if indxfgw_start >= len(source.f) - 1:
         # If the SMBH has already merged set the SNR to ~0
@@ -405,14 +430,15 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
     S_n_f_interp_new = S_n_f_interp_old(np.log10(f_cut.value))
     S_n_f_interp = 10 ** S_n_f_interp_new
 
-    if isinstance(instrument, detector.PTA):
-        # Rescaled by 1.5 to make SNR plots match...
-        integral_consts = 4.0 * 1.5
+    if not isinstance(integral_consts, (int, float)):
+        if isinstance(instrument, detector.PTA):
+            # Rescaled by 1.5 to make SNR plots match...
+            integral_consts = 4.0 * 1.5
 
-    elif isinstance(instrument, detector.SpaceBased) or isinstance(
-        instrument, detector.GroundBased
-    ):
-        integral_consts = 16.0 / 5.0
+        elif isinstance(instrument, detector.SpaceBased) or isinstance(
+            instrument, detector.GroundBased
+        ):
+            integral_consts = 16.0 / 5.0
 
     # CALCULATE SNR FOR BOTH NOISE CURVES
     denom = S_n_f_interp  # Sky Averaged Noise Spectral Density

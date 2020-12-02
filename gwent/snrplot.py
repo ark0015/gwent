@@ -571,7 +571,7 @@ def Get_Axes_Labels(
         ax_dict[var_axis + "ticklabels"] = [
             x if int(x) < 1 else int(x) for x in orig_labels
         ]
-    elif var in ["chi1", "chi2"]:
+    elif var in ["chi1", "chi2", "chii"]:
         new_labels = (
             np.arange(round(min(orig_labels) * 10), round(max(orig_labels) * 10) + 1, 1)
             / 10

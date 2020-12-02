@@ -9,9 +9,8 @@ import lalsimulation
 import gwent
 from . import utils
 
-def Get_Waveform(
-    source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwargs={}
-):
+
+def Get_Waveform(source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwargs={}):
     """Gets the frequency domain waveform of a particular source using approximant type in approximant.
     this can either be the python implementation of IMRPhenomD given below, or a waveform modelled in
     LIGO's lalsuite package. If a lalsuite approximant is used, source will be given plus and cross
@@ -45,13 +44,57 @@ def Get_Waveform(
     elif approximant in dir(lalsimulation):
         waveform_dict = {}
 
-        M_time = source.M.to("kg") * const.G / const.c ** 3  # Converts M = [M] to M = [sec]
-        #Uses source f_low in Mf (default is 1e-5), then we convert to Hz for lalsuite
-        default_f_min = source.f_low/M_time
-        #Uses 5 orders of magnitude larger that f_low in Mf space (default is 1), then convert to Hz for lalsuite
-        default_f_max = source.f_low * 1e5/M_time
-        #Find even spacing given nfreqs of the source (default is 1e3)
-        default_deltaF = (default_f_max-default_f_min)/source.nfreqs
+        M_time = (
+            source.M.to("kg") * const.G / const.c ** 3
+        )  # Converts M = [M] to M = [sec]
+
+        # Used for finding the starting frequency based on our SNR calculation assumption of
+        # wanting to integrate from observed frequency (f(T_obs_before_merger)) till merger
+        if not hasattr(source, "f_T_obs"):
+            if not hasattr(source, "instrument"):
+                # No instrument? We set some time observed
+                source.Check_Freq_Evol(T_obs=4.0 * u.yr)
+            else:
+                source.Check_Freq_Evol()
+        # Uses source f_T_obs (observed frequency T_obs before merger) in detector frame so we convert to source frame
+        default_f_min = source.f_T_obs * (1 + source.z) / 2.0
+        # Uses Mf space as the end frequency (might be a little arbitrary, but lalsuite cuts the waveform off after f_cut anyway), then convert to Hz for lalsuite
+        default_f_max = 1.0 / M_time
+        # Find even spacing given nfreqs of the source (default is 1e3)
+        # default_deltaF = (default_f_max - default_f_min) / source.nfreqs
+
+        # Spacing required to include defaut_f_min in frequency
+        # WARNING: THIS CAN RESULT IN AN EXTREMELY LONG ARRAY
+        default_deltaF = default_f_min
+
+        # Smallest deltaF before lalsuite can't shift t_coalescence to 0 (?)
+        deltaF_min = 5e-10 * u.Hz
+        if default_deltaF < deltaF_min:
+            print("deltaF is too small, setting to min value we checked: ", deltaF_min)
+            default_deltaF = deltaF_min
+        # Maximum array size before we found trouble with memory
+        array_max = 2e5
+        arr_size = np.ceil((default_f_max - (default_f_min)) / (default_f_min))
+        if arr_size > array_max:
+            errstr_1 = "predicted frequency array size is very large: {}. ".format(
+                arr_size
+            )
+            errstr_1 += "This will probably cause memory errors..."
+            errstr_1 += "We will attempt to shrink it by reducing f_max."
+            # raise ValueError(errstr_1)
+            # print(errstr_1)
+            new_arr_size = arr_size
+            new_default_f_max = default_f_max
+            scale = 2.0
+            while new_arr_size > array_max:
+                new_default_f_max = new_default_f_max / scale
+                new_arr_size = np.ceil(
+                    (new_default_f_max - (default_f_min)) / (default_f_min)
+                )
+                scale += 1
+            default_f_max = new_default_f_max
+            # print('New f_max:',default_f_max)
+            # print('New array size:',new_arr_size)
 
         waveform_dict.update(
             {
@@ -74,7 +117,7 @@ def Get_Waveform(
                 "f_max": default_f_max.value,
                 "f_ref": 0,
                 "LALpars": {},
-                "approximant": getattr(lalsimulation,approximant),
+                "approximant": getattr(lalsimulation, approximant),
             }
         )
 
@@ -121,32 +164,35 @@ def Get_Waveform(
 
         if "deltaF" in lalsuite_kwargs.keys():
             waveform_dict["deltaF"] = lalsuite_kwargs["deltaF"]
-        elif hasattr(source,'instrument'):
-            delT_obs = 1/source.instrument.T_obs.to('s')
-            #If dividing it up into nfreqs makes the resolution smaller than 1/T_obs, swap.
-            if default_deltaF < delT_obs:
-                waveform_dict["deltaF"] = delT_obs.value
-            else:
-                waveform_dict["deltaF"] = default_deltaF.value         
-        else:
-            waveform_dict["deltaF"] = default_deltaF.value
-
-
         if "f_min" in lalsuite_kwargs.keys():
-            waveform_dict["f_min"] = lalsuite_kwargs["f_min"]
+            if isinstance(lalsuite_kwargs["f_min"], u.Quantity):
+                waveform_dict["f_min"] = lalsuite_kwargs["f_min"].value
+            else:
+                waveform_dict["f_min"] = lalsuite_kwargs["f_min"]
         if "f_max" in lalsuite_kwargs.keys():
-            waveform_dict["f_max"] = lalsuite_kwargs["f_max"]
-        elif hasattr(source,'f_high'):
-            waveform_dict["f_max"] = source.f_high.to('Hz').value
+            if isinstance(lalsuite_kwargs["f_max"], u.Quantity):
+                waveform_dict["f_max"] = lalsuite_kwargs["f_max"].value
+            else:
+                waveform_dict["f_max"] = lalsuite_kwargs["f_max"]
+        elif hasattr(source, "f_high"):
+            new_f_max = source.f_high / M_time
+            waveform_dict["f_max"] = new_f_max.to("Hz").value
 
         if "f_ref" in lalsuite_kwargs.keys():
-            waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"]
+            if isinstance(lalsuite_kwargs["f_ref"], u.Quantity):
+                waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"].value
+            else:
+                waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"]
         if "LALpars" in lalsuite_kwargs.keys():
             waveform_dict["LALpars"] = lalsuite_kwargs["LALpars"]
 
-        return Get_LALSuite_Waveform(source,waveform_dict)
+        return Get_LALSuite_Waveform(source, waveform_dict)
     else:
-        raise ValueError("{}, not an available waveform. Must select either pyPhenomD or one from lalsuite's FD waveform approximants".format(approximant))
+        raise ValueError(
+            "{}, not an available waveform. Must select either pyPhenomD or one from lalsuite's FD waveform approximants".format(
+                approximant
+            )
+        )
 
 
 def Get_Amp_Phase(h):
@@ -160,7 +206,7 @@ def Get_Full_Amp(h_plus_f, h_cross_f):
 
 
 def Strain_Conv(source, freqs, strain, inverse=False):
-    """Converts frequency and strain in natural units (G=c=1) to Hertz and dimensionless, respectively.
+    """Converts frequency and strain in natural units (G=c=1) to Hertz and raw Fourier strain amplitude (1/Hertz), respectively.
     If inverse is true, it does the reverse and assumes the strain and frequency are given in the detector frame.
 
     Parameters
@@ -170,7 +216,7 @@ def Strain_Conv(source, freqs, strain, inverse=False):
     freqs : array
         the frequency of the source in either natural units (G=c=1) or Hertz
     strain : array
-        the strain of the source in natural units (G=c=1) or physical dimensionless parameters
+        the strain of the source in natural units (G=c=1) or raw Fourier strain amplitude (1/Hertz)
     inverse : bool, optional
         Converts non-naturalized (Hertz and dimensionless) frequency and strain to Mf and strain in G=c=1 units
     """
@@ -184,23 +230,23 @@ def Strain_Conv(source, freqs, strain, inverse=False):
     freq_conv = 1 / M_redshifted_time
     # Normalized factor to match Stationary phase approx at low frequencies
     strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_redshifted_time ** 2
-
     if inverse:
-        #converted to source frame natural units
+        # converted to source frame natural units
         conv_freqs = freqs / freq_conv
         conv_strain = strain / strain_conv
     else:
-        #converted to detector frame physical units
+        # converted to detector frame physical units
         conv_freqs = freqs * freq_conv
         conv_strain = strain * strain_conv
 
     return [conv_freqs, conv_strain]
 
-def Get_LALSuite_Waveform(source,waveform_dict):
+
+def Get_LALSuite_Waveform(source, waveform_dict):
     """Gets the frequency domain waveform of a particular source using a waveform modelled in
     LIGO's lalsuite package. The source is given plus and cross
     properties with their phase and amplitude for user convenience.
-    
+
     Parameters
     ----------
     source : object
@@ -228,34 +274,35 @@ def Get_LALSuite_Waveform(source,waveform_dict):
             LALparams    LAL dictionary containing accessory parameters
             approximant    post-Newtonian approximant to use for waveform production
     """
-    h_f_plus,h_f_cross = lalsimulation.SimInspiralChooseFDWaveform(**waveform_dict)
-    h_f_plus_amp,h_f_plus_phase = Get_Amp_Phase(h_f_plus.data.data)
-    h_f_cross_amp,h_f_cross_phase = Get_Amp_Phase(h_f_cross.data.data)
+    h_f_plus, h_f_cross = lalsimulation.SimInspiralChooseFDWaveform(**waveform_dict)
+    h_f_plus_amp, h_f_plus_phase = Get_Amp_Phase(h_f_plus.data.data)
+    h_f_cross_amp, h_f_cross_phase = Get_Amp_Phase(h_f_cross.data.data)
 
-    source.h_f_plus_amp=h_f_plus_amp
-    source.h_f_plus_phase=h_f_plus_phase
-    source.h_f_cross_amp=h_f_cross_amp
-    source.h_f_cross_phase=h_f_cross_phase
+    source.h_f_plus_amp = h_f_plus_amp
+    source.h_f_plus_phase = h_f_plus_phase
+    source.h_f_cross_amp = h_f_cross_amp
+    source.h_f_cross_phase = h_f_cross_phase
 
-    full_amp = Get_Full_Amp(h_f_plus_amp,h_f_cross_amp)
-    #Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_low,f_cutoff)
+    full_amp = Get_Full_Amp(h_f_plus_amp, h_f_cross_amp)
+    # Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_low,f_cutoff)
     trimmed_full_amp = []
     for amp in full_amp:
         if not np.isnan(amp) and amp != 0.0:
             trimmed_full_amp.append(amp)
     trimmed_full_amp = np.asarray(trimmed_full_amp)
-    lin_freqs = np.arange(0,waveform_dict['f_max'],waveform_dict['deltaF'])
-    trimmed_freqs = lin_freqs[1:trimmed_full_amp.shape[0]+1]
+    lin_freqs = np.arange(0, waveform_dict["f_max"], waveform_dict["deltaF"])
+    trimmed_freqs = lin_freqs[1 : trimmed_full_amp.shape[0] + 1]
 
-    #The difference between the two is `gwent` has a factor of $\sqrt{\frac{1}{24}}(1+z)^{2}$
-    # and `LALSuite` has a factor of $2\sqrt{\frac{1}{64}}$. 
-    #Thus, $h_{\mathrm{gwent}} = \sqrt{\frac{2}{3}}(1+z)^{2}h_{\mathrm{LAL}}$,
+    # The difference between the two is `gwent` has a factor of $\sqrt{\frac{1}{24}}(1+z)^{2}$
+    # and `LALSuite` has a factor of $2\sqrt{\frac{1}{64}}$.
+    # Thus, $h_{\mathrm{gwent}} = \sqrt{\frac{2}{3}}(1+z)^{2}h_{\mathrm{LAL}}$,
     # this factor is reduced by $\sqrt{\frac{1}{2}}$ if using the cross and plus polarizations to get the total Fourier strain amplitude.
 
-    # frequency and strain of source in detector frame
-    freqs = trimmed_freqs/(1+source.z)
-    strain = np.sqrt(1 / 3 )*(1+source.z)**2*trimmed_full_amp
-    return [freqs,strain]
+    # frequency and strain of source in detector frame and physical units: Hertz and raw Fourier strain amplitude (1/Hertz)
+    freqs = trimmed_freqs / (1 + source.z) * u.Hz
+    strain = np.sqrt(1 / 3) * (1 + source.z) ** 2 * trimmed_full_amp / u.Hz
+    return [freqs, strain]
+
 
 def Get_PyPhenomD(source, pct_of_peak=0.01):
     """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
