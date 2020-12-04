@@ -1265,25 +1265,70 @@ class SpaceBased(Interferometer):
         if self._T_type == "analytic":
             self.Get_Analytic_Transfer_Function()
 
-    def Add_Background(self):
+    def Add_Background(self, model=0):
         """
-        Galactic confusions noise parameters as a function of T_obs
-        """
-        A = 1.4e-44
-        agam = 1100
-        bgam = 3 / 10
-        afk = 0.0016
-        bfk = -2 / 9
-        f_k = afk * self.T_obs ** bfk
-        gamma = agam * self.T_obs ** bgam
+        Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
+        corresponding to array index 0,1,2,3 respectively
 
-        f = self.fT.value
-        S_c_f = (
-            A
-            * (f ** (-7 / 3))
-            * (1 + np.tanh(gamma.value * (f_k.value - f)))
-            * (1 / u.Hz)
-        )  # White Dwarf Background Noise
+        Parameters
+        ----------
+        model : int, {0,1}
+        Used to select between the Cornish and Robson 2017 model with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
+        and a model of the Galactic confusion noise parameterized as a function of T_obs, 0 and 1, respectively.
+        """
+        if model == 0:
+            """
+            Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
+            corresponding to array index 0,1,2,3 respectively
+            From Cornish and Robson 2017 with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477)
+            """
+            f = self.fT.to("Hz")
+            A = 9e-38 / u.Hz
+            a = [0.133, 0.171, 0.165, 0.138]
+            b = [x / u.mHz for x in [0.243, 0.292, 0.299, -0.221]]
+            k = [x / u.mHz for x in [0.482, 1.020, 0.611, 0.521]]
+            g = [x / u.mHz for x in [0.917, 1.680, 1.340, 1.680]]
+            f_k = [x * u.mHz for x in [2.58, 2.15, 1.73, 1.13]]
+            f_ref = 1000 * u.mHz
+            if self.T_obs < 1.0 * u.yr:
+                index = 0
+            elif self.T_obs >= 1.0 * u.yr and self.T_obs < 2.0 * u.yr:
+                index = 1
+            elif self.T_obs >= 2.0 * u.yr and self.T_obs < 4.0 * u.yr:
+                index = 2
+            else:
+                index = 3
+
+            gfkf = g[index].to("1/Hz") * (f_k[index].to("Hz") - f)
+            kf = k[index].to("1/Hz") * f
+            S_c_f = (
+                A
+                * ((1.0 * u.mHz).to("Hz") / f) ** (7 / 3)
+                * np.exp(
+                    -((f / f_ref.to("Hz")) ** a[index])
+                    - b[index].to("1/Hz") * f * np.sin(kf.to("").value)
+                )
+                * (1 + np.tanh(gfkf.to("").value))
+            )  # White Dwarf Background Noise
+        elif model == 1:
+            """
+            Galactic confusions noise parameters as a function of T_obs
+            """
+            A = 1.4e-44
+            agam = 1100
+            bgam = 3 / 10
+            afk = 0.0016
+            bfk = -2 / 9
+            f_k = afk * self.T_obs ** bfk
+            gamma = agam * self.T_obs ** bgam
+
+            f = self.fT.value
+            S_c_f = (
+                A
+                * (f ** (-7 / 3))
+                * (1 + np.tanh(gamma.value * (f_k.value - f)))
+                * (1 / u.Hz)
+            )  # White Dwarf Background Noise
         return S_c_f
 
 

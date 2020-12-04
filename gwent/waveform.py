@@ -67,35 +67,6 @@ def Get_Waveform(source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwa
         # WARNING: THIS CAN RESULT IN AN EXTREMELY LONG ARRAY
         default_deltaF = default_f_min
 
-        # Smallest deltaF before lalsuite can't shift t_coalescence to 0 (?)
-        deltaF_min = 5e-10 * u.Hz
-        if default_deltaF < deltaF_min:
-            print("deltaF is too small, setting to min value we checked: ", deltaF_min)
-            default_deltaF = deltaF_min
-        # Maximum array size before we found trouble with memory
-        array_max = 2e5
-        arr_size = np.ceil((default_f_max - (default_f_min)) / (default_f_min))
-        if arr_size > array_max:
-            errstr_1 = "predicted frequency array size is very large: {}. ".format(
-                arr_size
-            )
-            errstr_1 += "This will probably cause memory errors..."
-            errstr_1 += "We will attempt to shrink it by reducing f_max."
-            # raise ValueError(errstr_1)
-            # print(errstr_1)
-            new_arr_size = arr_size
-            new_default_f_max = default_f_max
-            scale = 2.0
-            while new_arr_size > array_max:
-                new_default_f_max = new_default_f_max / scale
-                new_arr_size = np.ceil(
-                    (new_default_f_max - (default_f_min)) / (default_f_min)
-                )
-                scale += 1
-            default_f_max = new_default_f_max
-            # print('New f_max:',default_f_max)
-            # print('New array size:',new_arr_size)
-
         waveform_dict.update(
             {
                 "m1": source.M.to("kg").value / (1 + source.q),
@@ -186,6 +157,8 @@ def Get_Waveform(source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwa
         if "LALpars" in lalsuite_kwargs.keys():
             waveform_dict["LALpars"] = lalsuite_kwargs["LALpars"]
 
+        Get_Proper_Freq_Params(waveform_dict)
+
         return Get_LALSuite_Waveform(source, waveform_dict)
     else:
         raise ValueError(
@@ -193,6 +166,54 @@ def Get_Waveform(source, approximant="pyPhenomD", pct_of_peak=0.01, lalsuite_kwa
                 approximant
             )
         )
+
+
+def Get_Proper_Freq_Params(waveform_dict):
+    """Used to check if the calculated array is too big, and to assure f_min is included by adjusting deltaF"""
+    in_deltaF = waveform_dict["deltaF"]
+    in_f_min = waveform_dict["f_min"]
+    in_f_max = waveform_dict["f_max"]
+
+    # Smallest deltaF before lalsuite can't shift t_coalescence to 0 (?)
+    deltaF_min = 5e-10
+    # Maximum array size before we found trouble with memory
+    array_max = 2e5
+
+    if in_deltaF != in_f_min:
+        out_deltaF = in_f_min
+        out_f_min = in_f_min
+        if out_deltaF < deltaF_min:
+            print("deltaF is too small, setting to min value we checked: ", deltaF_min)
+            out_deltaF = deltaF_min
+            out_f_min = deltaF_min
+    elif in_deltaF < deltaF_min:
+        print("deltaF is too small, setting to min value we checked: ", deltaF_min)
+        out_deltaF = deltaF_min
+        out_f_min = deltaF_min
+    else:
+        out_deltaF = in_deltaF
+        out_f_min = in_f_min
+
+    # Size based on np arange size
+    arr_size = np.ceil((in_f_max - (out_f_min)) / (out_deltaF))
+    if arr_size > array_max:
+        errstr_1 = "predicted frequency array size is very large: {}. ".format(arr_size)
+        errstr_1 += "This will probably cause memory errors..."
+        errstr_1 += "We will attempt to shrink it by reducing f_max."
+        # raise ValueError(errstr_1)
+        # print(errstr_1)
+        new_arr_size = arr_size
+        out_f_max = in_f_max
+        scale = 2.0
+        while new_arr_size > array_max:
+            out_f_max = out_f_max / scale
+            new_arr_size = np.ceil((out_f_max - (out_f_min)) / (out_deltaF))
+            scale += 1
+    else:
+        out_f_max = in_f_max
+
+    waveform_dict.update({"deltaF": out_deltaF, "f_min": out_f_min, "f_max": out_f_max})
+    return waveform_dict
 
 
 def Get_Amp_Phase(h):
