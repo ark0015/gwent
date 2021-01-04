@@ -7,6 +7,7 @@ gwent
         :target: https://pypi.python.org/pypi/gwent
 
 .. image:: https://github.com/ark0015/gwent/workflows/CI-Tests/badge.svg
+        :target: https://github.com/ark0015/gwent/actions
 
 .. image:: https://readthedocs.org/projects/gwent/badge/?version=latest
         :target: https://gwent.readthedocs.io/en/latest/?badge=latest
