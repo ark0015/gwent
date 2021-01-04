@@ -392,7 +392,7 @@ def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
     source.h_gw = binary.Get_Mono_Strain(
         source,
         inc=inc,
-        freq=source.instrument.f_opt,
+        freq=source.f_gw,
         f_gw_frame="observer",
         pn_frame="observer",
         out_frame="observer",
@@ -403,16 +403,21 @@ def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
         scale = 2 / np.pi
     else:
         scale = 1.0
-    return (
-        scale
-        * source.h_gw
-        * np.sqrt(
-            np.max(np.unique(instrument.T_obs.to("s")))
-            / instrument.S_n_f[
-                np.where(instrument.fT.value == instrument.f_opt.value)[0][0]
-            ]
+
+    indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
+    if indxfgw == 0 or indxfgw >= len(instrument.fT)-1:
+        #The source frequency is assumed to be outside the instrument's frequency, thus the SNR is ~0.
+        #print(f"Your assigned source GW frequency is {source.f_gw} and the instrument frequency range is [{np.unique(np.min(instrument.fT))[0]:.1e},{np.unique(np.max(instrument.fT))[0]:.1e}]")
+        return 1e-30
+    else:
+        return (
+            scale
+            * source.h_gw
+            * np.sqrt(
+                np.max(np.unique(instrument.T_obs.to("s")))
+                / instrument.S_n_f[indxfgw]
+            )
         )
-    )
 
 
 def Calc_Chirp_SNR(source, instrument, integral_consts=None):
@@ -450,7 +455,7 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
         statement_1 += f"Your minimum calculated frequency is {source.f[0]} and f(T_obs) is {source.f_T_obs}"
         print(statement_1)
     indxfgw_end = len(source.f)
-    if indxfgw_start >= len(source.f) - 1:
+    if indxfgw_start >= indxfgw_end - 1:
         # If the SMBH has already merged set the SNR to ~0
         return 1e-30
     else:

@@ -1014,7 +1014,7 @@ def Check_Freq_Evol(
             )
         else:
             raise ValueError(
-                "Must either assign T_evol a value, or assign the source an instrument."
+                "Must either assign T_evol a value, or assign the source a frequency (f_gw) or an instrument."
             )
     else:
         if hasattr(source, "instrument"):
