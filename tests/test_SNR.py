@@ -12,11 +12,13 @@ import pytest
 
 import os, sys
 current_path = os.getcwd()
-print(current_path)
-splt_path = current_path.split("/")
-gwent_path_idx = splt_path.index("gwent")
-gwent_path = "/".join(splt_path[0 : gwent_path_idx + 1])
 sys.path.insert(0, current_path)
+"""
+splt_path = current_path.split("/")
+gwent_path_idx = splt_path.index("Research")
+gwent_path = "/".join(splt_path[0 : gwent_path_idx + 1])
+sys.path.insert(0, gwent_path)
+"""
 
 import gwent
 from gwent import binary
