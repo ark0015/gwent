@@ -10,14 +10,15 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 
-
 import os, sys
 current_path = os.getcwd()
 splt_path = current_path.split("/")
 gwent_path_idx = splt_path.index("gwent")
+print(gwent_path_idx)
 gwent_path = "/".join(splt_path[0 : gwent_path_idx + 1])
 sys.path.insert(0, gwent_path)
 
+print(current_path, gwent_path)
 import gwent
 from gwent import binary
 from gwent import detector
