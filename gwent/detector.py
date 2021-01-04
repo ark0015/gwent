@@ -423,9 +423,7 @@ class PTA:
                                     )
                         else:
                             raise ValueError(
-                                "{} must be a single value, or the same length as n_p: {}".format(
-                                    var_name, self.n_p
-                                )
+                                f"{var_name} must be a single value, or the same length as n_p: {self.n_p}"
                             )
                 else:
                     if len(var) == 2:
@@ -441,9 +439,7 @@ class PTA:
                         samp_var = var
                     else:
                         raise ValueError(
-                            "To sample {}, it must be either [min,max], or an array of individual pulsar {} of length n_p: {}".format(
-                                var_name, var_name, self.n_p
-                            )
+                            f"To sample {var_name}, it must be either [min,max], or an array of individual pulsar {var_name} of length n_p: {self.n_p}"
                         )
 
                     if var_name == "rn_amp":
@@ -488,6 +484,13 @@ class PTA:
     def Get_Sample_Draws(self, var_name, num_draws):
         """For observation times, all noise parameters (sigma, Rn_amplitudes,RN alphas), cadence, and sky locations (phis, thetas),
         uses the individual parameter value ranges and generates distributions from which to draw new parameters.
+
+        Parameters
+        ----------
+        var_name : string
+            The name of the noise parameter to assign sampled parameters
+        num_draws : int,float
+            The number of draws to return
 
         Notes
         -----
@@ -687,10 +690,8 @@ class Interferometer:
 
     name : string
         name of the instrument
-
     T_obs : float
         the observation time of the PTA in [years]
-
     load_location : string, optional
         If you want to load an instrument curve from a file, it's the file path
     I_type : string, {'E','A','h'}
@@ -916,7 +917,6 @@ class GroundBased(Interferometer):
 
         Parameters
         ----------
-
         noise_dict : dictionary
             A nested noise dictionary that has the main variable parameter name(s) in the top level,
             the next level of the dictionary contains the subparameter variable name(s) and the desired value
@@ -1038,12 +1038,11 @@ class SpaceBased(Interferometer):
         the higher break frequency of the acceleration noise in [Hz]
     A_IFO : float
         the amplitude of the interferometer
-
     T_type : string, {'N','A'}
         Picks the transfer function generation method
         'N' uses the numerically approximated method in Robson, Cornish, and Liu, 2019
         'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
-    Background : Boolean
+    Background : Boolean, optional
         Add in a Galactic Binary Confusion Noise
 
     """
@@ -1229,7 +1228,12 @@ class SpaceBased(Interferometer):
         self.fT = LISA_Transfer_Function_f[idx_f_5:idx_f_1]
 
     def Get_Analytic_Transfer_Function(self, openingangle=None):
-        # Response function approximation from Calculation described by Cornish, Robson, Liu 2019
+        """Response function approximation from Calculation described by Cornish, Robson, Liu 2019
+        Parameters
+        ----------
+        openingangle : int,float,Quantity, optional
+        Determines the opening angle of the instrument, if unassigned use the value in the above paper.
+        """
         self.fT = (
             np.logspace(
                 np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs

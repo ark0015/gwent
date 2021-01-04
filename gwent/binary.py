@@ -134,18 +134,27 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     Parameters
     ----------
-    chi1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    chi2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2
-
+    chi1 : float, optional
+        The dimensionless spin parameter abs(a/m) for black hole m1 defaults to 0.0.
+    chi2 : float, optional
+        The dimensionless spin parameter abs(a/m) for black hole m2 defaults to 0.0.
     f_low : float, optional
         The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
+    f_high : float, optional
+        The highest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
     nfreqs : int, optional
         The number of frequencies at which the BBH waveform is calculated
-    instrument: object, optional
+    instrument : object, optional
         If assigned, the optimal frequency (ie. most sensitive frequency) of the detector is used as
         the binary's GW frequency
+    f_gw : float, Quantity, optional
+        The binary's GW frequency if source is monochromatic
+    approximant : str, optional
+        the approximant used to calculate the frequency domain waveform of the source.
+        Can either be the python implementation of IMRPhenomD ('pyPhenomD', the default) given below,
+        or a waveform modelled in LIGO's lalsuite's lalsimulation package.
+    lalsuite_kwargs: dict, optional
+        More specific user-defined kwargs for the different lalsuite waveforms
 
     Notes
     -----
@@ -169,7 +178,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
                 self.nfreqs = value
             elif keys == "instrument":
                 self.instrument = value
-                self.Check_Freq_Evol()
+                Check_Freq_Evol(
+                    self, T_evol=None, T_evol_frame="observer", f_gw_frame="observer"
+                )
             elif keys == "f_gw":
                 self.f_gw = value
             elif keys == "chi1":
@@ -195,7 +206,10 @@ class BBHFrequencyDomain(BinaryBlackHole):
         if not hasattr(self, "f_low"):
             self.f_low = 1e-6
         if not hasattr(self, "approximant"):
-            self.approximant = "pyPhenomD"
+            if hasattr(self, "lalsuite_kwargs"):
+                self.approximant = self.lalsuite_kwargs['approximant']
+            else:
+                self.approximant = "pyPhenomD"
         if not hasattr(self, "lalsuite_kwargs"):
             self.lalsuite_kwargs = {}
 
@@ -231,7 +245,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def h_gw(self):
         if not hasattr(self, "_h_gw"):
             if hasattr(self, "_instrument"):
-                self._h_gw = Get_Mono_Strain(self, in_frame="source").to("")
+                # Default assumes f_gw and h_gw are in the observer frame
+                self._h_gw = Get_Mono_Strain(self).to("")
             else:
                 raise ValueError(
                     "No instrument assigned, please fix it. "
@@ -270,6 +285,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
     @property
     def h_f(self):
         if not hasattr(self, "_h_f"):
+            # Default assumes output is in observer frame
             if self.approximant == "pyPhenomD":
                 if not all([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
                     self.Get_PhenomD_Strain()
@@ -298,6 +314,7 @@ class BBHFrequencyDomain(BinaryBlackHole):
     @property
     def f(self):
         if not hasattr(self, "_f"):
+            # Default assumes output is in observer frame
             if self.approximant == "pyPhenomD":
                 if not all([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
                     self.Get_PhenomD_Strain()
@@ -477,21 +494,52 @@ class BBHTimeDomain(BinaryBlackHole):
         return [natural_f, natural_h_f]
 
 
-def Get_Char_Strain(source):
+def Get_Char_Strain(source, in_frame="observer", out_frame="observer"):
     """Converts source strain to characteristic strain
 
     Parameters
     ----------
     source : object
         Instance of gravitational wave source class
-
+    in_frame : str, {'observer','source'}
+        Determines whether the input source strain and frequency are in the source or observer frame.
+    out_frame : str, {'observer','source'}
+        Determines whether the returned frequency is in the source or observer frame.
     """
-    h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
+    if in_frame == "source":
+        if out_frame == "observer":
+            h_char = np.sqrt(
+                4
+                * (source.f / (1 + source.z)) ** 2
+                * (source.h_f * (1 + source.z) ** 2) ** 2
+            )
+        elif out_frame == "source":
+            h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+    elif in_frame == "observer":
+        if out_frame == "observer":
+            h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
+        elif out_frame == "source":
+            h_char = np.sqrt(
+                4
+                * (source.f * (1 + source.z)) ** 2
+                * (source.h_f / (1 + source.z) ** 2) ** 2
+            )
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
     return h_char
 
 
 def Get_Mono_Char_Strain(
-    source, freq, in_frame="observer", out_frame="observer", inc=None
+    source,
+    method="SPA",
+    freq=None,
+    f_gw_frame="observer",
+    pn_frame="observer",
+    out_frame="observer",
+    inc=None,
 ):
     """Calculates the characteristic strain from a slowly evolving (monochromatic) binary black hole
 
@@ -499,8 +547,17 @@ def Get_Mono_Char_Strain(
     ----------
     source : object
         Instance of gravitational wave source class
-    in_frame : str, {'observer','source'}
-        Determines whether the source frequency f_gw is in the source or observer frame. 
+    method : str, {'SPA','PN'}
+        Determines method of calculating $h_{0}$. 
+        'SPA' uses the stationary phase approximation typically used for single frequency sources
+        'PN' uses the waveform of the source (source.h_f) at freq.
+    freq : float, optional
+        the binary GW frequency in the corresponding in frame. If freq is None, the frequency
+        is set to source.f_gw
+    f_gw_frame : str, {'source','observer'}
+        Determines whether the input frequency (either freq or source.f_gw if freq is None) is in the source or observer frame.
+    pn_frame : str, {'source','observer'}
+        Determines whether the waveform f and h_f are in the source or observer frame. 
     out_frame : str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
     inc : float, optional
@@ -513,108 +570,251 @@ def Get_Mono_Char_Strain(
         The characteristic strain of a monochromatic source in the source frame.
     """
 
-    strain_amp = Get_Mono_Strain(
-        source, inc=inc, in_frame=in_frame, out_frame=out_frame
-    )
-    f_dot = source.Get_F_Dot(freq, in_frame=in_frame, out_frame=out_frame)
-
-    if out_frame == "observer":
-        if in_frame == "source":
-            return source.f_gw / (1 + source.z) * np.sqrt(2 / f_dot) * strain_amp
-        else:
-            return source.f_gw * np.sqrt(2 / f_dot) * strain_amp
+    if freq is not None:
+        f_gw = utils.make_quant(freq, "Hz")
     else:
-        if in_frame == "source":
-            return source.f_gw * np.sqrt(2 / f_dot) * strain_amp
+        f_gw = utils.make_quant(source.f_gw, "Hz")
+
+    if method == "SPA":
+        strain_amp = Get_Mono_Strain(
+            source,
+            method=method,
+            freq=f_gw,
+            inc=inc,
+            f_gw_frame=f_gw_frame,
+            pn_frame=pn_frame,
+            out_frame=out_frame,
+        )
+        f_dot = Get_F_Dot(source, freq=f_gw, in_frame=f_gw_frame, out_frame=out_frame)
+
+        if out_frame == "observer":
+            if f_gw_frame == "source":
+                return f_gw / (1 + source.z) * np.sqrt(2 / f_dot) * strain_amp
+            else:
+                return f_gw * np.sqrt(2 / f_dot) * strain_amp
         else:
-            return source.f_gw * (1 + source.z) * np.sqrt(2 / f_dot) * strain_amp
+            if f_gw_frame == "source":
+                return f_gw * np.sqrt(2 / f_dot) * strain_amp
+            else:
+                return f_gw * (1 + source.z) * np.sqrt(2 / f_dot) * strain_amp
+    else:
+        h_char = Get_Char_Strain(source, in_frame=pn_frame, out_frame=out_frame)
+        if f_gw_frame == "observer":
+            f_obs_source = f_gw * (1 + source.z)
+        elif f_gw_frame == "source":
+            f_obs_source = f_gw
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
+        low_f_err_statement = "Uh, you probably should set your source f_low to lower. "
+        interp_h_char = interp.interp1d(
+            np.log10(source.f.value), np.log10(h_char.value)
+        )
+        if pn_frame == "source":
+            if f_obs_source.value < np.unique(np.min(source.f.value)):
+                low_f_err_statement += f"Your minimum calculated frequency is {source.f[0]} and your selected observed frequency is {f_obs_source}"
+                raise ValueError(low_f_err_statement)
+            else:
+                # Both are in the same frame so it doesn't matter the out_frame since h_char is already in out_frame
+                new_h_char = 10 ** interp_h_char(np.log10(f_obs_source.value))
+        elif pn_frame == "observer":
+            f_obs = f_obs_source.value / (1 + source.z)
+            if f_obs < np.unique(np.min(source.f.value)):
+                low_f_err_statement += f"Your minimum calculated frequency is {source.f[0]} and your selected observed frequency is {f_obs}"
+                raise ValueError(low_f_err_statement)
+            else:
+                # Need f_obs in detector frame
+                new_h_char = 10 ** interp_h_char(np.log10(f_obs))
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
+        return new_h_char
 
 
-def Get_Mono_Strain(source, freq, inc=None, in_frame="source", out_frame="source"):
+def Get_Mono_Strain(
+    source,
+    method="SPA",
+    freq=None,
+    inc=None,
+    f_gw_frame="observer",
+    pn_frame="observer",
+    out_frame="observer",
+):
     """Calculates the fourier domain strain from a monochromatic binary black hole.
 
     Parameters
     ----------
     source : object
         Instance of gravitational wave source class
-    freq : float
-        the binary GW frequency in the corresponding in frame.
+    method : str, {'SPA','PN'}
+        Determines method of calculating $h_{0}$. 
+        'SPA' uses the stationary phase approximation typically used for single frequency sources
+        'PN' uses the waveform of the source (source.h_f), rescales using eqn. 35 in Moore, Cole, and Berry (https://arxiv.org/pdf/1408.0740.pdf)
+        to get $h_{0}$, this may prove more accurate as higher order effects are taken into account.
+    freq : float, optional
+        the binary GW frequency in the corresponding in frame. If freq is None, the frequency
+        is set to source.f_gw
     inc : float, optional
         The inclination of the source in radians. If inc is None, the strain is \
         sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
-    in_frame : str, {'source','observer'}
-        Determines whether the frequency is in the source or observer frame.
+    f_gw_frame : str, {'source','observer'}
+        Determines whether the input frequency (either freq or source.f_gw if freq is None) is in the source or observer frame.
+    pn_frame : str, {'source','observer'}
+        Determines whether the waveform f and h_f are in the source or observer frame.
     out_frame : str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
 
     Returns
     -------
     float
-        The strain of a monochromatic source in the source frame.
+        The strain of a monochromatic source in the out_frame frame.
 
     """
-    f_gw = utils.make_quant(freq, "Hz")
+    if freq is not None:
+        f_gw = utils.make_quant(freq, "Hz")
+    else:
+        f_gw = utils.make_quant(source.f_gw, "Hz")
 
-    if in_frame == "observer":
+    if f_gw_frame == "observer":
         f_obs_source = f_gw * (1 + source.z)
-    elif in_frame == "source":
+    elif f_gw_frame == "source":
         f_obs_source = f_gw
     else:
         raise ValueError("The reference frame can only be observer or source.")
 
-    DL = cosmo.luminosity_distance(source.z)
-    DL = DL.to("m")
-
-    # Converts M = [M] to M = [sec]
-    m_conv = const.G / const.c ** 3
-
-    eta = source.q / (1 + source.q) ** 2
-    M_time = source.M.to("kg") * m_conv
-    M_chirp = eta ** (3 / 5) * M_time
-
-    if inc is not None:
-        if inc > np.pi or inc < -np.pi:
-            raise ValueError("Inclination must be between -pi and pi.")
-        a = (1 + np.cos(inc) ** 2) / 2
-        b = np.cos(inc)
-        const_val = 4.0 * np.sqrt(a ** 2 + b ** 2)
-    else:
-        const_val = 8 / np.sqrt(5)
-
-    if out_frame == "observer":
-        return (
-            const_val
-            * (const.c / DL)
-            * (np.pi * f_obs_source / (1 + source.z)) ** (2.0 / 3.0)
-            * (M_chirp * (1 + source.z)) ** (5.0 / 3.0)
+    if method == "PN":
+        interp_h_f = interp.interp1d(
+            np.log10(source.f.value),
+            np.log10(source.h_f.value),
+            kind="cubic",
+            fill_value=-30.0,
+            bounds_error=False,
         )
-    elif out_frame == "source":
-        return (
-            const_val
-            * (const.c / DL)
-            * (np.pi * f_obs_source) ** (2.0 / 3.0)
-            * M_chirp ** (5.0 / 3.0)
-        )
+        low_f_err_statement = "Uh, you probably should set your source f_low to lower. "
+        if pn_frame == "source":
+            if f_obs_source.value < np.unique(np.min(source.f.value)):
+                low_f_err_statement += f"Your minimum calculated frequency is {source.f[0]} and your selected observed frequency is {f_obs_source}"
+                raise ValueError(low_f_err_statement)
+            else:
+                # Both are in the same frame so it doesn't matter the out_frame since h_char is already in out_frame
+                new_h_f = 10 ** interp_h_f(np.log10(f_obs_source.value)) / u.Hz
+            if out_frame == "observer":
+                h_0 = (
+                    new_h_f
+                    * (1 + source.z) ** 2
+                    * np.sqrt(
+                        2
+                        * Get_F_Dot(
+                            source,
+                            freq=f_obs_source,
+                            in_frame="source",
+                            out_frame=out_frame,
+                        )
+                    )
+                )
+            elif out_frame == "source":
+                h_0 = new_h_f * np.sqrt(
+                    2
+                    * Get_F_Dot(
+                        source,
+                        freq=f_obs_source,
+                        in_frame="source",
+                        out_frame=out_frame,
+                    )
+                )
+            else:
+                raise ValueError("The reference frame can only be observer or source.")
+        elif pn_frame == "observer":
+            # Need f_obs in detector frame
+            f_obs = f_obs_source.value / (1 + source.z)
+            if f_obs < np.unique(np.min(source.f.value))[0]:
+                low_f_err_statement += f"Your minimum calculated frequency is {source.f[0]} and your selected observed frequency is {f_obs}"
+                raise ValueError(low_f_err_statement)
+            else:
+                # Need f_obs in detector frame
+                new_h_f = 10 ** interp_h_f(np.log10(f_obs)) / u.Hz
+            if out_frame == "observer":
+                h_0 = new_h_f * np.sqrt(
+                    2
+                    * Get_F_Dot(
+                        source,
+                        freq=f_obs_source,
+                        in_frame="source",
+                        out_frame=out_frame,
+                    )
+                )
+            elif out_frame == "source":
+                h_0 = (new_h_f / (1 + source.z) ** 2) * np.sqrt(
+                    2
+                    * Get_F_Dot(
+                        source,
+                        freq=f_obs_source,
+                        in_frame="source",
+                        out_frame=out_frame,
+                    )
+                )
+            else:
+                raise ValueError("The reference frame can only be observer or source.")
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+    elif method == "SPA":
+        DL = cosmo.luminosity_distance(source.z)
+        DL = DL.to("m")
+
+        # Converts M = [M] to M = [sec]
+        m_conv = const.G / const.c ** 3
+
+        eta = source.q / (1 + source.q) ** 2
+        M_time = source.M.to("kg") * m_conv
+        M_chirp = eta ** (3 / 5) * M_time
+
+        if inc is not None:
+            if inc > np.pi or inc < -np.pi:
+                raise ValueError("Inclination must be between -pi and pi.")
+            a = (1 + np.cos(inc) ** 2) / 2
+            b = np.cos(inc)
+            const_val = 4.0 * np.sqrt(a ** 2 + b ** 2)
+        else:
+            const_val = 8 / np.sqrt(5)
+
+        if out_frame == "observer":
+            h_0 = (
+                const_val
+                * (const.c / DL)
+                * (np.pi * f_obs_source / (1 + source.z)) ** (2.0 / 3.0)
+                * (M_chirp * (1 + source.z)) ** (5.0 / 3.0)
+            )
+        elif out_frame == "source":
+            h_0 = (
+                const_val
+                * (const.c / DL)
+                * (np.pi * f_obs_source) ** (2.0 / 3.0)
+                * M_chirp ** (5.0 / 3.0)
+            )
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
     else:
-        raise ValueError("The reference frame can only be observer or source.")
+        raise ValueError("The method can only be SPA or PN.")
+
+    return h_0
 
 
-def Get_F_Dot(source, freq, in_frame="observer", out_frame="observer"):
+def Get_F_Dot(source, freq=None, in_frame="observer", out_frame="observer"):
     """Calculates the change in frequency of a binary black hole at a given frequency.
 
     Parameters
     ----------
     source : object
         Instance of gravitational wave source class
-    freq : float
-        the binary GW frequency in the corresponding in frame.
+    freq : float, optional
+        the binary GW frequency in the corresponding in frame. If freq is None, the frequency
+        is set to source.f_gw
     in_frame : str, {'observer','source'}
         Determines whether the given frequency is in the source or observer frame.
     out_frame : str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
 
     """
-    freq = utils.make_quant(freq, "Hz")
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
@@ -622,10 +822,15 @@ def Get_F_Dot(source, freq, in_frame="observer", out_frame="observer"):
     M_time = source.M.to("kg") * m_conv
     M_chirp = eta ** (3 / 5) * M_time
 
+    if freq is not None:
+        f_gw = utils.make_quant(freq, "Hz")
+    else:
+        f_gw = utils.make_quant(source.f_gw, "Hz")
+
     if in_frame == "observer":
-        f_obs_source = freq * (1 + source.z)
+        f_obs_source = f_gw * (1 + source.z)
     elif in_frame == "source":
-        f_obs_source = freq
+        f_obs_source = f_gw
     else:
         raise ValueError("The reference frame can only be observer or source.")
 
@@ -649,28 +854,33 @@ def Get_F_Dot(source, freq, in_frame="observer", out_frame="observer"):
         raise ValueError("The reference frame can only be observer or source.")
 
 
-def Get_Time_From_Merger(source, freq, in_frame="observer", out_frame="source"):
+def Get_Time_From_Merger(source, freq=None, in_frame="observer", out_frame="source"):
     """Calculates the time from merger of a binary black hole given a frequency.
 
     Parameters
     ----------
     source : object
         Instance of gravitational wave source class
-    freq : float
-        the binary GW frequency in the corresponding in frame.
+    freq : float, optional
+        the binary GW frequency in the corresponding in frame. If freq is None, the frequency
+        is set to source.f_gw
     in_frame : str, {'observer','source'}
         Determines whether the given frequency is in the source or observer frame.
     out_frame : str, {'source','observer'}
         Determines whether the returned frequency is in the source or observer frame.
 
     """
-    freq = utils.make_quant(freq, "1/s")
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
     # Always assume the mass is in the source frame
     M_time = source.M.to("kg") * m_conv
     M_chirp = eta ** (3 / 5) * M_time
+
+    if freq is not None:
+        freq = utils.make_quant(freq, "Hz")
+    else:
+        freq = utils.make_quant(source.f_gw, "Hz")
 
     if in_frame == "observer":
         f_obs_source = freq * (1 + source.z)
@@ -693,7 +903,7 @@ def Get_Time_From_Merger(source, freq, in_frame="observer", out_frame="source"):
         raise ValueError("The reference frame can only be observer or source.")
 
 
-def Get_Source_Freq(source, tau, in_frame="observer"):
+def Get_Source_Freq(source, tau, in_frame="observer", out_frame="source"):
     """Calculates the binary black hole's gravitational wave frequency given a time from merger in the source frame
 
     Parameters
@@ -704,7 +914,9 @@ def Get_Source_Freq(source, tau, in_frame="observer"):
         the time from merger in the respective frame.
         If not an astropy quantity, assumed to be a time in seconds
     in_frame : str, {'observer','source'}
-        Determines whether the given frequency is in the source or observer frame.
+        Determines whether the given time to merger is in the source or observer frame.
+    out_frame : str, {'source','observer'}
+        Determines whether the returned frequency is in the source or observer frame.
 
     """
     tau = utils.make_quant(tau, "s")
@@ -721,14 +933,29 @@ def Get_Source_Freq(source, tau, in_frame="observer"):
     M_time = source.M.to("kg") * m_conv
     M_chirp = eta ** (3 / 5) * M_time
 
-    return 1.0 / 8.0 / np.pi / M_chirp * (5 * M_chirp / tau_source) ** (3.0 / 8.0)
+    if out_frame == "observer":
+        return (
+            1.0
+            / 8.0
+            / np.pi
+            / (M_chirp * (1 + source.z))
+            * (5 * M_chirp / tau_source) ** (3.0 / 8.0)
+        )
+    elif out_frame == "source":
+        return 1.0 / 8.0 / np.pi / M_chirp * (5 * M_chirp / tau_source) ** (3.0 / 8.0)
+    else:
+        raise ValueError("The reference frame can only be observer or source.")
 
 
-def Check_Freq_Evol(source, T_evol=None, T_evol_frame="observer", f_gw_frame="source"):
+def Check_Freq_Evol(
+    source, T_evol=None, T_evol_frame="observer", f_gw_frame="observer"
+):
     """Checks the frequency evolution of the black hole binary.
 
     Parameters
     ----------
+    source : object
+        Instance of gravitational wave source class
     T_evol : int,float, Quantity, optional
         The length of time the binary may evolve, if not provided it is assumed source
         has an instrument assigned and the instruments observation time will be used.
@@ -752,7 +979,6 @@ def Check_Freq_Evol(source, T_evol=None, T_evol_frame="observer", f_gw_frame="so
     which uses binomial expansion of f_T_evol_inst - f_init_inst and thus will never be imaginary
 
     """
-
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
@@ -764,21 +990,28 @@ def Check_Freq_Evol(source, T_evol=None, T_evol_frame="observer", f_gw_frame="so
         if hasattr(source, "_instrument"):
             if hasattr(source, "_f_gw"):
                 t_init_source = Get_Time_From_Merger(
-                    source, source.f_gw, in_frame=f_gw_frame
+                    source, freq=source.f_gw, in_frame=f_gw_frame, out_frame="source"
                 )
             else:
                 # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
                 t_init_source = Get_Time_From_Merger(
-                    source, source.instrument.f_opt, frame="observer"
+                    source,
+                    freq=source.instrument.f_opt,
+                    in_frame="observer",
+                    out_frame="source",
                 )
             # f(T_evol), the frequency of the source at T_evol before merger
-            f_T_evol_source = Get_Source_Freq(source, T_evol, in_frame=T_evol_frame)
+            f_T_evol_source = Get_Source_Freq(
+                source, T_evol, in_frame=T_evol_frame, out_frame="source"
+            )
         elif hasattr(source, "_f_gw") and not hasattr(source, "_instrument"):
             t_init_source = Get_Time_From_Merger(
-                source, source.f_gw, in_frame=f_gw_frame
+                source, freq=source.f_gw, in_frame=f_gw_frame, out_frame="source"
             )
             # f(T_evol), the frequency of the source at T_evol before merger
-            f_T_evol_source = Get_Source_Freq(source, T_evol, in_frame=T_evol_frame)
+            f_T_evol_source = Get_Source_Freq(
+                source, T_evol, in_frame=T_evol_frame, out_frame="source"
+            )
         else:
             raise ValueError(
                 "Must either assign T_evol a value, or assign the source an instrument."
@@ -789,10 +1022,15 @@ def Check_Freq_Evol(source, T_evol=None, T_evol_frame="observer", f_gw_frame="so
             T_evol = utils.make_quant(np.max(np.unique(source.instrument.T_obs)), "s")
             # Assumes f_init is the optimal frequency in the instrument frame to get t_init_source
             t_init_source = Get_Time_From_Merger(
-                source, source.instrument.f_opt, in_frame="observer"
+                source,
+                freq=source.instrument.f_opt,
+                in_frame="observer",
+                out_frame="source",
             )
             # f(T_evol), the frequency of the source at T_evol before merger
-            f_T_evol_source = Get_Source_Freq(source, T_evol, in_frame="observer")
+            f_T_evol_source = Get_Source_Freq(
+                source, T_evol, in_frame="observer", out_frame="source"
+            )
         else:
             raise ValueError(
                 "Must either assign T_evol a value, or assign the source an instrument."

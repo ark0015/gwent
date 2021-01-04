@@ -21,7 +21,7 @@ def Plot_SNR(
     return_plt=False,
     dl_axis=False,
     lb_axis=False,
-    smooth_contours=False,
+    smooth_contours=True,
     cfill=True,
     display_cbar=True,
     x_axis_label=True,
@@ -597,11 +597,25 @@ def Get_Axes_Labels(
         ]
     elif var == "A_IFO":
         # Proposed Value = 10^{-12}: L3 LISA
-        ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
-        ax_dict[var_axis + "label"] = r"$A_{\mathrm{IFO}}$ [m]"
-        ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%.0f}$" % x for x in np.log10(orig_labels)
-        ]
+        if var_scale == 'log':
+            ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
+            ax_dict[var_axis + "label"] = r"$A_{\mathrm{IFO}}$ [m]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$10^{%.0f}$" % x for x in np.log10(orig_labels)
+            ]
+        elif var_scale == "lin":
+            scale = 10 ** round(np.log10(min(orig_labels)))
+            new_labels = (
+                np.arange(
+                    round(min(orig_labels) / scale), round(max(orig_labels) / scale) + 1, 3
+                )
+                * scale
+            )
+            ax_dict[var_axis + "ticks"] = new_labels
+            ax_dict[var_axis + "label"] = r"$A_{\mathrm{IFO}}$ [pm]"
+            ax_dict[var_axis + "ticklabels"] = [
+                r"$%.1f$" % (x) for x in new_labels/scale
+            ]
     elif var == "f_acc_break_low":
         # Proposed Value = 0.4mHz: L3 LISA
         scale = 10 ** round(np.log10(min(orig_labels)))
