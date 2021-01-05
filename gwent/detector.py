@@ -1042,7 +1042,7 @@ class SpaceBased(Interferometer):
         Picks the transfer function generation method
         'N' uses the numerically approximated method in Robson, Cornish, and Liu, 2019
         'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
-    Background : Boolean, optional 
+    Background : Boolean, optional
         Add in a Galactic Binary Confusion Noise
     Background_model : int, {0,1}
         Used to selectGalactic Binary Confusion Noise model: 0 is the Cornish and Robson 2017 model
@@ -1245,7 +1245,7 @@ class SpaceBased(Interferometer):
         """Response function approximation from Calculation described by Cornish, Robson, Liu 2019
         Uses openingangle property to determine the opening angle of the instrument, if unassigned use the value in the above paper.
         """
-        if hasattr(self,'openingangle'):
+        if hasattr(self, "openingangle"):
             openingangle = self.openingangle
         else:
             openingangle = None

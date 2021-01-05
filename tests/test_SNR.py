@@ -410,7 +410,7 @@ def test_NANOGrav_WN_params_Mvq(source_pta, NANOGrav_WN):
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
     [_, _, _] = snr.Get_SNR_Matrix(
-        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y, method='PN'
+        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y, method="PN"
     )
     fig, ax = snrplot.Plot_SNR(
         var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
@@ -451,6 +451,7 @@ def test_NANOGrav_WN_params_Mvchi1(source_pta, NANOGrav_WN):
     )
     plt.close(fig)
 
+
 def test_NANOGrav_WN_params_Mvchii(source_pta, NANOGrav_WN):
     # Variable on x-axis
     var_x = "M"
@@ -471,13 +472,14 @@ def test_NANOGrav_WN_params_Mvchii(source_pta, NANOGrav_WN):
     )
     plt.close(fig)
 
+
 def test_NANOGrav_WN_params_chiivM(source_pta, NANOGrav_WN):
     # Variable on x-axis
     var_x = "chii"
     # Variable on y-axis
     var_y = "M"
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
-        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y,method='PN'
+        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y, method="PN"
     )
     fig, ax = snrplot.Plot_SNR(
         var_x,
@@ -490,6 +492,7 @@ def test_NANOGrav_WN_params_chiivM(source_pta, NANOGrav_WN):
         return_plt=True,
     )
     plt.close(fig)
+
 
 def test_NANOGrav_WN_params_MvTobs(source_pta, NANOGrav_WN):
     # Variable on x-axis
@@ -540,6 +543,7 @@ def test_NANOGrav_WN_params_Mvsigma(source_pta, NANOGrav_WN):
     )
     plt.close(fig)
 
+
 def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
     source_pta.q = 1.0
     source_pta.chi1 = 0.0
@@ -554,8 +558,8 @@ def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
     NANOGrav_WN.n_p = [N_p, N_p_min, N_p_max]
     NANOGrav_WN.cadence = [cadence, cadence_min, cadence_max]
 
-    print(source_pta.M,source_pta.q,source_pta.chi1,source_pta.chi2,source_pta.z)
-    print(NANOGrav_WN.T_obs,NANOGrav_WN.n_p,NANOGrav_WN.cadence,NANOGrav_WN.sigma)
+    print(source_pta.M, source_pta.q, source_pta.chi1, source_pta.chi2, source_pta.z)
+    print(NANOGrav_WN.T_obs, NANOGrav_WN.n_p, NANOGrav_WN.cadence, NANOGrav_WN.sigma)
     # Variable on x-axis
     var_x = "M"
     # Variable on y-axis

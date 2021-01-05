@@ -10,6 +10,7 @@ import gwent
 from . import waveform
 from . import utils
 
+
 class BinaryBlackHole:
     """Base Class for frequency domain strains from Binary Black Holes.
 
@@ -66,9 +67,11 @@ class BinaryBlackHole:
 
     @q.setter
     def q(self, value):
-        if hasattr(self,'approximant'):
-            #Need to recalculate pyphenomD if q is changed
-            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+        if hasattr(self, "approximant"):
+            # Need to recalculate pyphenomD if q is changed
+            if self.approximant == "pyPhenomD" and any(
+                [hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]
+            ):
                 del self._phenomD_f
                 del self._phenomD_h
         self.var_dict = ["q", value]
@@ -220,9 +223,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     @chi1.setter
     def chi1(self, value):
-        if hasattr(self,'approximant'):
-            #Need to recalculate pyphenomD if chi1 is changed
-            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+        if hasattr(self, "approximant"):
+            # Need to recalculate pyphenomD if chi1 is changed
+            if self.approximant == "pyPhenomD" and any(
+                [hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]
+            ):
                 del self._phenomD_f
                 del self._phenomD_h
         self.var_dict = ["chi1", value]
@@ -234,9 +239,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     @chi2.setter
     def chi2(self, value):
-        if hasattr(self,'approximant'):
-            #Need to recalculate pyphenomD if chi2 is changed
-            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+        if hasattr(self, "approximant"):
+            # Need to recalculate pyphenomD if chi2 is changed
+            if self.approximant == "pyPhenomD" and any(
+                [hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]
+            ):
                 del self._phenomD_f
                 del self._phenomD_h
         self.var_dict = ["chi2", value]

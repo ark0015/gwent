@@ -21,7 +21,7 @@ def test_conversion_error():
 # Values from Robson, Cornish, and Liu 2019 https://arxiv.org/abs/1803.01944 using the Transfer Function Approximation within.
 L = 2.5 * u.Gm  # armlength in Gm
 L = L.to("m")
-LISA_T_obs = 4. * u.yr
+LISA_T_obs = 4.0 * u.yr
 f_acc_break_low = 0.4 * u.mHz.to("Hz") * u.Hz
 f_acc_break_high = 8.0 * u.mHz.to("Hz") * u.Hz
 f_IMS_break = 2.0 * u.mHz.to("Hz") * u.Hz

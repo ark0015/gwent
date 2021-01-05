@@ -14,6 +14,7 @@ from . import binary
 current_path = os.path.abspath(gwent.__path__[0])
 load_directory = os.path.join(current_path, "LoadFiles/")
 
+
 def Get_Waveform(
     source,
     approximant="pyPhenomD",
@@ -52,9 +53,13 @@ def Get_Waveform(
         if not hasattr(source, "_fitcoeffs"):
             Get_Fitcoeffs(source)
         if not all([hasattr(source, "_phenomD_f"), hasattr(source, "_phenomD_h")]):
-            [source._phenomD_f, source._phenomD_h] = Get_PyPhenomD(source, pct_of_peak=pct_of_peak)
+            [source._phenomD_f, source._phenomD_h] = Get_PyPhenomD(
+                source, pct_of_peak=pct_of_peak
+            )
 
-        return Strain_Conv(source, source._phenomD_f, source._phenomD_h, out_frame=out_frame)
+        return Strain_Conv(
+            source, source._phenomD_f, source._phenomD_h, out_frame=out_frame
+        )
     elif approximant in dir(lalsimulation) or isinstance(approximant, int):
         if isinstance(approximant, int):
             approx = approximant
@@ -232,12 +237,14 @@ def Get_Proper_Freq_Params(waveform_dict):
     waveform_dict.update({"deltaF": out_deltaF, "f_min": out_f_min, "f_max": out_f_max})
     return waveform_dict
 
+
 def Get_Fitcoeffs(source):
     """Loads Quasi-Normal Mode fitting files for speed later."""
     fit_coeffs_filedirectory = os.path.join(
         load_directory, "PhenomDFiles/fitcoeffsWEB.dat"
     )
     source._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
+
 
 def Get_Amp_Phase(h):
     """Separates the amplitude and phase from complex strain polarizations (hcross,hplus)."""
