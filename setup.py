@@ -11,7 +11,16 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["numpy", "scipy", "astropy", "hasasia", "matplotlib", "h5py", "pyyaml"]
+requirements = [
+    "numpy",
+    "scipy",
+    "astropy",
+    "hasasia",
+    "matplotlib",
+    "h5py",
+    "pyyaml",
+    "lalsuite",
+]
 
 setup_requirements = [
     "pytest-runner",
