@@ -33,7 +33,7 @@ jobs:
     - name: Install lalsuite
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
-        pip install scipy==1.4.1
+        pip install scipy
         pip install numpy==1.18.5
         pip install matplotlib==3.2.1
         pip install lscsoft-glue==2.0.0
@@ -51,7 +51,7 @@ jobs:
       env:
         ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
     - name: Install other requirements
-      run: pip install -r requirements
+      run: pip install -r requirements.txt
     - name: Display Python, pip, and setuptools version
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
