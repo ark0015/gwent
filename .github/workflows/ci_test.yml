@@ -36,7 +36,7 @@ jobs:
         pip install scipy
         pip install numpy
         pip install matplotlib
-        pip install lscsoft-glue==2.0.0
+        pip install lscsoft-glue
         pip install ligo-segments==1.2.0
         pip install six==1.15.0
         pip install pyOpenSSL==19.1.0
