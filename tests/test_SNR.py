@@ -12,7 +12,10 @@ import pytest
 
 
 import os, sys
+
 current_path = os.getcwd()
+sys.path.insert(0, current_path)
+
 splt_path = current_path.split("/")
 top_path_idx = splt_path.index("Research")
 top_directory = "/".join(splt_path[0 : top_path_idx + 1])
@@ -50,7 +53,7 @@ chi2 = 0.0  # spin of m2
 chi_min = -0.85  # Limits of PhenomD for unaligned spins
 chi_max = 0.85
 
-z = 1.0  # Redshift
+z = 0.1  # Redshift
 z_min = 1e-2
 z_max = 1e3
 
@@ -59,7 +62,7 @@ z_max = 1e3
 def source_pta():
     # M = m1+m2 Total Mass
     M = 1e8
-    M_min = 1e7
+    M_min = 1e8
     M_max = 1e11
 
     source_pta = binary.BBHFrequencyDomain(M, q, z, chi1, chi2)
@@ -68,6 +71,7 @@ def source_pta():
     source_pta.chi1 = [chi1, chi_min, chi_max]
     source_pta.chi2 = [chi2, chi_min, chi_max]
     source_pta.z = [z, z_min, z_max]
+    source_pta.f_low = 1e-12
 
     return source_pta
 
@@ -79,7 +83,7 @@ def source_space_based():
     M_min = 1e1
     M_max = 1e10
 
-    source_space_based = binary.BBHFrequencyDomain(M, q, z, chi1, chi2)
+    source_space_based = binary.BBHFrequencyDomain(M, q, z, chi1=chi1, chi2=chi2)
     source_space_based.M = [M, M_min, M_max]
     source_space_based.q = [q, q_min, q_max]
     source_space_based.chi1 = [chi1, chi_min, chi_max]
@@ -405,6 +409,9 @@ def test_NANOGrav_WN_params_Mvq(source_pta, NANOGrav_WN):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
     )
+    [_, _, _] = snr.Get_SNR_Matrix(
+        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y, method='PN'
+    )
     fig, ax = snrplot.Plot_SNR(
         var_x, sample_x, var_y, sample_y, SNRMatrix, display=False, return_plt=True
     )
@@ -444,6 +451,45 @@ def test_NANOGrav_WN_params_Mvchi1(source_pta, NANOGrav_WN):
     )
     plt.close(fig)
 
+def test_NANOGrav_WN_params_Mvchii(source_pta, NANOGrav_WN):
+    # Variable on x-axis
+    var_x = "M"
+    # Variable on y-axis
+    var_y = "chii"
+    [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
+        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y
+    )
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
+    )
+    plt.close(fig)
+
+def test_NANOGrav_WN_params_chiivM(source_pta, NANOGrav_WN):
+    # Variable on x-axis
+    var_x = "chii"
+    # Variable on y-axis
+    var_y = "M"
+    [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
+        source_pta, NANOGrav_WN, var_x, sampleRate_x, var_y, sampleRate_y,method='PN'
+    )
+    fig, ax = snrplot.Plot_SNR(
+        var_x,
+        sample_x,
+        var_y,
+        sample_y,
+        SNRMatrix,
+        cfill=False,
+        display=False,
+        return_plt=True,
+    )
+    plt.close(fig)
 
 def test_NANOGrav_WN_params_MvTobs(source_pta, NANOGrav_WN):
     # Variable on x-axis
@@ -494,8 +540,22 @@ def test_NANOGrav_WN_params_Mvsigma(source_pta, NANOGrav_WN):
     )
     plt.close(fig)
 
-
 def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
+    source_pta.q = 1.0
+    source_pta.chi1 = 0.0
+    source_pta.chi2 = 0.0
+    source_pta.z = 0.1
+    source_pta.f_low = 1e-6
+    T_obs = 15.0 * u.yr  # Observing time in years
+    T_obs_min = 5.0 * u.yr
+    T_obs_max = 30.0 * u.yr
+    NANOGrav_WN.T_obs = [T_obs, T_obs_min, T_obs_max]
+    NANOGrav_WN.sigma = [sigma, sigma_min, sigma_max]
+    NANOGrav_WN.n_p = [N_p, N_p_min, N_p_max]
+    NANOGrav_WN.cadence = [cadence, cadence_min, cadence_max]
+
+    print(source_pta.M,source_pta.q,source_pta.chi1,source_pta.chi2,source_pta.z)
+    print(NANOGrav_WN.T_obs,NANOGrav_WN.n_p,NANOGrav_WN.cadence,NANOGrav_WN.sigma)
     # Variable on x-axis
     var_x = "M"
     # Variable on y-axis

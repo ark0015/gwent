@@ -3,12 +3,16 @@ import astropy.constants as const
 import astropy.units as u
 from astropy.cosmology import WMAP9 as cosmo
 
+import os
 import lal
 import lalsimulation
 
 import gwent
 from . import utils
+from . import binary
 
+current_path = os.path.abspath(gwent.__path__[0])
+load_directory = os.path.join(current_path, "LoadFiles/")
 
 def Get_Waveform(
     source,
@@ -46,11 +50,13 @@ def Get_Waveform(
     """
     if approximant == "pyPhenomD":
         if not hasattr(source, "_fitcoeffs"):
-            source.Get_Fitcoeffs()
-        [natural_f, natural_h] = Get_PyPhenomD(source, pct_of_peak=pct_of_peak)
-        return Strain_Conv(source, natural_f, natural_h, out_frame=out_frame)
-    elif approximant in dir(lalsimulation) or isinstance(approximant,int):
-        if isinstance(approximant,int):
+            Get_Fitcoeffs(source)
+        if not all([hasattr(source, "_phenomD_f"), hasattr(source, "_phenomD_h")]):
+            [source._phenomD_f, source._phenomD_h] = Get_PyPhenomD(source, pct_of_peak=pct_of_peak)
+
+        return Strain_Conv(source, source._phenomD_f, source._phenomD_h, out_frame=out_frame)
+    elif approximant in dir(lalsimulation) or isinstance(approximant, int):
+        if isinstance(approximant, int):
             approx = approximant
         else:
             approx = getattr(lalsimulation, approximant)
@@ -66,7 +72,7 @@ def Get_Waveform(
         if not hasattr(source, "f_T_obs"):
             if not hasattr(source, "instrument"):
                 # No instrument? We set some time observed
-                binary.Check_Freq_Evol(source, T_obs=4.0 * u.yr)
+                binary.Check_Freq_Evol(source, T_evol=4.0 * u.yr)
             else:
                 binary.Check_Freq_Evol(source)
         # Uses source f_T_obs (observed frequency T_obs before merger) in detector frame so we convert to source frame
@@ -226,6 +232,12 @@ def Get_Proper_Freq_Params(waveform_dict):
     waveform_dict.update({"deltaF": out_deltaF, "f_min": out_f_min, "f_max": out_f_max})
     return waveform_dict
 
+def Get_Fitcoeffs(source):
+    """Loads Quasi-Normal Mode fitting files for speed later."""
+    fit_coeffs_filedirectory = os.path.join(
+        load_directory, "PhenomDFiles/fitcoeffsWEB.dat"
+    )
+    source._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
 
 def Get_Amp_Phase(h):
     """Separates the amplitude and phase from complex strain polarizations (hcross,hplus)."""

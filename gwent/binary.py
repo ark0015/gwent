@@ -10,10 +10,6 @@ import gwent
 from . import waveform
 from . import utils
 
-current_path = os.path.abspath(gwent.__path__[0])
-load_directory = os.path.join(current_path, "LoadFiles/")
-
-
 class BinaryBlackHole:
     """Base Class for frequency domain strains from Binary Black Holes.
 
@@ -70,6 +66,11 @@ class BinaryBlackHole:
 
     @q.setter
     def q(self, value):
+        if hasattr(self,'approximant'):
+            #Need to recalculate pyphenomD if q is changed
+            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+                del self._phenomD_f
+                del self._phenomD_h
         self.var_dict = ["q", value]
         self._q = self._return_value
 
@@ -207,13 +208,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
             self.f_low = 1e-6
         if not hasattr(self, "approximant"):
             if hasattr(self, "lalsuite_kwargs"):
-                self.approximant = self.lalsuite_kwargs['approximant']
+                self.approximant = self.lalsuite_kwargs["approximant"]
             else:
                 self.approximant = "pyPhenomD"
         if not hasattr(self, "lalsuite_kwargs"):
             self.lalsuite_kwargs = {}
-
-        self.Get_Fitcoeffs()
 
     @property
     def chi1(self):
@@ -221,6 +220,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     @chi1.setter
     def chi1(self, value):
+        if hasattr(self,'approximant'):
+            #Need to recalculate pyphenomD if chi1 is changed
+            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+                del self._phenomD_f
+                del self._phenomD_h
         self.var_dict = ["chi1", value]
         self._chi1 = self._return_value
 
@@ -230,6 +234,11 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     @chi2.setter
     def chi2(self, value):
+        if hasattr(self,'approximant'):
+            #Need to recalculate pyphenomD if chi2 is changed
+            if self.approximant == 'pyPhenomD' and any([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
+                del self._phenomD_f
+                del self._phenomD_h
         self.var_dict = ["chi2", value]
         self._chi2 = self._return_value
 
@@ -286,25 +295,18 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def h_f(self):
         if not hasattr(self, "_h_f"):
             # Default assumes output is in observer frame
-            if self.approximant == "pyPhenomD":
-                if not all([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
-                    self.Get_PhenomD_Strain()
-                [_, self._h_f] = waveform.Strain_Conv(
-                    self, self._phenomD_f, self._phenomD_h
+            if not hasattr(self, "_h_f"):
+                [self._f, self._h_f] = waveform.Get_Waveform(
+                    self,
+                    approximant=self.approximant,
+                    lalsuite_kwargs=self.lalsuite_kwargs,
                 )
             else:
-                if not hasattr(self, "_h_f"):
-                    [self._f, self._h_f] = waveform.Get_Waveform(
-                        self,
-                        approximant=self.approximant,
-                        lalsuite_kwargs=self.lalsuite_kwargs,
-                    )
-                else:
-                    [_, self._h_f] = waveform.Get_Waveform(
-                        self,
-                        approximant=self.approximant,
-                        lalsuite_kwargs=self.lalsuite_kwargs,
-                    )
+                [_, self._h_f] = waveform.Get_Waveform(
+                    self,
+                    approximant=self.approximant,
+                    lalsuite_kwargs=self.lalsuite_kwargs,
+                )
         return self._h_f
 
     @h_f.deleter
@@ -315,43 +317,23 @@ class BBHFrequencyDomain(BinaryBlackHole):
     def f(self):
         if not hasattr(self, "_f"):
             # Default assumes output is in observer frame
-            if self.approximant == "pyPhenomD":
-                if not all([hasattr(self, "_phenomD_f"), hasattr(self, "_phenomD_h")]):
-                    self.Get_PhenomD_Strain()
-                [self._f, _] = waveform.Strain_Conv(
-                    self, self._phenomD_f, self._phenomD_h
+            if not hasattr(self, "_h_f"):
+                [self._f, self._h_f] = waveform.Get_Waveform(
+                    self,
+                    approximant=self.approximant,
+                    lalsuite_kwargs=self.lalsuite_kwargs,
                 )
             else:
-                if not hasattr(self, "_h_f"):
-                    [self._f, self._h_f] = waveform.Get_Waveform(
-                        self,
-                        approximant=self.approximant,
-                        lalsuite_kwargs=self.lalsuite_kwargs,
-                    )
-                else:
-                    [self._f, _] = waveform.Get_Waveform(
-                        self,
-                        approximant=self.approximant,
-                        lalsuite_kwargs=self.lalsuite_kwargs,
-                    )
+                [self._f, _] = waveform.Get_Waveform(
+                    self,
+                    approximant=self.approximant,
+                    lalsuite_kwargs=self.lalsuite_kwargs,
+                )
         return self._f
 
     @f.deleter
     def f(self):
         del self._f
-
-    def Get_Fitcoeffs(self):
-        """Loads Quasi-Normal Mode fitting files for speed later."""
-        fit_coeffs_filedirectory = os.path.join(
-            load_directory, "PhenomDFiles/fitcoeffsWEB.dat"
-        )
-        self._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
-
-    def Get_PhenomD_Strain(self):
-        """Gets the BBH's frequency and waveform from IMRPhenomD."""
-        if not hasattr(self, "_fitcoeffs"):
-            self.Get_Fitcoeffs()
-        [self._phenomD_f, self._phenomD_h] = waveform.Get_PyPhenomD(self)
 
 
 class BBHTimeDomain(BinaryBlackHole):

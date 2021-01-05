@@ -1042,8 +1042,14 @@ class SpaceBased(Interferometer):
         Picks the transfer function generation method
         'N' uses the numerically approximated method in Robson, Cornish, and Liu, 2019
         'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
-    Background : Boolean, optional
+    Background : Boolean, optional 
         Add in a Galactic Binary Confusion Noise
+    Background_model : int, {0,1}
+        Used to selectGalactic Binary Confusion Noise model: 0 is the Cornish and Robson 2017 model
+        with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
+        and 1 is a model of the Galactic confusion noise parameterized as a function of T_obs
+    openingangle : int,float,Quantity, optional
+        Determines the opening angle of the instrument, if unassigned use the value in in Robson, Cornish, and Liu, 2019.
 
     """
 
@@ -1055,6 +1061,11 @@ class SpaceBased(Interferometer):
                 self.T_type = value
             elif keys == "Background":
                 self.Background = value
+            elif keys == "Background_model":
+                self.Background = True
+                self.Background_model = value
+            elif keys == "openingangle":
+                self.openingangle = value
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
@@ -1062,7 +1073,10 @@ class SpaceBased(Interferometer):
             self.f_low = 1e-5 * u.Hz
         if not hasattr(self, "f_high"):
             self.f_high = 1.0 * u.Hz
-        if not hasattr(self, "Background"):
+        if hasattr(self, "Background"):
+            if not hasattr(self, "Background_model"):
+                self.Background_model = 0
+        else:
             self.Background = False
 
         if len(args) != 0:
@@ -1227,13 +1241,14 @@ class SpaceBased(Interferometer):
         )
         self.fT = LISA_Transfer_Function_f[idx_f_5:idx_f_1]
 
-    def Get_Analytic_Transfer_Function(self, openingangle=None):
+    def Get_Analytic_Transfer_Function(self):
         """Response function approximation from Calculation described by Cornish, Robson, Liu 2019
-        Parameters
-        ----------
-        openingangle : int,float,Quantity, optional
-        Determines the opening angle of the instrument, if unassigned use the value in the above paper.
+        Uses openingangle property to determine the opening angle of the instrument, if unassigned use the value in the above paper.
         """
+        if hasattr(self,'openingangle'):
+            openingangle = self.openingangle
+        else:
+            openingangle = None
         self.fT = (
             np.logspace(
                 np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs
@@ -1269,18 +1284,15 @@ class SpaceBased(Interferometer):
         if self._T_type == "analytic":
             self.Get_Analytic_Transfer_Function()
 
-    def Add_Background(self, model=0):
+    def Add_Background(self):
         """
         Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
         corresponding to array index 0,1,2,3 respectively
-
-        Parameters
-        ----------
-        model : int, {0,1}
-        Used to select between the Cornish and Robson 2017 model with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
-        and a model of the Galactic confusion noise parameterized as a function of T_obs, 0 and 1, respectively.
+        Uses Background_model to select between Galactic Binary Confusion Noise models: 0 is the Cornish and Robson 2017 model
+        with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
+        and 1 is a model of the Galactic confusion noise parameterized as a function of T_obs
         """
-        if model == 0:
+        if self.Background_model == 0:
             """
             Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
             corresponding to array index 0,1,2,3 respectively
@@ -1314,7 +1326,7 @@ class SpaceBased(Interferometer):
                 )
                 * (1 + np.tanh(gfkf.to("").value))
             )  # White Dwarf Background Noise
-        elif model == 1:
+        elif self.Background_model == 1:
             """
             Galactic confusions noise parameters as a function of T_obs
             """

@@ -11,6 +11,7 @@ import astropy.units as u
 import gwent
 from gwent import detector
 from gwent import binary
+from gwent import waveform
 
 load_directory = gwent.__path__[0] + "/LoadFiles/InstrumentFiles/"
 
@@ -330,7 +331,8 @@ def test_PTA_init_error_kwargs():
 
 L = 2.5 * u.Gm  # armlength in Gm
 L = L.to("m")
-LISA_T_obs = 4 * u.yr
+LISA_T_obs_1 = 1 * u.yr
+LISA_T_obs_2 = 3 * u.yr
 
 #### LISA Proposal 1
 # Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017 (https://arxiv.org/abs/1702.00786)
@@ -347,7 +349,7 @@ Background = False
 def LISA_prop1():
     LISA_prop1 = detector.SpaceBased(
         "LISA",
-        LISA_T_obs,
+        LISA_T_obs_1,
         L,
         A_acc,
         f_acc_break_low,
@@ -372,7 +374,7 @@ Background = True
 def test_LISA_prop2():
     LISA_prop2 = detector.SpaceBased(
         "LISA Approximate",
-        LISA_T_obs,
+        LISA_T_obs_2,
         L,
         A_acc,
         f_acc_break_low,
@@ -380,8 +382,11 @@ def test_LISA_prop2():
         A_IMS,
         f_IMS_break,
         Background=Background,
+        Background_model = 1,
+        openingangle = 60,
         T_type="A",
     )
+    LISA_prop2.S_n_f;
 
 
 # ####################################################################
@@ -419,6 +424,23 @@ x1 = [0.95, 0.0, -0.95]
 x2 = [0.95, 0.0, -0.95]
 z = [3.0, 0.093, 20.0]
 
+def test_BBH_arg_error():
+    with pytest.raises(ValueError):
+        binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],M[1])
+
+def test_BBH_base_not_implemented_error():
+    err_source_1 = binary.BinaryBlackHole(M[0],q[0],z[0],x1[0],x2[0])
+    with pytest.raises(NotImplementedError):
+        err_source_1.h_f
+    with pytest.raises(NotImplementedError):
+        err_source_1.f
+
+def test_BBH_base_load_data_error():
+    with pytest.raises(IOError):
+        err_source_2 = binary.BinaryBlackHole(M[0],q[0],z[0],x1[0],x2[0],load_location='./error')
+    with pytest.raises(ValueError):
+        err_source_3 = binary.BinaryBlackHole(M[0],q[0],z[0],x1[0],x2[0])
+        err_source_3.Load_Data()
 
 def test_BBHStrain(LISA_prop1, aLIGO, SKA_WN, ET):
     source_1 = binary.BBHFrequencyDomain(
@@ -432,29 +454,170 @@ def test_BBHStrain(LISA_prop1, aLIGO, SKA_WN, ET):
         f_high=10,
         nfreqs=int(1e3),
     )
-    source_2 = binary.BBHFrequencyDomain(
-        M[1], q[1], z[1], x1[1], x2[1], instrument=aLIGO
-    )
+    source_2 = binary.BBHFrequencyDomain(M[1], q[1], z[1], chi2=x2[1], instrument=aLIGO)
     source_3 = binary.BBHFrequencyDomain(
         M[2], q[2], z[2], x1[2], x2[2], instrument=SKA_WN
     )
-    source_4 = binary.BBHFrequencyDomain(M[1], q[0], z[1], x1[1], x2[1], instrument=ET)
+    source_4 = binary.BBHFrequencyDomain(M[1], q[0], z[1], chi1=x1[1], instrument=ET)
     binary.Get_Char_Strain(source_1)
-    source_2.Get_Time_From_Merger(1 / u.yr, frame="source").to("yr")
+    binary.Get_Time_From_Merger(
+        source_2, freq=1 / u.yr, in_frame="source", out_frame="observer"
+    ).to("yr")
+    binary.Get_Time_From_Merger(
+        source_2, freq=1 / u.yr, in_frame="source", out_frame="source"
+    ).to("yr")
+    binary.Get_Time_From_Merger(
+        source_2, freq=1 / u.yr, in_frame="observer", out_frame="observer"
+    ).to("yr")
     binary.Get_Mono_Char_Strain(
         source_2,
         np.max(source_2.instrument.T_obs).to("s"),
         inc=np.pi / 2,
-        T_evol_frame="observer",
         f_gw_frame="observer",
     )
-    source_3.Check_Freq_Evol(
-        T_evol=np.max(source_3.instrument.T_obs).to("s"), T_evol_frame="source"
+    binary.Check_Freq_Evol(
+        source_3,
+        T_evol=np.max(source_3.instrument.T_obs).to("s"),
+        T_evol_frame="source",
     )
     binary.Get_Mono_Strain(source_2)
-    binary.Get_Mono_Strain(source_2, frame="observer")
+    binary.Get_Mono_Strain(source_2, out_frame="observer")
 
 
+def test_BBH_Mono_Funcs():
+    source_5 = binary.BBHFrequencyDomain(M[0], q[1], z[1], f_gw=1e-5 * u.Hz)
+    source_5.chi1 = 0.0
+    source_5.chi2 = 0.0
+    source_5.f;
+    source_5.chi2 = 0.5
+    source_5.h_f;
+    binary.Get_Mono_Char_Strain(source_5)
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="SPA",
+        freq=source_5.f_gw,
+        f_gw_frame="source",
+        pn_frame="source",
+        out_frame="observer",
+        inc=np.pi / 2,
+    )
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="SPA",
+        freq=source_5.f_gw,
+        f_gw_frame="source",
+        pn_frame="source",
+        out_frame="source",
+        inc=np.pi / 2,
+    )
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="SPA",
+        freq=source_5.f_gw,
+        f_gw_frame="source",
+        pn_frame="source",
+        out_frame="source",
+        inc=np.pi / 2,
+    )
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="SPA",
+        f_gw_frame="observer",
+        pn_frame="source",
+        out_frame="source",
+    )
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="PN",
+        freq=source_5.f_gw,
+        f_gw_frame="observer",
+        pn_frame="source",
+        out_frame="source",
+    )
+    binary.Get_Mono_Char_Strain(
+        source_5,
+        method="PN",
+        freq=source_5.f_gw,
+        f_gw_frame="source",
+        pn_frame="observer",
+        out_frame="source",
+    )
+    binary.Get_Mono_Strain(
+        source_5,
+        method="PN",
+        freq=source_5.f_gw,
+        f_gw_frame="source",
+        pn_frame="observer",
+        out_frame="source",
+    )
+    binary.Get_F_Dot(source_5, freq=None, in_frame="observer", out_frame="observer")
+    binary.Get_F_Dot(source_5, freq=None, in_frame="source", out_frame="observer")
+    binary.Get_F_Dot(source_5, freq=None, in_frame="observer", out_frame="source")
+    binary.Get_F_Dot(
+        source_5, freq=source_5.f_gw, in_frame="source", out_frame="source"
+    )
+    binary.Check_Freq_Evol(
+        source_5,
+        T_evol=4*u.yr.to('s'),
+        T_evol_frame="observer",
+        f_gw_frame="source",
+    )
+
+def test_BBH_lalsuite_approx(LISA_prop1):
+    approximant = "IMRPhenomD"
+    lalsuite_kwargs = {"eccentricity": 0.5}
+    delT_obs = (1/4/u.yr)
+    delT_obs = delT_obs.to('1/s')
+
+    source_6 = binary.BBHFrequencyDomain(
+        M, q, z, approximant=approximant, lalsuite_kwargs=lalsuite_kwargs
+    )
+    source_6.f_low = 1e-7
+    source_6.chi1 = 0.5
+    source_6.chi2 = -0.2
+    source_6.f_gw = 1e-3*u.Hz
+    [_,_] = waveform.Get_Waveform(
+        source_6,
+        approximant=approximant,
+        pct_of_peak=0.01,
+        lalsuite_kwargs=lalsuite_kwargs,
+        out_frame="observer")
+    binary.Get_Char_Strain(source_6);
+
+    lalsuite_kwargs.update({'approximant':'IMRPhenomPv3','chi1':0.0,'chi2':0.2,'deltaF':delT_obs.value,
+               'f_min':delT_obs.value,
+               'f_max':delT_obs.value*1e3,'f_ref':0.1*u.Hz,})
+    source_7 = binary.BBHFrequencyDomain(
+        M[0], q[0], z[0], lalsuite_kwargs=lalsuite_kwargs
+    )
+    source_7.f_gw = 1e-3*u.Hz
+    binary.Get_Char_Strain(source_7, in_frame="source", out_frame="observer");
+    binary.Get_Char_Strain(source_7, in_frame="observer", out_frame="source");
+    binary.Get_Char_Strain(source_7, in_frame="source", out_frame="source");
+
+    lalsuite_kwargs_2 = {'m1':M[0]/(1+q[0])*u.M_sun.to('kg'),'m2':(M[0]*q[0]/(1+q[0]))*u.M_sun.to('kg'),
+               'S1x':0, 'S1y':0, 'S1z':x1[2],
+               'S2x':0, 'S2y':0, 'S2z':x2[2],
+               'distance':7.146757481804179e+27,'inclination':0,
+               'phiRef':0,'longAscNodes':0,'eccentricity':0,'meanPerAno':0,'deltaF':delT_obs,
+               'f_min':delT_obs*.01,
+               'f_max':delT_obs*1e3,
+               'f_ref':0,
+               'LALpars':{}}
+    source_8 = binary.BBHFrequencyDomain(
+        M[0], q[0], z[0], approximant=98, instrument=LISA_prop1, lalsuite_kwargs=lalsuite_kwargs_2
+    )
+    [_,_] = waveform.Get_Waveform(
+        source_8,
+        approximant=98,
+        pct_of_peak=0.01,
+        lalsuite_kwargs=lalsuite_kwargs_2,
+        out_frame="source")
+
+    waveform.Strain_Conv(source_8, source_8.f, source_8.h_f, inverse=True, in_frame="source", out_frame="observer");
+    waveform.Strain_Conv(source_8, source_8.f, source_8.h_f, inverse=True, in_frame="observer", out_frame="observer");
+    waveform.Strain_Conv(source_8, source_8.f, source_8.h_f, inverse=True, in_frame="source", out_frame="source");
+    waveform.Strain_Conv(source_8, source_8.f, source_8.h_f, inverse=True, in_frame="observer", out_frame="source");
 # ### Numerical Relativity from EOB subtraction
 
 EOBdiff_filedirectory = gwent.__path__[0] + "/LoadFiles/DiffStrain/EOBdiff/"

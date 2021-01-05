@@ -28,9 +28,9 @@ def Get_SNR_Matrix(
         y-axis variable
     sample_rate_y : array
         samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    inc : 
-    integral_consts : 
-    method : 
+    inc :
+    integral_consts :
+    method :
 
     Returns
     -------
@@ -405,17 +405,16 @@ def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
         scale = 1.0
 
     indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
-    if indxfgw == 0 or indxfgw >= len(instrument.fT)-1:
-        #The source frequency is assumed to be outside the instrument's frequency, thus the SNR is ~0.
-        #print(f"Your assigned source GW frequency is {source.f_gw} and the instrument frequency range is [{np.unique(np.min(instrument.fT))[0]:.1e},{np.unique(np.max(instrument.fT))[0]:.1e}]")
+    if indxfgw == 0 or indxfgw >= len(instrument.fT) - 1:
+        # The source frequency is assumed to be outside the instrument's frequency, thus the SNR is ~0.
+        # print(f"Your assigned source GW frequency is {source.f_gw} and the instrument frequency range is [{np.unique(np.min(instrument.fT))[0]:.1e},{np.unique(np.max(instrument.fT))[0]:.1e}]")
         return 1e-30
     else:
         return (
             scale
             * source.h_gw
             * np.sqrt(
-                np.max(np.unique(instrument.T_obs.to("s")))
-                / instrument.S_n_f[indxfgw]
+                np.max(np.unique(instrument.T_obs.to("s"))) / instrument.S_n_f[indxfgw]
             )
         )
 
