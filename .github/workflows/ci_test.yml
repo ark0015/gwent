@@ -33,7 +33,7 @@ jobs:
       env:
         ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
     - name: Install lalsuite
-      run: pip install lalsuite
+      run: pip install lalsuite==6.79
       env:
         ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
     - name: Display Python, pip, and setuptools version
