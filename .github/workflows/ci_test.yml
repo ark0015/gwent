@@ -30,74 +30,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools wheel pytest pytest-cov
       #pip install -r requirements.txt
-    - if: ${{ matrix.python-version == '3.6'}}
-      name: Install lalsuite
+    - name: Install lalsuite
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
         pip install scipy==1.4.1
-        pip install numpy==1.18.5
-        pip install matplotlib==3.2.1
-        pip install lscsoft-glue==2.0.0
-        pip install ligo-segments==1.2.0
-        pip install six==1.15.0
-        pip install pyOpenSSL==19.1.0
-        pip install pyparsing==2.4.7
-        pip install cycler==0.10.0
-        pip install kiwisolver==1.2.0
-        pip install cryptography==2.9.2
-        pip install cffi==1.14.0
-        pip install pycparser==2.20
-        pip install zipp==3.1.0
-        pip install lalsuite==3.79
-      env:
-        ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
-    - if: ${{ matrix.python-version != '3.7'}}
-      name: Install lalsuite
-      run: |
-        python -c "import sys; print(f'Python {sys.version}')"
-        pip install scipy==1.4.1
-        pip install numpy==1.18.5
-        pip install matplotlib==3.2.1
-        pip install lscsoft-glue==2.0.0
-        pip install ligo-segments==1.2.0
-        pip install six==1.15.0
-        pip install pyOpenSSL==19.1.0
-        pip install pyparsing==2.4.7
-        pip install cycler==0.10.0
-        pip install kiwisolver==1.2.0
-        pip install cryptography==2.9.2
-        pip install cffi==1.14.0
-        pip install pycparser==2.20
-        pip install zipp==3.1.0
-        pip install lalsuite
-      env:
-        ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
-    - if: ${{ matrix.python-version == '3.8'}}
-      name: Install lalsuite
-      run: |
-        python -c "import sys; print(f'Python {sys.version}')"
-        pip install scipy==1.4.1
-        pip install numpy==1.18.5
-        pip install matplotlib==3.2.1
-        pip install lscsoft-glue==2.0.0
-        pip install ligo-segments==1.2.0
-        pip install six==1.15.0
-        pip install pyOpenSSL==19.1.0
-        pip install pyparsing==2.4.7
-        pip install cycler==0.10.0
-        pip install kiwisolver==1.2.0
-        pip install cryptography==2.9.2
-        pip install cffi==1.14.0
-        pip install pycparser==2.20
-        pip install zipp==3.1.0
-        pip install lalsuite
-      env:
-        ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
-    - if: ${{ matrix.python-version == '3.9'}}
-      name: Install lalsuite
-      run: |
-        python -c "import sys; print(f'Python {sys.version}')"
-        pip install scipy
         pip install numpy==1.18.5
         pip install matplotlib==3.2.1
         pip install lscsoft-glue==2.0.0
@@ -115,7 +51,7 @@ jobs:
       env:
         ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
     - name: Install other requirements
-      run: pip install -r requirements.txt
+      run: pip install -r requirements
     - name: Display Python, pip, and setuptools version
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
