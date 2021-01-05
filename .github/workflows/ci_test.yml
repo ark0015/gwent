@@ -34,7 +34,7 @@ jobs:
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
         pip install scipy
-        pip install numpy==1.18.5
+        pip install numpy
         pip install matplotlib==3.2.1
         pip install lscsoft-glue==2.0.0
         pip install ligo-segments==1.2.0
