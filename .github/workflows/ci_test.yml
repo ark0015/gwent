@@ -50,7 +50,7 @@ jobs:
         pip install zipp==3.1.0
         pip install lalsuite
       if: ${{ matrix.python-version }} == '3.9'
-        run: |
+      run: |
         python -c "import sys; print(f'Python {sys.version}')"
         pip install scipy
         pip install numpy==1.18.5
