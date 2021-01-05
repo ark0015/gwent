@@ -19,6 +19,7 @@ requirements = [
     "matplotlib",
     "h5py",
     "pyyaml",
+    "lalsuite",
 ]
 
 setup_requirements = [
@@ -41,7 +42,6 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
     ],
     description="Gravitational Wave Detector Design Toolkit.",
     install_requires=requirements,
