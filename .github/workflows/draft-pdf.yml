@@ -10,7 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Find where we are
-        run: python -c "import os; print(f'{os.getcwd()}')"
+        run: python -c "import os; print(os.getcwd())"
       - name: Build draft PDF
         uses: openjournals/openjournals-draft-action@master
         with:
