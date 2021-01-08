@@ -91,9 +91,9 @@ class PTA:
         'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
         'h' is the characteristic strain $h_{n}(f)$ ('h')
-    f_low : float, optional
+    f_min : float, optional
         Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
-    f_high : float, optional
+    f_max : float, optional
         Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated
@@ -137,10 +137,10 @@ class PTA:
                 self.load_location = value
             elif keys == "I_type":
                 self.I_type = value
-            elif keys == "f_low":
-                self.f_low = utils.make_quant(value, "Hz")
-            elif keys == "f_high":
-                self.f_high = utils.make_quant(value, "Hz")
+            elif keys == "f_min":
+                self.f_min = utils.make_quant(value, "Hz")
+            elif keys == "f_max":
+                self.f_max = utils.make_quant(value, "Hz")
             elif keys == "nfreqs":
                 self.nfreqs = value
             elif keys == "nbins":
@@ -160,10 +160,10 @@ class PTA:
         if not hasattr(self, "use_rn"):
             self.use_rn = False
 
-        if hasattr(self, "f_low") and hasattr(self, "f_high"):
+        if hasattr(self, "f_min") and hasattr(self, "f_max"):
             self.fT = (
                 np.logspace(
-                    np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs
+                    np.log10(self.f_min.value), np.log10(self.f_max.value), self.nfreqs
                 )
                 * u.Hz
             )
@@ -699,9 +699,9 @@ class Interferometer:
         'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
         'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
         'h' is the characteristic strain $h_{n}(f)$ ('h')
-    f_low : float, optional
+    f_min : float, optional
         Assigned lowest frequency of instrument (default is assigned in particular child classes)
-    f_high : float, optional
+    f_max : float, optional
         Assigned highest frequency of instrument (default is assigned in particular child classes)
     nfreqs : int, optional
         Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
@@ -716,10 +716,10 @@ class Interferometer:
                 self.load_location = value
             elif keys == "I_type":
                 self.I_type = value
-            elif keys == "f_low":
-                self.f_low = utils.make_quant(value, "Hz")
-            elif keys == "f_high":
-                self.f_high = utils.make_quant(value, "Hz")
+            elif keys == "f_min":
+                self.f_min = utils.make_quant(value, "Hz")
+            elif keys == "f_max":
+                self.f_max = utils.make_quant(value, "Hz")
             elif keys == "nfreqs":
                 self.nfreqs = value
 
@@ -755,8 +755,8 @@ class Interferometer:
             if isinstance(self, GroundBased):
                 self._fT = (
                     np.logspace(
-                        np.log10(self.f_low.value),
-                        np.log10(self.f_high.value),
+                        np.log10(self.f_min.value),
+                        np.log10(self.f_max.value),
                         self.nfreqs,
                     )
                     * u.Hz
@@ -847,10 +847,10 @@ class GroundBased(Interferometer):
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self, "f_low"):
-            self.f_low = 1.0 * u.Hz
-        if not hasattr(self, "f_high"):
-            self.f_high = 1e4 * u.Hz
+        if not hasattr(self, "f_min"):
+            self.f_min = 1.0 * u.Hz
+        if not hasattr(self, "f_max"):
+            self.f_max = 1e4 * u.Hz
 
         if not hasattr(self, "load_location"):
             if not hasattr(self, "noise_dict"):
@@ -1069,10 +1069,10 @@ class SpaceBased(Interferometer):
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self, "f_low"):
-            self.f_low = 1e-5 * u.Hz
-        if not hasattr(self, "f_high"):
-            self.f_high = 1.0 * u.Hz
+        if not hasattr(self, "f_min"):
+            self.f_min = 1e-5 * u.Hz
+        if not hasattr(self, "f_max"):
+            self.f_max = 1.0 * u.Hz
         if hasattr(self, "Background"):
             if not hasattr(self, "Background_model"):
                 self.Background_model = 0
@@ -1231,8 +1231,8 @@ class SpaceBased(Interferometer):
         fc = const.c / (2 * self.L)  # light round trip freq
         LISA_Transfer_Function_f = fc * self._transferfunctiondata[:, 0]
 
-        idx_f_5 = np.abs(LISA_Transfer_Function_f - self.f_low).argmin()
-        idx_f_1 = np.abs(LISA_Transfer_Function_f - self.f_high).argmin()
+        idx_f_5 = np.abs(LISA_Transfer_Function_f - self.f_min).argmin()
+        idx_f_1 = np.abs(LISA_Transfer_Function_f - self.f_max).argmin()
 
         # 3/10 is normalization 2/5sin(openingangle)
         # Some papers use 3/20, not summing over 2 independent low-freq data channels
@@ -1251,7 +1251,7 @@ class SpaceBased(Interferometer):
             openingangle = None
         self.fT = (
             np.logspace(
-                np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs
+                np.log10(self.f_min.value), np.log10(self.f_max.value), self.nfreqs
             )
             * u.Hz
         )

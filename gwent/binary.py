@@ -142,9 +142,9 @@ class BBHFrequencyDomain(BinaryBlackHole):
         The dimensionless spin parameter abs(a/m) for black hole m1 defaults to 0.0.
     chi2 : float, optional
         The dimensionless spin parameter abs(a/m) for black hole m2 defaults to 0.0.
-    f_low : float, optional
+    f_min : float, optional
         The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
-    f_high : float, optional
+    f_max : float, optional
         The highest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
     nfreqs : int, optional
         The number of frequencies at which the BBH waveform is calculated
@@ -174,10 +174,10 @@ class BBHFrequencyDomain(BinaryBlackHole):
             self.chi2 = chi2
 
         for keys, value in kwargs.items():
-            if keys == "f_low":
-                self.f_low = value
-            elif keys == "f_high":
-                self.f_high = value
+            if keys == "f_min":
+                self.f_min = value
+            elif keys == "f_max":
+                self.f_max = value
             elif keys == "nfreqs":
                 self.nfreqs = value
             elif keys == "instrument":
@@ -207,8 +207,8 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self, "f_low"):
-            self.f_low = 1e-6
+        if not hasattr(self, "f_min"):
+            self.f_min = 1e-6
         if not hasattr(self, "approximant"):
             if hasattr(self, "lalsuite_kwargs"):
                 self.approximant = self.lalsuite_kwargs["approximant"]
@@ -595,7 +595,7 @@ def Get_Mono_Char_Strain(
         else:
             raise ValueError("The reference frame can only be observer or source.")
 
-        low_f_err_statement = "Uh, you probably should set your source f_low to lower. "
+        low_f_err_statement = "Uh, you probably should set your source f_min to lower. "
         interp_h_char = interp.interp1d(
             np.log10(source.f.value), np.log10(h_char.value)
         )
@@ -679,7 +679,7 @@ def Get_Mono_Strain(
             fill_value=-30.0,
             bounds_error=False,
         )
-        low_f_err_statement = "Uh, you probably should set your source f_low to lower. "
+        low_f_err_statement = "Uh, you probably should set your source f_min to lower. "
         if pn_frame == "source":
             if f_obs_source.value < np.unique(np.min(source.f.value)):
                 low_f_err_statement += f"Your minimum calculated frequency is {source.f[0]} and your selected observed frequency is {f_obs_source}"
@@ -1002,8 +1002,13 @@ def Check_Freq_Evol(
                 source, T_evol, in_frame=T_evol_frame, out_frame="source"
             )
         else:
-            raise ValueError(
-                "Must either assign T_evol a value, or assign the source a frequency (f_gw) or an instrument."
+            # f(T_evol), the frequency of the source at T_evol before merger
+            f_T_evol_source = Get_Source_Freq(
+                source, T_evol, in_frame=T_evol_frame, out_frame="source"
+            )
+            # Assumes that the initial time observed is T_evol (needs to be in the source frame)
+            t_init_source = Get_Time_From_Merger(
+                source, freq=f_T_evol_source, in_frame="source", out_frame="source"
             )
     else:
         if hasattr(source, "instrument"):

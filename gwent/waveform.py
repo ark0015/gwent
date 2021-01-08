@@ -164,13 +164,17 @@ def Get_Waveform(
                 waveform_dict["f_min"] = lalsuite_kwargs["f_min"].value
             else:
                 waveform_dict["f_min"] = lalsuite_kwargs["f_min"]
+        elif hasattr(source, "f_min"):
+            new_f_min = source.f_min / M_time
+            waveform_dict["f_min"] = new_f_min.to("Hz").value
+
         if "f_max" in lalsuite_kwargs.keys():
             if isinstance(lalsuite_kwargs["f_max"], u.Quantity):
                 waveform_dict["f_max"] = lalsuite_kwargs["f_max"].value
             else:
                 waveform_dict["f_max"] = lalsuite_kwargs["f_max"]
-        elif hasattr(source, "f_high"):
-            new_f_max = source.f_high / M_time
+        elif hasattr(source, "f_max"):
+            new_f_max = source.f_max / M_time
             waveform_dict["f_max"] = new_f_max.to("Hz").value
 
         if "f_ref" in lalsuite_kwargs.keys():
@@ -195,6 +199,8 @@ def Get_Proper_Freq_Params(waveform_dict):
     in_deltaF = waveform_dict["deltaF"]
     in_f_min = waveform_dict["f_min"]
     in_f_max = waveform_dict["f_max"]
+
+    print(in_deltaF, in_f_min)
 
     # Smallest deltaF before lalsuite can't shift t_coalescence to 0 (?)
     deltaF_min = 5e-10
@@ -360,7 +366,7 @@ def Get_LALSuite_Waveform(source, waveform_dict, out_frame="observer"):
     source.h_f_cross_phase = h_f_cross_phase
 
     full_amp = Get_Full_Amp(h_f_plus_amp, h_f_cross_amp)
-    # Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_low,f_cutoff)
+    # Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_min,f_cutoff)
     trimmed_full_amp = []
     for amp in full_amp:
         if not np.isnan(amp) and amp != 0.0:
@@ -409,7 +415,7 @@ def Get_PyPhenomD(source, pct_of_peak=0.01):
         the waveform strain in geometrized units (G=c=1)
 
     """
-    f_low = source.f_low
+    f_min = source.f_min
     N = source.nfreqs
     q = source.q
     x1 = source.chi1
@@ -457,12 +463,12 @@ def Get_PyPhenomD(source, pct_of_peak=0.01):
     )
 
     # If lowest frequency is greater than cutoffFreq, then raise error.
-    if f_low >= cutoffFreq:
+    if f_min >= cutoffFreq:
         raise ValueError(
-            "Lower frequency bound (ie. f_low) must be lower than that of the merger ringdown."
+            "Lower frequency bound (ie. f_min) must be lower than that of the merger ringdown."
         )
 
-    Mf = np.logspace(np.log10(f_low), np.log10(cutoffFreq), N)
+    Mf = np.logspace(np.log10(f_min), np.log10(cutoffFreq), N)
 
     v1 = A_insp(f1, eta, x1, x2, x_PN)
     v2 = Lambda(eta, x_PN, 3)

@@ -129,7 +129,7 @@ def aLIGO_gwinc():
         T_obs,
         noise_dict=noise_dict,
         f_low=1.0,
-        f_high=1e4,
+        f_max=1e4,
         nfreqs=int(1e3),
     )
     aLIGO_gwinc.T_obs = [T_obs, T_obs_min, T_obs_max]

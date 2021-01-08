@@ -28,9 +28,13 @@ def Get_SNR_Matrix(
         y-axis variable
     sample_rate_y : array
         samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    inc :
-    integral_consts :
-    method :
+    inc : int, float, Quantity, Optional
+        The inclination of the source in degrees
+    integral_consts : int, float, Optional
+        Used to adjust the SNR scaling in Calc_Chirp_SNR
+    method : str, {'SPA','PN'}
+        Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
+        or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
     Returns
     -------
@@ -367,7 +371,7 @@ def Recalculate_Noise(source, instrument):
         source.instrument = instrument
 
 
-def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
+def Calc_Mono_SNR(source, instrument, inc=None, method="SPA"):
     """Calculates the SNR for a monochromatic source
 
     Parameters
@@ -378,6 +382,9 @@ def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
         Instance of a gravitational wave detector class
     inc : None,float,int, optional
         The inclination of the monochromatic source in radians.
+    method : str, {'SPA','PN'}
+        Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
+        or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
     Notes
     -----
@@ -398,7 +405,6 @@ def Calc_Mono_SNR(source, instrument, inc=None, method="PN"):
         out_frame="observer",
         method=method,
     )
-
     if method == "SPA":
         scale = 2 / np.pi
     else:
@@ -428,6 +434,8 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
         Instance of a gravitational wave source class
     instrument : object
         Instance of a gravitational wave detector class
+    integral_consts : int, float, Optional
+        Used to adjust the SNR scaling
 
     Notes
     -----
@@ -450,7 +458,7 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
     # Only want to integrate from observed frequency (f(T_obs_before_merger)) till merger
     indxfgw_start = np.abs(source.f - source.f_T_obs).argmin()
     if indxfgw_start == 0:
-        statement_1 = "Uh, you probably should set your source f_low to lower. "
+        statement_1 = "Uh, you probably should set your source f_min to lower. "
         statement_1 += f"Your minimum calculated frequency is {source.f[0]} and f(T_obs) is {source.f_T_obs}"
         print(statement_1)
     indxfgw_end = len(source.f)

@@ -189,7 +189,7 @@ def SKA_WN():
         sigma=sigma_SKA,
         cadence=cadence_SKA,
         f_low=1e-10,
-        f_high=1e-7,
+        f_max=1e-7,
         nfreqs=int(1e3),
     )
     return SKA_WN
@@ -457,7 +457,7 @@ def test_BBHStrain(LISA_prop1, aLIGO, SKA_WN, ET):
         x2[0],
         instrument=LISA_prop1,
         f_low=1e-6,
-        f_high=10,
+        f_max=10,
         nfreqs=int(1e3),
     )
     source_2 = binary.BBHFrequencyDomain(M[1], q[1], z[1], chi2=x2[1], instrument=aLIGO)
