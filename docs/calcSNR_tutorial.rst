@@ -1,4 +1,4 @@
-.. module:: gwent
+.. module:: hasasia
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
           downloaded `here <_static/notebooks/calcSNR_tutorial.ipynb>`_.
@@ -79,8 +79,19 @@ This takes the form of
 
 .. code:: python
 
-    def Initialize_Source(instrument):
+    def Initialize_Source(instrument,approximant='pyPhenomD',lalsuite_kwargs={}):
         """Initializes a source binary based on the instrument type and returns the source
+        
+        Parameters
+        ----------
+        instrument : object
+            Instance of a gravitational wave detector class
+        approximant : str, optional
+            the approximant used to calculate the frequency domain waveform of the source.
+            Can either be the python implementation of IMRPhenomD ('pyPhenomD', the default) given below,
+            or a waveform modelled in LIGO's lalsuite's lalsimulation package.
+        lalsuite_kwargs: dict, optional
+            More specific user-defined kwargs for the different lalsuite waveforms
         """
         
         #q = m2/m1 reduced mass
@@ -111,15 +122,19 @@ This takes the form of
                                                q_list,
                                                z_ground_source,
                                                chi1_list,
-                                               chi2_list)
+                                               chi2_list,
+                                               approximant=approximant,
+                                               lalsuite_kwargs=lalsuite_kwargs)
         elif isinstance(instrument,detector.SpaceBased):
-            M_space_source = [1e6,10.,1e10]
+            M_space_source = [1e6,1.,1e10]
             z_space_source = [1.0,z_min,z_max]
             source = binary.BBHFrequencyDomain(M_space_source,
                                                q_list,
                                                z_space_source,
                                                chi1_list,
-                                               chi2_list)
+                                               chi2_list,
+                                               approximant=approximant,
+                                               lalsuite_kwargs=lalsuite_kwargs)
         elif isinstance(instrument,detector.PTA):
             M_pta_source = [1e9,1e8,1e11]
             z_pta_source = [0.1,z_min,z_max]
@@ -127,7 +142,9 @@ This takes the form of
                                                q_list,
                                                z_pta_source,
                                                chi1_list,
-                                               chi2_list)
+                                               chi2_list,
+                                               approximant=approximant,
+                                               lalsuite_kwargs=lalsuite_kwargs)
         return source
 
 Create SNR Matrices and Samples for a Few Examples
@@ -135,40 +152,40 @@ Create SNR Matrices and Samples for a Few Examples
 
 The variables for either axis in the SNR calculation can be:
 
--  GLOBAL:
+-  **GLOBAL:**
 
-   -  ‘T_obs’ - Detector Observation Time
+   -  ``T_obs`` - Detector Observation Time
 
--  SOURCE:
+-  **SOURCE:**
 
-   -  ‘M’ - Mass (Solar Units)
-   -  ‘q’ - Mass Ratio
-   -  ‘chi1’ - Dimensionless Spin of Black Hole 1
-   -  ‘chi2’ - Dimensionless Spin of Black Hole 2
-   -  ‘z’ - Redshift
+   -  ``M`` - Mass (Solar Units)
+   -  ``q`` - Mass Ratio
+   -  ``chi1`` - Dimensionless Spin of Black Hole 1
+   -  ``chi2`` - Dimensionless Spin of Black Hole 2
+   -  ``z`` - Redshift
 
--  GroundBased ONLY:
+-  **GroundBased ONLY:**
 
    -  Any single valued variable in list of params given by:
-      instrument_GroundBased.Get_Noise_Dict()
+      ``instrument_GroundBased.Get_Noise_Dict()``
    -  To make variable in SNR, declare the main variable, then the
-      subparameter variable as a string e.g. var_x = ‘Infrastructure
-      Length’, the case matters.
+      subparameter variable as a string e.g.
+      ``var_x = Infrastructure Length``, the case matters.
 
--  SpaceBased ONLY:
+-  **SpaceBased ONLY:**
 
-   -  ‘L’ - Detector Armlength
-   -  ‘A_acc’ - Detector Acceleration Noise
-   -  ‘A_IFO’ - Detector Optical Metrology Noise
-   -  ‘f_acc_break_low’ - The Low Acceleration Noise Break Frequency
-   -  ‘f_acc_break_high’ - The High Acceleration Noise Break Frequency
-   -  ‘f_IFO_break’ - The Optical Metrology Noise Break Frequency
+   -  ``L`` - Detector Armlength
+   -  ``A_acc`` - Detector Acceleration Noise
+   -  ``A_IFO`` - Detector Optical Metrology Noise
+   -  ``f_acc_break_low`` - The Low Acceleration Noise Break Frequency
+   -  ``f_acc_break_high`` - The High Acceleration Noise Break Frequency
+   -  ``f_IFO_break`` - The Optical Metrology Noise Break Frequency
 
--  PTA ONLY:
+-  **PTA ONLY:**
 
-   -  ‘n_p’ - Number of Pulsars
-   -  ‘sigma’ - Root-Mean-Squared Timing Error
-   -  ‘cadence’ - Observation Cadence
+   -  ``n_p`` - Number of Pulsars
+   -  ``sigma`` - Root-Mean-Squared Timing Error
+   -  ``cadence`` - Observation Cadence
 
 Instrument Creation Examples
 ----------------------------
@@ -202,7 +219,7 @@ Ground Based Detectors
                       'Laser':
                       {'Power':[125,10,1e3]},
                       'Seismic':
-                      {'Gamma':[0.8,1e-3,1e3]}}
+                      {'Gamma':[0.8,0.1,1.0]}}
         aLIGO = detector.GroundBased('aLIGO',T_obs_ground_list,noise_dict=noise_dict_aLIGO)
         
         return aLIGO
@@ -355,9 +372,9 @@ them all at once.
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_chi1 ,  done. t = :  41.35525178909302
-    Model:  aLIGO_M_vs_q ,  done. t = :  40.72077178955078
-    Model:  aLIGO_M_vs_z ,  done. t = :  31.168396711349487
+    Model:  aLIGO_M_vs_chi1 ,  done. t = :  31.16754937171936
+    Model:  aLIGO_M_vs_q ,  done. t = :  31.795299530029297
+    Model:  aLIGO_M_vs_z ,  done. t = :  23.489653825759888
 
 
 Plotting SNRs
@@ -443,9 +460,9 @@ max value from the previous run.
 
 .. parsed-literal::
 
-    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  31.27728819847107
-    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  31.22858500480652
-    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  30.76893949508667
+    Model:  aLIGO_M_vs_Infrastructure Length ,  done. t = :  24.8679461479187
+    Model:  aLIGO_M_vs_Seismic Gamma ,  done. t = :  23.985658407211304
+    Model:  aLIGO_M_vs_Laser Power ,  done. t = :  24.44096326828003
 
 
 .. code:: python
@@ -509,9 +526,9 @@ parameters.
 
 .. parsed-literal::
 
-    Model:  LISA_prop1_M_vs_chi1 ,  done. t = :  50.03253507614136
-    Model:  LISA_prop1_M_vs_q ,  done. t = :  48.90465474128723
-    Model:  LISA_prop1_M_vs_z ,  done. t = :  40.506542921066284
+    Model:  LISA_prop1_M_vs_chi1 ,  done. t = :  43.22341322898865
+    Model:  LISA_prop1_M_vs_q ,  done. t = :  43.869982957839966
+    Model:  LISA_prop1_M_vs_z ,  done. t = :  33.89306306838989
 
 
 .. code:: python
@@ -566,6 +583,61 @@ plots.
 .. image:: calcSNR_tutorial_files/calcSNR_tutorial_36_0.png
 
 
+Changing Waveform Models
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Thanks to swig wrapping, we can access the frequency domain waveforms
+within ``lalsuite`` (specifically any found
+`here <https://lscsoft.docs.ligo.org/lalsuite/lalsimulation/group___l_a_l_sim_inspiral__c.html#ga50d4b23c4b6a80e93d4ed5ea7d90113b>`__).
+User beware though, this is *mostly* untested. Depending on the waveform
+model, the SNR calculation could take much longer. To select between
+waveforms, simply change the ``approximant`` either in the source
+initialization, or inside the dictionary of extra parameters passed to
+``lalsuite``.
+
+.. code:: python
+
+    #Number of SNRMatrix rows
+    sampleRate_y = 50
+    #Number of SNRMatrix columns
+    sampleRate_x = 50
+
+.. code:: python
+
+    #Variable on y-axis
+    var_y = 'z'
+    #Variable on x-axis
+    var_x = 'M'
+    
+    lalsuite_kwargs = {"S1x": 0.5, "S1y": 0, "S1z": 0.2,
+                       "S2x": -0.2, "S2y": 0.5, "S2z": 0.1,
+                       "inclination":np.pi/2}
+    instrument = Initialize_LISA()
+    source = Initialize_Source(instrument,approximant='IMRPhenomPv3',lalsuite_kwargs=lalsuite_kwargs)
+    start = time.time()
+    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
+                                                       var_x,sampleRate_x,
+                                                       var_y,sampleRate_y)
+    end = time.time()
+    
+    print('Model: ',instrument.name + '_' + var_x + '_vs_' + var_y,',',' done. t = : ',end-start)
+    Plot_SNR(var_x,sample_x,var_y,sample_y,SNRMatrix,smooth_contours=False)
+
+
+.. parsed-literal::
+
+    Model:  LISA_prop1_M_vs_z ,  done. t = :  431.48117208480835
+
+
+
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_39_1.png
+
+
+.. code:: python
+
+    sampleRate_y = 100
+    sampleRate_x = 100
+
 .. code:: python
 
     #Variable on y-axis
@@ -592,12 +664,12 @@ plots.
 
 .. parsed-literal::
 
-    Model:  LISA_prop1_M_vs_L ,  done. t = :  39.371663093566895
-    Model:  LISA_prop1_M_vs_A_acc ,  done. t = :  40.02059864997864
-    Model:  LISA_prop1_M_vs_A_IFO ,  done. t = :  39.97913455963135
-    Model:  LISA_prop1_M_vs_f_acc_break_low ,  done. t = :  40.6117742061615
-    Model:  LISA_prop1_M_vs_f_acc_break_high ,  done. t = :  41.86841011047363
-    Model:  LISA_prop1_M_vs_f_IFO_break ,  done. t = :  40.63132047653198
+    Model:  LISA_prop1_M_vs_L ,  done. t = :  32.94680953025818
+    Model:  LISA_prop1_M_vs_A_acc ,  done. t = :  33.771636962890625
+    Model:  LISA_prop1_M_vs_A_IFO ,  done. t = :  33.917126417160034
+    Model:  LISA_prop1_M_vs_f_acc_break_low ,  done. t = :  34.29063296318054
+    Model:  LISA_prop1_M_vs_f_acc_break_high ,  done. t = :  34.608739614486694
+    Model:  LISA_prop1_M_vs_f_IFO_break ,  done. t = :  34.29920196533203
 
 
 .. code:: python
@@ -643,7 +715,7 @@ plots.
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_38_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_42_0.png
 
 
 PTA SNRs
@@ -677,9 +749,9 @@ Same as the rest, just for example purposes!
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_chi1 ,  done. t = :  27.372398853302002
-    Model:  NANOGrav_WN_M_vs_q ,  done. t = :  23.18591332435608
-    Model:  NANOGrav_WN_M_vs_z ,  done. t = :  23.842024326324463
+    Model:  NANOGrav_WN_M_vs_chi1 ,  done. t = :  24.73322606086731
+    Model:  NANOGrav_WN_M_vs_q ,  done. t = :  21.385414361953735
+    Model:  NANOGrav_WN_M_vs_z ,  done. t = :  22.074593544006348
 
 
 .. code:: python
@@ -708,19 +780,27 @@ Same as the rest, just for example purposes!
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_41_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_45_0.png
 
 
 There is also functionality to plot two different plots together for
-eazy comparison.
+eazy comparison.   Here we compare the methods in the previous
+calculation to a source with an inclination of :math:`\pi/2` and one
+using the alternate method of calculating the monochromatic strain with
+the phenomenological waveform amplitude.
 
 .. code:: python
 
     instrument = Initialize_NANOGrav()
+    inc = np.pi/2
     source = Initialize_Source(instrument)
-    [sample_x,sample_y,SNRMatrix] = snr.Get_SNR_Matrix(source,instrument,
-                                                       'M',sampleRate_x,
-                                                       'z',sampleRate_y,inc=np.pi/2)
+    [sample_x_inclined,sample_y_inclined,SNRMatrix_inclined] = snr.Get_SNR_Matrix(source,instrument,
+                                                                                  'M',sampleRate_x,
+                                                                                  'z',sampleRate_y,
+                                                                                  inc=inc)
+    [sample_x_PN_method,sample_y_PN_method,SNRMatrix_PN_method] = snr.Get_SNR_Matrix(source,instrument,
+                                                                                     'M',sampleRate_x,
+                                                                                     'z',sampleRate_y,method='PN')
 
 .. code:: python
 
@@ -728,12 +808,15 @@ eazy comparison.
     Plot_SNR('M',sample_x_array[-1],'z',sample_y_array[-1],SNR_array[-1],
              display=False,display_cbar=False,fig=fig,ax=ax,
              contour_kwargs={'cmap':'viridis'},cfill=False)
-    Plot_SNR('M',sample_x,'z',sample_y,SNRMatrix,fig=fig,ax=ax,
+    Plot_SNR('M',sample_x_inclined,'z',sample_y_inclined,SNRMatrix_inclined,
+             display=False,display_cbar=False,fig=fig,ax=ax,
+             contour_kwargs={'cmap':'viridis','linestyles':':'},cfill=False)
+    Plot_SNR('M',sample_x_PN_method,'z',sample_y_PN_method,SNRMatrix_PN_method,fig=fig,ax=ax,
              contour_kwargs={'cmap':'viridis','linestyles':'--'},cfill=False)
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_44_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_0.png
 
 
 These can take a long time if you vary the instrument parameters. Be
@@ -770,10 +853,10 @@ careful with your sample rates!
 
 .. parsed-literal::
 
-    Model:  NANOGrav_WN_M_vs_n_p ,  done. t = :  141.06110644340515
-    Model:  NANOGrav_WN_M_vs_sigma ,  done. t = :  159.12187552452087
-    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  163.1423692703247
-    Model:  NANOGrav_WN_M_vs_T_obs ,  done. t = :  254.33116555213928
+    Model:  NANOGrav_WN_M_vs_n_p ,  done. t = :  134.68967270851135
+    Model:  NANOGrav_WN_M_vs_sigma ,  done. t = :  171.6554970741272
+    Model:  NANOGrav_WN_M_vs_cadence ,  done. t = :  172.50515484809875
+    Model:  NANOGrav_WN_M_vs_T_obs ,  done. t = :  261.6520907878876
 
 
 .. code:: python
@@ -820,6 +903,6 @@ careful with your sample rates!
 
 
 
-.. image:: calcSNR_tutorial_files/calcSNR_tutorial_48_0.png
+.. image:: calcSNR_tutorial_files/calcSNR_tutorial_52_0.png
 
 

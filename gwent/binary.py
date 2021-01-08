@@ -16,19 +16,19 @@ class BinaryBlackHole:
 
     Parameters
     ----------
-    M : float
-        Total mass of the black hole binary (m1+m2)
-    q : float
-        Mass ratio of the black hole binary (m1/m2, m1<m2)
-    z : float
+    M: float
+        Total mass of the black hole binary (``m1`` +``m2``)
+    q: float
+        Mass ratio of the black hole binary (``m1`` /``m2``, ``m1`` <``m2``)
+    z: float
         Redshift of the black hole binary
 
-    load_location : string, optional
-        the directory of the loaded file, (ie. '/path/to/file')
+    load_location: string, optional
+        the directory of the loaded file, (ie. ``'/path/to/file'``)
 
     Notes
     -----
-    IMRPhenomD waveforms calibrated for q = m1/m2 < 18
+    IMRPhenomD waveforms calibrated for ``q`` = ``m1`` /``m2`` < 18
 
     """
 
@@ -138,31 +138,31 @@ class BBHFrequencyDomain(BinaryBlackHole):
 
     Parameters
     ----------
-    chi1 : float, optional
-        The dimensionless spin parameter abs(a/m) for black hole m1 defaults to 0.0.
-    chi2 : float, optional
-        The dimensionless spin parameter abs(a/m) for black hole m2 defaults to 0.0.
-    f_min : float, optional
-        The lowest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
-    f_max : float, optional
-        The highest frequency in natural units (Mf, G=c=1) at which the BBH waveform is calculated
-    nfreqs : int, optional
+    chi1: float, optional
+        The dimensionless spin parameter abs(a/m) for black hole ``m1`` defaults to 0.0.
+    chi2: float, optional
+        The dimensionless spin parameter abs(a/m) for black hole ``m2`` defaults to 0.0.
+    f_min: float, optional
+        The lowest frequency in natural units (``Mf``, G=c=1) at which the BBH waveform is calculated
+    f_max: float, optional
+        The highest frequency in natural units (``Mf``, G=c=1) at which the BBH waveform is calculated
+    nfreqs: int, optional
         The number of frequencies at which the BBH waveform is calculated
-    instrument : object, optional
+    instrument: object, optional
         If assigned, the optimal frequency (ie. most sensitive frequency) of the detector is used as
         the binary's GW frequency
-    f_gw : float, Quantity, optional
+    f_gw: float, Quantity, optional
         The binary's GW frequency if source is monochromatic
-    approximant : str, optional
+    approximant: str, optional
         the approximant used to calculate the frequency domain waveform of the source.
-        Can either be the python implementation of IMRPhenomD ('pyPhenomD', the default) given below,
-        or a waveform modelled in LIGO's lalsuite's lalsimulation package.
+        Can either be the python implementation of IMRPhenomD (``'pyPhenomD'``, the default) given below,
+        or a waveform modelled in LIGO's ``lalsuite`` 's ``lalsimulation`` package.
     lalsuite_kwargs: dict, optional
-        More specific user-defined kwargs for the different lalsuite waveforms
+        More specific user-defined kwargs for the different ``lalsuite`` waveforms
 
     Notes
     -----
-    IMRPhenomD waveforms calibrated for aligned spins chi_1, chi_2 = abs(a/m) <= 0.85 or if q=1 abs(a/m)<0.98
+    IMRPhenomD waveforms calibrated for aligned spins ``chi1``, ``chi2`` = abs(a/m) <= 0.85 or if ``q`` =1 abs(a/m)<0.98
 
     """
 
@@ -396,19 +396,19 @@ class BBHTimeDomain(BinaryBlackHole):
 
         Parameters
         ----------
-        interp_res : {'coarse','fine'}, optional
-            'coarse' uses maximum difference between subsequent time steps for interpolation
-            'fine' uses minimum difference between subsequent time steps for interpolation
-        windowing : {'left','right','all'}, optional
-            'left' windows the left side of the time data
-            'right' windows the right side of the time data
-            'all' windows the both the left and right side of the time data
+        interp_res: {'coarse','fine'}, optional
+            ``'coarse'`` uses maximum difference between subsequent time steps for interpolation
+            ``'fine'`` uses minimum difference between subsequent time steps for interpolation
+        windowing: {'left','right','all'}, optional
+            ``'left'`` windows the left side of the time data
+            ``'right'`` windows the right side of the time data
+            ``'all'`` windows the both the left and right side of the time data
 
         Returns
         -------
-        natural_f : array
+        natural_f: array
             The frequency of the input source in natural units (G=c=1)
-        natural_h : array
+        natural_h: array
             The strain of the input source in natural units (G=c=1)
 
         """
@@ -488,11 +488,11 @@ def Get_Char_Strain(source, in_frame="observer", out_frame="observer"):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    in_frame : str, {'observer','source'}
+    in_frame: str, {'observer','source'}
         Determines whether the input source strain and frequency are in the source or observer frame.
-    out_frame : str, {'observer','source'}
+    out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
     """
     if in_frame == "source":
@@ -534,28 +534,28 @@ def Get_Mono_Char_Strain(
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    method : str, {'SPA','PN'}
-        Determines method of calculating $h_{0}$. 
-        'SPA' uses the stationary phase approximation typically used for single frequency sources
-        'PN' uses the waveform of the source (source.h_f) at freq.
-    freq : float, optional
+    method: str, {'SPA','PN'}
+        Determines method of calculating :math:`h_{0}`. 
+        ``'SPA'`` uses the stationary phase approximation typically used for single frequency sources
+        ``'PN'`` uses the waveform of the source (``source.h_f``) at freq.
+    freq: float, optional
         the binary GW frequency in the corresponding in frame. If freq is None, the frequency
-        is set to source.f_gw
-    f_gw_frame : str, {'source','observer'}
-        Determines whether the input frequency (either freq or source.f_gw if freq is None) is in the source or observer frame.
-    pn_frame : str, {'source','observer'}
-        Determines whether the waveform f and h_f are in the source or observer frame. 
-    out_frame : str, {'observer','source'}
+        is set to ``source.f_gw``
+    f_gw_frame: str, {'source','observer'}
+        Determines whether the input frequency (either freq or ``source.f_gw`` if ``freq`` is ``None``) is in the source or observer frame.
+    pn_frame: str, {'source','observer'}
+        Determines whether the waveform ``f`` and `h_f`` are in the source or observer frame. 
+    out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
-    inc : float, optional
-        The inclination of the source in radians. If inc is None, the strain is \
-        sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
+    inc: float, optional
+        The inclination of the source in radians. If ``inc`` is ``None``, the strain is \
+        sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf>
 
     Returns
     -------
-    float
+    mono_char_strain: float
         The characteristic strain of a monochromatic source in the source frame.
     """
 
@@ -633,30 +633,30 @@ def Get_Mono_Strain(
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    method : str, {'SPA','PN'}
-        Determines method of calculating $h_{0}$. 
-        'SPA' uses the stationary phase approximation typically used for single frequency sources
-        'PN' uses the waveform of the source (source.h_f), rescales using eqn. 35 in Moore, Cole, and Berry (https://arxiv.org/pdf/1408.0740.pdf)
-        to get $h_{0}$, this may prove more accurate as higher order effects are taken into account.
-    freq : float, optional
-        the binary GW frequency in the corresponding in frame. If freq is None, the frequency
-        is set to source.f_gw
-    inc : float, optional
-        The inclination of the source in radians. If inc is None, the strain is \
+    method: str, {'SPA','PN'}
+        Determines method of calculating :math:`h_{0}`. 
+        ``'SPA'`` uses the stationary phase approximation typically used for single frequency sources
+        ``'PN'`` uses the waveform of the source (source.h_f), rescales using eqn. 35 in Moore, Cole, and Berry (https://arxiv.org/pdf/1408.0740.pdf)
+        to get :math:`h_{0}`, this may prove more accurate as higher order effects are taken into account.
+    freq: float, optional
+        the binary GW frequency in the corresponding in frame. If ``freq`` is ``None``, the frequency
+        is set to ``source.f_gw``
+    inc: float, optional
+        The inclination of the source in radians. If ``inc`` is ``None``, the strain is \
         sky and inclination averaged strain from Robson et al. 2019 (eqn 27) <https://arxiv.org/pdf/1803.01944.pdf> \
-    f_gw_frame : str, {'source','observer'}
-        Determines whether the input frequency (either freq or source.f_gw if freq is None) is in the source or observer frame.
-    pn_frame : str, {'source','observer'}
-        Determines whether the waveform f and h_f are in the source or observer frame.
-    out_frame : str, {'observer','source'}
+    f_gw_frame: str, {'source','observer'}
+        Determines whether the input frequency (either ``freq`` or ``source.f_gw`` if ``freq`` is ``None``) is in the source or observer frame.
+    pn_frame: str, {'source','observer'}
+        Determines whether the waveform ``f`` and ``h_f`` are in the source or observer frame.
+    out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
 
     Returns
     -------
-    float
-        The strain of a monochromatic source in the out_frame frame.
+    h_0: float
+        The strain of a monochromatic source in the ``out_frame`` frame.
 
     """
     if freq is not None:
@@ -793,16 +793,15 @@ def Get_F_Dot(source, freq=None, in_frame="observer", out_frame="observer"):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    freq : float, optional
+    freq: float, optional
         the binary GW frequency in the corresponding in frame. If freq is None, the frequency
         is set to source.f_gw
-    in_frame : str, {'observer','source'}
+    in_frame: str, {'observer','source'}
         Determines whether the given frequency is in the source or observer frame.
-    out_frame : str, {'observer','source'}
+    out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
-
     """
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
@@ -848,16 +847,15 @@ def Get_Time_From_Merger(source, freq=None, in_frame="observer", out_frame="sour
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    freq : float, optional
+    freq: float, optional
         the binary GW frequency in the corresponding in frame. If freq is None, the frequency
         is set to source.f_gw
-    in_frame : str, {'observer','source'}
+    in_frame: str, {'observer','source'}
         Determines whether the given frequency is in the source or observer frame.
-    out_frame : str, {'source','observer'}
+    out_frame: str, {'source','observer'}
         Determines whether the returned frequency is in the source or observer frame.
-
     """
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
@@ -897,16 +895,15 @@ def Get_Source_Freq(source, tau, in_frame="observer", out_frame="source"):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    tau : int, float, Quantity
+    tau: int, float, Quantity
         the time from merger in the respective frame.
         If not an astropy quantity, assumed to be a time in seconds
-    in_frame : str, {'observer','source'}
+    in_frame: str, {'observer','source'}
         Determines whether the given time to merger is in the source or observer frame.
-    out_frame : str, {'source','observer'}
+    out_frame: str, {'source','observer'}
         Determines whether the returned frequency is in the source or observer frame.
-
     """
     tau = utils.make_quant(tau, "s")
     if in_frame == "observer":
@@ -943,14 +940,14 @@ def Check_Freq_Evol(
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of gravitational wave source class
-    T_evol : int,float, Quantity, optional
+    T_evol: int,float, Quantity, optional
         The length of time the binary may evolve, if not provided it is assumed source
         has an instrument assigned and the instruments observation time will be used.
-    T_evol_frame : str, {'observer','source'}
+    T_evol_frame: str, {'observer','source'}
         Determines whether the given T_evol is in the source or observer frame.
-    f_gw_frame : str, {'observer','source'}
+    f_gw_frame: str, {'observer','source'}
         Determines whether the frequency is in the source or observer frame.
         May not be used if source has an instrument assigned.
 
@@ -966,7 +963,6 @@ def Check_Freq_Evol(
 
     To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) <https://arxiv.org/abs/1907.04341>
     which uses binomial expansion of f_T_evol_inst - f_init_inst and thus will never be imaginary
-
     """
     m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2

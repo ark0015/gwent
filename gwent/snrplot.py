@@ -45,66 +45,66 @@ def Plot_SNR(
 
     Parameters
     ----------
-    var_x : str
+    var_x: str
         x-axis variable
-    sample_x : array
-        samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    var_y : str
+    sample_x: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the x-axis variable
+    var_y: str
         y-axis variable
-    sample_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    SNRMatrix : array-like
+    sample_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
+    SNRMatrix: array-like
         the matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
 
-    fig : object, optional
+    fig: object, optional
         matplotlib figure object on which to collate the individual plots
-    ax : object, optional
+    ax: object, optional
         matplotlib axes object on which to plot the individual plot
-    display : bool, optional
+    display: bool, optional
         Option to turn off display if saving multiple plots to a file
-    return_plt : bool, optional
-        Option to return fig and ax
-    dl_axis : bool, optional
+    return_plt: bool, optional
+        Option to return ``fig`` and ``ax``
+    dl_axis: bool, optional
         Option to turn on the right hand side labels of luminosity distance
-    lb_axis : bool, optional
+    lb_axis: bool, optional
         Option to turn on the right hand side labels of lookback time
-    smooth_contours : bool, optional
+    smooth_contours: bool, optional
         Option to have contours appear smooth instead of tiered (depending on sample size the edges appear boxey).
-    cfill : bool, optional
-        Option to use filled contours or not, default is True
-    display_cbar : bool, optional
+    cfill: bool, optional
+        Option to use filled contours or not, default is ``True``
+    display_cbar: bool, optional
         Option to display the colorbar on the axes object
-    x_axis_label : bool, optional
+    x_axis_label: bool, optional
         Option to display the x axis label
-    y_axis_label : bool, optional
+    y_axis_label: bool, optional
         Option to display the y axis label
-    x_axis_line : int,float, optional
+    x_axis_line: int,float, optional
         Option to display a line on the x axis if not None
-    y_axis_line : int,float, optional
+    y_axis_line: int,float, optional
         Option to display a line on the y axis if not None
-    logLevels_min : float, optional
-        Sets the minimum log level of the colorbar, default is -1.0 which set the minimum to the log minimum of the given SNRMatrix
-    logLevels_max : float, optional
-        Sets the maximum log level of the colorbar, default is 0.0, which sets the maximum to the log maximum value of the given SNRMatrix
-    hspace : float, optional
+    logLevels_min: float, optional
+        Sets the minimum log level of the colorbar, default is -1.0 which set the minimum to the log minimum of the given ``SNRMatrix``
+    logLevels_max: float, optional
+        Sets the maximum log level of the colorbar, default is 0.0, which sets the maximum to the log maximum value of the given ``SNRMatrix``
+    hspace: float, optional
         Sets the vertical space between axes objects, default is 0.15
-    wspace : float, optional
+    wspace: float, optional
         Sets the horizontal space between axes objects, default is 0.1
-    contour_kwargs : dict, optional
+    contour_kwargs: dict, optional
         Sets additional kwargs taken by contour in matplotlib
-    contourf_kwargs : dict, optional
+    contourf_kwargs: dict, optional
         Sets additional kwargs taken by contourf in matplotlib
-    xticklabels_kwargs : dict, optional
+    xticklabels_kwargs: dict, optional
         Sets additional kwargs taken by xticklabel in matplotlib
-    xlabels_kwargs= : dict, optional
+    xlabels_kwargs=: dict, optional
         Sets additional kwargs taken by xlabel in matplotlib
-    xline_kwargs : dict, optional
+    xline_kwargs: dict, optional
         Sets additional kwargs taken by ax.axvline in matplotlib
-    yticklabels_kwargs : dict, optional
+    yticklabels_kwargs: dict, optional
         Sets additional kwargs taken by yticklabel in matplotlib
-    ylabels_kwargs : dict, optional
+    ylabels_kwargs: dict, optional
         Sets additional kwargs taken by ylabel in matplotlib
-    yline_kwargs : dict, optional
+    yline_kwargs: dict, optional
         Sets additional kwargs taken by ax.axhline in matplotlib
 
     """
@@ -531,19 +531,19 @@ def Get_Axes_Labels(
     ax: object
         The current axes object
     var_axis: str
-        The axis to change labels and ticks, can either be 'y' or 'x'
+        The axis to change labels and ticks, can either be ``'y'`` or ``'x'``
     var: str
         The variable to label
     orig_labels: list,np.ndarray
         The original labels for the particular axis, may be updated depending on parameter
     line_val: int,float
-        Value of line plotted on var_axis if not None. Assumed to be non-log10 value
+        Value of line plotted on ``var_axis`` if not None. Assumed to be non-log10 value
     label_kwargs: dict
         The dictionary adjusting the particular axis' label kwargs
     tick_label_kwargs: dict
         The dictionary adjusting the particular axis' tick label kwargs
     line_kwargs: dict
-        The dictionary associated with the line displayed on var_axis
+        The dictionary associated with the line displayed on ``var_axis``
 
     """
 

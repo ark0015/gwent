@@ -16,41 +16,40 @@ def Get_SNR_Matrix(
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    var_x : str
+    var_x: str
         x-axis variable
-    sample_rate_x : int
-        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
-    var_y : str
+    sample_rate_x: int
+        Number of samples at which ``SNRMatrix`` is calculated corresponding to the x-axis variable
+    var_y: str
         y-axis variable
-    sample_rate_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    inc : int, float, Quantity, Optional
+    sample_rate_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
+    inc: int, float, Quantity, Optional
         The inclination of the source in degrees
-    integral_consts : int, float, Optional
-        Used to adjust the SNR scaling in Calc_Chirp_SNR
-    method : str, {'SPA','PN'}
+    integral_consts: int, float, Optional
+        Used to adjust the SNR scaling in ``Calc_Chirp_SNR``
+    method: str, {'SPA','PN'}
         Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
         or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
     Returns
     -------
-    sample_x : array
+    sample_x: array
         samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
+    sample_y: array
         samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    SNRMatrix : array-like
-        the sample_rate_y X sample_rate_x matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
+    SNRMatrix: array-like
+        the ``sample_rate_y`` X ``sample_rate_x`` matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
 
     Notes
     -----
     Uses the variable given and the data range to sample the space either logrithmically or linearly based on the
     selection of variables. Then it computes the SNR for each value.
-    Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
-
+    Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the ``sample_y``X``sample_x``
     """
     if "inc" in kwargs.keys():
         inc = kwargs["inc"]
@@ -194,39 +193,38 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    var_x : str
+    var_x: str
         x-axis variable
-    sample_rate_x : int
-        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
-    var_y : str
+    sample_rate_x: int
+        Number of samples at which ``SNRMatrix`` is calculated corresponding to the x-axis variable
+    var_y: str
         y-axis variable
-    sample_rate_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    sample_rate_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
 
     Returns
     -------
-    sample_x : array
-        samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    sample_x: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the x-axis variable
+    sample_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
 
     Notes
     -----
         The function uses that to create a
-        sample space for the variable either in linear space or logspace for M,z,L,A_acc
+        sample space for the variable either in linear space or logspace for ``M, z, L, A_acc``
         for everything else.
-
     """
     sample_x = []
     sample_y = []
     recalculate_strain = False
     recalculate_noise = "neither"
 
-    # Used to change both spins simultaneously, should be arbitary if one uses chi1 or chi2 since they are set to the same value in Get_SNR_Matrix
+    # Used to change both spins simultaneously, should be arbitary if one uses chi1 or chi2 since they are set to the same value in `Get_SNR_Matrix`
     if var_x == "chii":
         var_x = "chi1"
     elif var_y == "chii":
@@ -344,9 +342,9 @@ def Recalculate_Noise(source, instrument):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
     """
     if hasattr(instrument, "I_type") or hasattr(instrument, "load_location"):
@@ -372,25 +370,24 @@ def Recalculate_Noise(source, instrument):
 
 
 def Calc_Mono_SNR(source, instrument, inc=None, method="SPA"):
-    """Calculates the SNR for a monochromatic source
+    r"""Calculates the SNR for a monochromatic source
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    inc : None,float,int, optional
+    inc: None,float,int, optional
         The inclination of the monochromatic source in radians.
-    method : str, {'SPA','PN'}
+    method: str, {'SPA','PN'}
         Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
         or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
     Notes
     -----
-    When comparing $h_{0}$ from `Get_Mono_Strain` (i.e., the typical monochromatic stationary phase approximation with the IMRPhenomD $h_{0}$ from $|\tilde{h}(f)|\sqrt{2\dot{f}}$,
-    the former is a factor of $\frac{\pi}{2}$ larger. We scale this out to make the transition between monochromatic and chirping if SPA is used.
-
+    When comparing :math:`h_{0}` from ``Get_Mono_Strain`` (i.e., the typical monochromatic stationary phase approximation with the IMRPhenomD :math:`h_{0}` from :math:`|\tilde{h}(f)|\sqrt{2\dot{f}}`,
+    the former is a factor of :math:`\frac{\pi}{2}` larger. We scale this out to make the transition between monochromatic and chirping if ``'SPA'`` is used.
     """
     if not hasattr(source, "instrument"):
         source.instrument = instrument
@@ -430,11 +427,11 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    integral_consts : int, float, Optional
+    integral_consts: int, float, Optional
         Used to adjust the SNR scaling
 
     Notes

@@ -1,4 +1,4 @@
-.. module:: gwent
+.. module:: hasasia
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
           downloaded `here <_static/notebooks/strain_plot_tutorial.ipynb>`_.
@@ -54,7 +54,7 @@ Setting matplotlib and plotting preferences
     mpl.rcParams['xtick.labelsize'] = 12
     mpl.rcParams['ytick.labelsize'] = 12
     mpl.rcParams['legend.fontsize'] = 10
-    color_cycle_wong = ['#000000','#E69F00','#56B4E9','#009E73','#F0E442','#0072B2','#D55E00','#CC79A7']
+    color_cycle_wong = ['#000000','#E69F00','#56B4E9','#009E73','#F0E442','#0072B2','#D55E00','#CC79A7','#5a5a5a']
     mpl.rcParams['axes.prop_cycle'] = cycler(color=color_cycle_wong)
 
 We need to get the file directories to load in the instrument files.
@@ -512,9 +512,9 @@ independent low-frequency data channels assumed in the paper.)
     A_IMS = 1.5e-11*u.m
     Background = False
         
-    LISA_prop2 = detector.SpaceBased('LISA Approximate',\
-                               LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                               Background=Background,T_type='A')
+    LISA_prop2 = detector.SpaceBased('LISA Approximate',
+                                     LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,
+                                     Background=Background,T_type='A')
 
 Plots of Generated LISA Detectors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -818,37 +818,99 @@ For more information see the tutorial on source strains.
 
     M = [1e6,65.0,1e10]
     q = [1.0,18.0,1.0]
-    x1 = [0.95,0.0,-0.95]
-    x2 = [0.95,0.0,-0.95]
+    x1 = [0.5,0.0,-0.95]
+    x2 = [0.2,0.0,-0.95]
     z = [3.0,0.093,20.0]
 
 Uses the first parameter values and the ``LISA_prop1`` detector model
-for calculation of the monochromatic strain.
+for the observation time with the precessing phenomenological
+``lalsuite`` waveform IMRPhenomPv3.
 
 .. code:: python
 
-    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0],instrument=LISA_prop1)
+    lalsuite_kwargs = {"S1x": 0.5, "S1y": 0., "S1z": x1[0],
+                       "S2x": -0.2, "S2y": 0.5, "S2z": x2[0],
+                       "inclination":np.pi/2}
+    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],instrument=LISA_prop1,
+                                         approximant='IMRPhenomPv3',lalsuite_kwargs=lalsuite_kwargs)
 
-Uses the first parameter values and the ``aLIGO`` detector model for
-calculation of the monochromatic strain.
+Uses the first parameter values and the ``aLIGO`` detector model for the
+observation time.
 
 .. code:: python
 
     source_2 = binary.BBHFrequencyDomain(M[1],q[1],z[1],x1[1],x2[1],instrument=aLIGO_1)
 
 Uses the first parameter values and the ``SKA_WN`` detector model for
-calculation of the monochromatic strain.
+the observation time.
 
 .. code:: python
 
     source_3 = binary.BBHFrequencyDomain(M[2],q[2],z[2],x1[2],x2[2],instrument=SKA_WN)
 
-Uses the first parameter values and the ``ET`` detector model for
-calculation of the monochromatic strain.
+To display the time it takes for each source to evolve, we find several
+markers in time: 200 years prior to merger, ``T_obs`` until merger, and
+one year until merger. In each call, we assume the time to merger is in
+the observer frame (i.e., ``in_frame = 'observer'``)
 
 .. code:: python
 
-    source_4 = binary.BBHFrequencyDomain(M[1],q[0],z[1],x1[1],x2[1],instrument=ET_B)
+    t_year = u.yr.to('s')*u.s
+    t_200_year = 200.*t_year
+
+.. code:: python
+
+    #Source 1
+    source_1_t_200_year_f = binary.Get_Source_Freq(source_1,t_200_year,
+                                                   in_frame='observer',out_frame='observer')
+    idx1 = np.abs(source_1.f-source_1_t_200_year_f).argmin()
+    source_1_t_200_year_h = binary.Get_Char_Strain(source_1)[idx1]
+    
+    source_1_t_year_f = binary.Get_Source_Freq(source_1,t_year,
+                                               in_frame='observer',out_frame='observer')
+    idx2 = np.abs(source_1.f-source_1_t_year_f).argmin()
+    source_1_t_year_h = binary.Get_Char_Strain(source_1)[idx2]
+    
+    source_1_t_T_obs_f = binary.Get_Source_Freq(source_1,source_1.instrument.T_obs,
+                                                in_frame='observer',out_frame='observer')
+    idx3 = np.abs(source_1.f-source_1_t_T_obs_f).argmin()
+    source_1_t_T_obs_h = binary.Get_Char_Strain(source_1)[idx3]
+
+.. code:: python
+
+    #Source 2
+    source_2_t_200_year_f = binary.Get_Source_Freq(source_2,t_200_year,
+                                                   in_frame='observer',out_frame='observer')
+    idx4 = np.abs(source_2.f-source_2_t_200_year_f).argmin()
+    source_2_t_200_year_h = binary.Get_Char_Strain(source_2)[idx4]
+    
+    source_2_t_year_f = binary.Get_Source_Freq(source_2,t_year,
+                                               in_frame='observer',out_frame='observer')
+    idx5 = np.abs(source_2.f-source_2_t_year_f).argmin()
+    source_2_t_year_h = binary.Get_Char_Strain(source_2)[idx5]
+    
+    source_2_t_T_obs_f = binary.Get_Source_Freq(source_2,source_2.instrument.T_obs,
+                                                in_frame='observer',out_frame='observer')
+    idx6 = np.abs(source_2.f-source_2_t_T_obs_f).argmin()
+    source_2_t_T_obs_h = binary.Get_Char_Strain(source_2)[idx6]
+
+.. code:: python
+
+    #Source 3
+    source_3_t_200_year_f = binary.Get_Source_Freq(source_3,t_200_year,
+                                                   in_frame='observer',out_frame='observer')
+    idx7 = np.abs(source_3.f-source_3_t_200_year_f).argmin()
+    source_3_t_200_year_h = binary.Get_Char_Strain(source_3)[idx7]
+    
+    source_3_t_year_f = binary.Get_Source_Freq(source_3,t_year,
+                                               in_frame='observer',out_frame='observer')
+    idx8 = np.abs(source_3.f-source_3_t_year_f).argmin()
+    source_3_t_year_h = binary.Get_Char_Strain(source_3)[idx8]
+    
+    source_3_t_T_obs_f = binary.Get_Source_Freq(source_3,np.unique(np.max(source_3.instrument.T_obs)),
+                                                in_frame='observer',out_frame='observer')
+    idx9 = np.abs(source_3.f-source_3_t_T_obs_f).argmin()
+    source_3_t_T_obs_h = binary.Get_Char_Strain(source_3)[idx9]
 
 Plots of Entire GW Band
 -----------------------
@@ -864,6 +926,7 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
 .. code:: python
 
     fig,ax = plt.subplots()
+    zord = 10.
     
     ax.loglog(SKA_WN.fT,SKA_WN.h_n_f,label = r'IPTA ($\sim$2030s)')
     ax.loglog(NANOGrav_11yr_hasasia.fT,NANOGrav_11yr_hasasia.h_n_f,label = 'NANOGrav (2018)')
@@ -879,6 +942,22 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
     
     ax.loglog(source_2.f,binary.Get_Char_Strain(source_2),
               label = r'$M = %.0f$ $\mathrm{M}_{\odot}$, $q = %.1f$, $z = %.1f$, $\chi_{i} = %.1f$' %(M[1],q[1],z[1],x1[1]))
+    
+    #Source 1
+    ax.scatter(source_1_t_200_year_f.value,source_1_t_200_year_h,color='C8',zorder=zord,marker='x',
+                label=r'$\tau = %.0f$ yrs' %t_200_year.to('yr').value)
+    ax.scatter(source_1_t_year_f.value,source_1_t_year_h,color='C8',zorder=zord,marker='1',
+                label=r'$\tau = %.0f$ yr' %t_year.to('yr').value)
+    ax.scatter(source_1_t_T_obs_f.value,source_1_t_T_obs_h,color='C8',zorder=zord,marker='+',
+                label=r'$\tau = T_{\mathrm{obs}}$')
+    #Source 2
+    ax.scatter(source_2_t_200_year_f.value,source_2_t_200_year_h,color='C8',zorder=zord,marker='x')
+    ax.scatter(source_2_t_year_f.value,source_2_t_year_h,color='C8',zorder=zord,marker='1')
+    ax.scatter(source_2_t_T_obs_f.value,source_2_t_T_obs_h,color='C8',zorder=zord,marker='+')
+    #Source 3
+    ax.scatter(source_3_t_200_year_f.value,source_3_t_200_year_h,color='C8',zorder=zord,marker='x')
+    ax.scatter(source_3_t_year_f.value,source_3_t_year_h,color='C8',zorder=zord,marker='1')
+    ax.scatter(source_3_t_T_obs_f.value,source_3_t_T_obs_h,color='C8',zorder=zord,marker='+')
     
     xlabel_min = -10
     xlabel_max = 4
@@ -901,11 +980,10 @@ right: ``SKA_WN``,\ ``LISA_prop1``,\ ``ET``).
     
     ax.set_xlabel('Frequency [Hz]')
     ax.set_ylabel('Characteristic Strain')
-    ax.legend(loc='upper right',fontsize=8)
+    ax.legend(loc='upper right',fontsize=6)
     plt.show()
 
 
 
-.. image:: strain_plot_tutorial_files/strain_plot_tutorial_95_0.png
-
+.. image:: strain_plot_tutorial_files/strain_plot_tutorial_98_0.png
 
