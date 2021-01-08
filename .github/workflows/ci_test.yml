@@ -31,9 +31,6 @@ jobs:
         pip install numpy
         pip install scipy
         pip install matplotlib
-    - name: Install lalsuite
-      run: |
-        python -c "import sys; print(f'Python {sys.version}')"
         pip install six
         pip install pyOpenSSL
         pip install pyparsing
@@ -45,6 +42,8 @@ jobs:
         pip install zipp
         pip install lscsoft-glue
         pip install ligo-segments
+    - name: Install lalsuite
+      run: |
         pip install lalsuite
     - name: Install other requirements
       run: pip install -r requirements.txt
