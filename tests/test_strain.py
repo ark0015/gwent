@@ -188,7 +188,7 @@ def SKA_WN():
         T_obs=T_SKA,
         sigma=sigma_SKA,
         cadence=cadence_SKA,
-        f_low=1e-10,
+        f_min=1e-10,
         f_max=1e-7,
         nfreqs=int(1e3),
     )
@@ -456,7 +456,7 @@ def test_BBHStrain(LISA_prop1, aLIGO, SKA_WN, ET):
         x1[0],
         x2[0],
         instrument=LISA_prop1,
-        f_low=1e-6,
+        f_min=1e-6,
         f_max=10,
         nfreqs=int(1e3),
     )
@@ -579,7 +579,7 @@ def test_BBH_lalsuite_approx(LISA_prop1):
     source_6 = binary.BBHFrequencyDomain(
         M, q, z, approximant=approximant, lalsuite_kwargs=lalsuite_kwargs
     )
-    source_6.f_low = 1e-7
+    source_6.f_min = 1e-7
     source_6.chi1 = 0.5
     source_6.chi2 = -0.2
     source_6.f_gw = 1e-3 * u.Hz

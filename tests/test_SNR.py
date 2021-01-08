@@ -71,7 +71,7 @@ def source_pta():
     source_pta.chi1 = [chi1, chi_min, chi_max]
     source_pta.chi2 = [chi2, chi_min, chi_max]
     source_pta.z = [z, z_min, z_max]
-    source_pta.f_low = 1e-12
+    source_pta.f_min = 1e-12
 
     return source_pta
 
@@ -128,7 +128,7 @@ def aLIGO_gwinc():
         "aLIGO gwinc",
         T_obs,
         noise_dict=noise_dict,
-        f_low=1.0,
+        f_min=1.0,
         f_max=1e4,
         nfreqs=int(1e3),
     )
@@ -549,7 +549,7 @@ def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
     source_pta.chi1 = 0.0
     source_pta.chi2 = 0.0
     source_pta.z = 0.1
-    source_pta.f_low = 1e-6
+    source_pta.f_min = 1e-9
     T_obs = 15.0 * u.yr  # Observing time in years
     T_obs_min = 5.0 * u.yr
     T_obs_max = 30.0 * u.yr
@@ -558,8 +558,6 @@ def test_NANOGrav_WN_params_Mvcadence(source_pta, NANOGrav_WN):
     NANOGrav_WN.n_p = [N_p, N_p_min, N_p_max]
     NANOGrav_WN.cadence = [cadence, cadence_min, cadence_max]
 
-    print(source_pta.M, source_pta.q, source_pta.chi1, source_pta.chi2, source_pta.z)
-    print(NANOGrav_WN.T_obs, NANOGrav_WN.n_p, NANOGrav_WN.cadence, NANOGrav_WN.sigma)
     # Variable on x-axis
     var_x = "M"
     # Variable on y-axis
