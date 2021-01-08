@@ -1,12 +1,9 @@
 import numpy as np
-import os, sys
+import os
+import sys
 import astropy.constants as const
 import astropy.units as u
-import scipy.interpolate as interp
 import scipy.stats as stats
-
-from astropy.cosmology import z_at_value
-from astropy.cosmology import WMAP9 as cosmo
 
 import gwent
 from . import utils
@@ -392,13 +389,13 @@ class PTA:
             if isinstance(var, u.Quantity):
                 var = var.value
             if isinstance(var, (list, np.ndarray)):
-                if self.var_dict[var_name]["sampled"] == False:
+                if not self.var_dict[var_name]["sampled"]:
                     if len(var) == self.n_p:
                         return var
                     elif len(var) == 1:
                         return np.ones(self.n_p) * var
                     else:
-                        if self.var_dict["n_p"]["sampled"] == True:
+                        if self.var_dict["n_p"]["sampled"]:
                             unique_vals = np.unique(var)
                             if len(unique_vals) == 1:
                                 return unique_vals[0]
@@ -453,10 +450,10 @@ class PTA:
                         )
             else:
                 if var_name in self.var_dict.keys():
-                    if self.var_dict[var_name]["sampled"] == False:
+                    if not self.var_dict[var_name]["sampled"]:
                         return np.ones(self.n_p) * var
                 else:
-                    self.var_dict[var_name]["sampled"] == True
+                    self.var_dict[var_name]["sampled"] = True
                     samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
                     if var_name == "phi":
                         # Add non-zero probability of picking 0 and 2pi
@@ -550,10 +547,10 @@ class PTA:
 
         for i, var in enumerate(var_list):
             if var in self.var_dict.keys():
-                if self.var_dict[var]["sampled"] == True:
+                if self.var_dict[var]["sampled"]:
                     setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
                 else:
-                    if self.var_dict["n_p"]["sampled"] == True:
+                    if self.var_dict["n_p"]["sampled"]:
                         prev_var = getattr(self, var)
                         if isinstance(prev_var, u.Quantity):
                             prev_var = prev_var.value

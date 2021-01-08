@@ -4,11 +4,9 @@ import astropy.units as u
 from astropy.cosmology import WMAP9 as cosmo
 
 import os
-import lal
 import lalsimulation
 
 import gwent
-from . import utils
 from . import binary
 
 current_path = os.path.abspath(gwent.__path__[0])

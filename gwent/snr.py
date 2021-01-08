@@ -1,12 +1,10 @@
 import numpy as np
 import scipy.interpolate as interp
-import scipy.integrate as integrate
 
 import astropy.units as u
 
 from . import detector
 from . import binary
-from .utils import make_quant
 
 
 def Get_SNR_Matrix(
@@ -147,13 +145,13 @@ def Get_SNR_Matrix(
             binary.Check_Freq_Evol(
                 source, T_evol=None, T_evol_frame="observer", f_gw_frame="observer"
             )
-            if source.ismono:  # Monochromatic Source and not diff EOB SNR
+            if source.ismono:
+                # Monochromatic Source and not diff EOB SNR
                 if hasattr(source, "h_gw"):
                     del source.h_gw
                 if method == "PN":
-                    if (
-                        recalculate_strain == True
-                    ):  # If we need to calculate the waveform everytime
+                    if recalculate_strain:
+                        # If we need to calculate the waveform everytime
                         # Delete old PhenomD waveform
                         if hasattr(source, "_phenomD_f"):
                             del source._phenomD_f
@@ -167,9 +165,8 @@ def Get_SNR_Matrix(
                     source, instrument, inc=inc, method=method
                 )
             else:  # Chirping Source
-                if (
-                    recalculate_strain == True
-                ):  # If we need to calculate the waveform everytime
+                if recalculate_strain:
+                    # If we need to calculate the waveform everytime
                     # Delete old PhenomD waveform
                     if hasattr(source, "_phenomD_f"):
                         del source._phenomD_f
@@ -275,7 +272,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
     # order of magnitude cut
     oom_cut = 2.0
     if (
-        var_x_min != None and var_x_max != None
+        var_x_min is not None and var_x_max is not None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_x == "n_p":
             instrument.var_dict[var_x]["sampled"] = True
@@ -305,7 +302,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
         raise ValueError(var_x + " does not have an assigned min and/or max.")
 
     if (
-        var_y_min != None and var_y_max != None
+        var_y_min is not None and var_y_max is not None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == "n_p":
             instrument.var_dict[var_y]["sampled"] = True

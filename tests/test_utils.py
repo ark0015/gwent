@@ -5,9 +5,8 @@ import pytest
 import astropy.units as u
 import numpy as np
 
-import gwent
-from gwent import detector
-from gwent import utils
+from . import detector
+from . import utils
 
 unit_1 = 1.0 * u.Hz
 

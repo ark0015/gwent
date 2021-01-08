@@ -3,10 +3,8 @@ import os
 import astropy.constants as const
 import astropy.units as u
 import scipy.interpolate as interp
-from astropy.cosmology import z_at_value
 from astropy.cosmology import WMAP9 as cosmo
 
-import gwent
 from . import waveform
 from . import utils
 
@@ -537,7 +535,7 @@ def Get_Mono_Char_Strain(
     source: object
         Instance of gravitational wave source class
     method: str, {'SPA','PN'}
-        Determines method of calculating :math:`h_{0}`. 
+        Determines method of calculating :math:`h_{0}`.
         ``'SPA'`` uses the stationary phase approximation typically used for single frequency sources
         ``'PN'`` uses the waveform of the source (``source.h_f``) at freq.
     freq: float, optional
@@ -546,7 +544,7 @@ def Get_Mono_Char_Strain(
     f_gw_frame: str, {'source','observer'}
         Determines whether the input frequency (either freq or ``source.f_gw`` if ``freq`` is ``None``) is in the source or observer frame.
     pn_frame: str, {'source','observer'}
-        Determines whether the waveform ``f`` and `h_f`` are in the source or observer frame. 
+        Determines whether the waveform ``f`` and `h_f`` are in the source or observer frame.
     out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
     inc: float, optional
@@ -636,7 +634,7 @@ def Get_Mono_Strain(
     source: object
         Instance of gravitational wave source class
     method: str, {'SPA','PN'}
-        Determines method of calculating :math:`h_{0}`. 
+        Determines method of calculating :math:`h_{0}`.
         ``'SPA'`` uses the stationary phase approximation typically used for single frequency sources
         ``'PN'`` uses the waveform of the source (source.h_f), rescales using eqn. 35 in Moore, Cole, and Berry (https://arxiv.org/pdf/1408.0740.pdf)
         to get :math:`h_{0}`, this may prove more accurate as higher order effects are taken into account.

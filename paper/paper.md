@@ -34,7 +34,14 @@ Black-holes are known to span at least 9 orders of magnitude in  mass: from the 
 
 Using this adaptable framework, we produce signal-to-noise ratios (SNRs) for the combination of any modelled parameter, associated with either the detector or the source. By allowing variation across each detector and source parameter, we can pinpoint the most important factors to determining the optimal performance for particular instrument designs. The adaptability of our detector and signal models can easily be extended to new detector designs and other models of GW signals.
 
-This software is designed to be used by astronomers to assess a BHB's detectability in any proposed detector. In an effort to make the package useful to a broader community, `gwent` includes many standard detectors. To be useful to a more advanced audience, `gwent` includes the ability to use cutting edge GW source waveform models available in `lalsuite` [@lalsuite] and user-provided GW detectors to assess their feasibility. It has already been used in a number of scientific publications [@Chen:2020; @Campeti:2020] and a GW detector design proposal [@AmaroSeoane:2020].
+This software is designed to be used by astronomers to assess a BHB's
+detectability in any proposed detector. In an effort to make the package
+useful to a broader community, `gwent` includes many standard detectors. To be
+useful to a more advanced audience, `gwent` includes the ability to use
+cutting edge GW source waveform models available in `lalsuite` [@lalsuite] and
+user-provided GW detectors to assess their feasibility. It has already been
+used in a number of scientific publications [@Chen:2020; @Campeti:2020] and a
+GW detector design proposal [@AmaroSeoane:2020].
 
 # Acknowledgements
 

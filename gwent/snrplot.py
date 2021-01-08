@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from scipy.constants import golden_ratio
 
 import astropy.units as u
 from astropy.cosmology import z_at_value
@@ -199,7 +198,7 @@ def Plot_SNR(
 
     # Set axis scales based on what data sampling we used
     if yaxis_type == "lin" and xaxis_type == "log":
-        if cfill == False:
+        if not cfill:
             CS1 = ax.contour(
                 np.log10(sample_x), sample_y, logSNR, print_logLevels, **contour_kwargs
             )
@@ -232,7 +231,7 @@ def Plot_SNR(
         ax.set_ylim(ylabel_min, ylabel_max)
 
     elif yaxis_type == "log" and xaxis_type == "lin":
-        if cfill == False:
+        if not cfill:
             CS1 = ax.contour(
                 sample_x, np.log10(sample_y), logSNR, print_logLevels, **contour_kwargs
             )
@@ -264,7 +263,7 @@ def Plot_SNR(
         ax.set_xlim(xlabel_min, xlabel_max)
         ax.set_ylim(np.log10(ylabel_min), np.log10(ylabel_max))
     elif yaxis_type == "lin" and xaxis_type == "lin":
-        if cfill == False:
+        if not cfill:
             CS1 = ax.contour(
                 sample_x, sample_y, logSNR, print_logLevels, **contour_kwargs
             )
@@ -289,7 +288,7 @@ def Plot_SNR(
         ax.set_xlim(xlabel_min, xlabel_max)
         ax.set_ylim(ylabel_min, ylabel_max)
     else:
-        if cfill == False:
+        if not cfill:
             CS1 = ax.contour(
                 np.log10(sample_x),
                 np.log10(sample_y),
@@ -456,7 +455,7 @@ def Plot_SNR(
             fig.subplots_adjust(right=0.8)
             cbar_ax = fig.add_axes([0.9, 0.15, 0.025, 0.7])
             # Make colorbar
-            if cfill == False:
+            if not cfill:
                 # Make colorbar
                 norm = colors.Normalize(vmin=logLevels_min, vmax=logLevels_max)
                 tick_levels = np.linspace(
@@ -477,7 +476,7 @@ def Plot_SNR(
         else:
             fig.subplots_adjust(right=0.8)
             cbar_ax = fig.add_axes([0.82, 0.15, 0.025, 0.7])
-            if cfill == False:
+            if not cfill:
                 # Make colorbar
                 norm = colors.Normalize(vmin=logLevels_min, vmax=logLevels_max)
                 tick_levels = np.linspace(
