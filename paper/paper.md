@@ -5,7 +5,6 @@ tags:
   - astronomy
   - gravitational waves
   - gravitational wave detectors
-  - 
 authors:
   - name: Andrew R. Kaiser^[Corresponding author]
     orcid: 0000-0002-3654-980X
@@ -25,6 +24,7 @@ affiliations:
    index: 3
 date: 23 September 2020
 bibliography: paper.bib
+---
 
 # Summary
 
@@ -42,7 +42,7 @@ detectors, whereas supermassive binaries that are billions of solar masses
 require detectors larger than our solar system, and are currently being 
 pursued with pulsar timing arrays (PTAs).
 
-`gwent` is a Python [@Python] package for modelling the sensitivities of 
+``gwent`` is a Python [@Python] package for modelling the sensitivities of 
 current and future generations of GW detectors across the entire GW spectrum 
 of coalescing black-hole binaries. 
 It provides methods based on the formalism in [@Kaiser:2020] to generate 
@@ -54,11 +54,11 @@ using realistic noise models that can reproduce current [@Abbott:2016],
 second, and third generation designs [@Hild:2011], as well as novel 
 variations of the essential design parameters. 
 To model the signal from black-hole binaries at any mass scale, 
-`gwent` uses phenomenological waveforms capable of modeling the 
+``gwent`` uses phenomenological waveforms capable of modeling the 
 inspiral, merger, and ringdown for sources with varying 
 mass ratios and spins [@Khan:2016; @Husa:2016]. 
-It uses standard Python packages, such as `NumPy` [@Numpy], 
-`SciPy` [@Scipy], `Matplotlib` [@Matplotlib] and `Astropy` [@Astropy] to 
+It uses standard Python packages, such as ``NumPy`` [@Numpy], 
+``SciPy`` [@Scipy], ``Matplotlib`` [@Matplotlib] and ``Astropy`` [@Astropy] to 
 construct these GW signals and detector models.
 
 Using this adaptable framework, we produce signal-to-noise ratios (SNRs) 
@@ -73,9 +73,9 @@ extended to new detector designs and other models of GW signals.
 This software is designed to be used by astronomers to assess a BHB's 
 detectability in any proposed detector. 
 In an effort to make the package useful to a broader community,
- `gwent` includes many standard detectors. 
-To be useful to a more advanced audience, `gwent` includes the ability to use
-cutting edge GW source waveform models available in `lalsuite` [@lalsuite] and
+ ``gwent`` includes many standard detectors. 
+To be useful to a more advanced audience, ``gwent`` includes the ability to use
+cutting edge GW source waveform models available in ``lalsuite`` [@lalsuite] and
 user-provided GW detectors to assess their feasibility. 
 It has already been used in a number of scientific 
 publications [@Chen:2020; @Campeti:2020] and a
