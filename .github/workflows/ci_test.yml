@@ -17,8 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-
+        python-version: [3.6, 3.7, 3.8]
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
@@ -28,10 +27,27 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
-    - name: Display Python, pip, setuptools, and tox version
+        python -m pip install --upgrade pip setuptools wheel pytest pytest-cov
+        pip install numpy
+        pip install scipy
+        pip install matplotlib
+        pip install six
+        pip install pyOpenSSL
+        pip install pyparsing
+        pip install cycler
+        pip install kiwisolver
+        pip install cryptography
+        pip install cffi
+        pip install pycparser
+        pip install zipp
+        pip install lscsoft-glue
+        pip install ligo-segments
+    - name: Install lalsuite
+      run: |
+        pip install lalsuite
+    - name: Install other requirements
+      run: pip install -r requirements.txt
+    - name: Display Python, pip, and setuptools version
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
         python -c "import pip; print(f'pip {pip.__version__}')"

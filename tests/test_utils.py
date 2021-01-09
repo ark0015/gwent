@@ -17,17 +17,17 @@ def test_conversion_error():
         utils.make_quant(unit_1, "s")
 
 
-#### LISA Proposal 2
+# LISA Proposal 2
 # Values from Robson, Cornish, and Liu 2019 https://arxiv.org/abs/1803.01944 using the Transfer Function Approximation within.
 L = 2.5 * u.Gm  # armlength in Gm
 L = L.to("m")
-LISA_T_obs = 4 * u.yr
+LISA_T_obs = 4.0 * u.yr
 f_acc_break_low = 0.4 * u.mHz.to("Hz") * u.Hz
 f_acc_break_high = 8.0 * u.mHz.to("Hz") * u.Hz
 f_IMS_break = 2.0 * u.mHz.to("Hz") * u.Hz
 A_acc = 3e-15 * u.m / u.s / u.s
 A_IMS = 1.5e-11 * u.m
-Background = False
+Background = True
 
 
 @pytest.fixture
@@ -42,6 +42,7 @@ def LISA_prop2():
         A_IMS,
         f_IMS_break,
         Background=Background,
+        Background_model=1,
         T_type="A",
     )
     return LISA_prop2

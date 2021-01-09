@@ -7,9 +7,9 @@ def make_quant(param, default_unit):
 
     Parameters
     ----------
-    param : float, or Astropy Quantity
+    param: float, or Astropy Quantity
         Parameter to initialize
-    default_unit : str
+    default_unit: str
         Astropy unit string, sets as default for param.
 
     Returns
@@ -45,9 +45,9 @@ def Get_Var_Dict(obj, value):
 
     Parameters
     ----------
-    obj : object
+    obj: object
         Instance of class with parameter variables
-    value : array-like
+    value: array-like
         value(s) that are assigned into dictionary
 
     Notes
@@ -58,7 +58,7 @@ def Get_Var_Dict(obj, value):
 
     Examples
     --------
-    obj.var_dict = ['M',value]
+    ``obj.var_dict = ['M',value]``
         where obj is in this case an instance of a BinaryBlackHole
 
     """

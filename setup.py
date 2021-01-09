@@ -11,7 +11,16 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["numpy", "scipy", "astropy", "hasasia", "matplotlib", "h5py", "pyyaml"]
+requirements = [
+    "numpy",
+    "scipy",
+    "astropy",
+    "hasasia",
+    "matplotlib",
+    "h5py",
+    "pyyaml",
+    "lalsuite",
+]
 
 setup_requirements = [
     "pytest-runner",
@@ -30,9 +39,9 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     description="Gravitational Wave Detector Design Toolkit.",
     install_requires=requirements,
@@ -46,6 +55,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/ark0015/gwent",
-    version="0.3.0",
+    version="0.4.0",
     zip_safe=False,
 )

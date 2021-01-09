@@ -1,12 +1,10 @@
 import numpy as np
 import scipy.interpolate as interp
-import scipy.integrate as integrate
 
 import astropy.units as u
 
 from . import detector
 from . import binary
-from .utils import make_quant
 
 
 def Get_SNR_Matrix(
@@ -16,47 +14,55 @@ def Get_SNR_Matrix(
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    var_x : str
+    var_x: str
         x-axis variable
-    sample_rate_x : int
-        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
-    var_y : str
+    sample_rate_x: int
+        Number of samples at which ``SNRMatrix`` is calculated corresponding to the x-axis variable
+    var_y: str
         y-axis variable
-    sample_rate_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    sample_rate_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
+    inc: int, float, Quantity, Optional
+        The inclination of the source in degrees
+    integral_consts: int, float, Optional
+        Used to adjust the SNR scaling in ``Calc_Chirp_SNR``
+    method: str, {'SPA','PN'}
+        Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
+        or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
     Returns
     -------
-    sample_x : array
+    sample_x: array
         samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
+    sample_y: array
         samples at which SNRMatrix was calculated corresponding to the y-axis variable
-    SNRMatrix : array-like
-        the sample_rate_y X sample_rate_x matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
+    SNRMatrix: array-like
+        the ``sample_rate_y`` X ``sample_rate_x`` matrix at which the SNR was calculated corresponding to the particular x and y-axis variable choices
 
     Notes
     -----
     Uses the variable given and the data range to sample the space either logrithmically or linearly based on the
     selection of variables. Then it computes the SNR for each value.
-    Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the sample_yXsample_x
-
+    Returns the variable ranges used to calculate the SNR for each matrix, then returns the SNRs with size of the ``sample_y``X``sample_x``
     """
-    for keys, value in kwargs.items():
-        if keys == "inc":
-            inc = value
-        elif keys == "integral_consts":
-            integral_consts = value
-        else:
-            raise ValueError("%s is not an accepted input option." % keys)
-
-    if "inc" not in locals():
+    if "inc" in kwargs.keys():
+        inc = kwargs["inc"]
+    else:
         inc = None
-    if "integral_consts" not in locals():
+
+    if "integral_consts" in kwargs.keys():
+        integral_consts = kwargs["integral_consts"]
+    else:
         integral_consts = None
+
+    if "method" in kwargs.keys():
+        method = kwargs["method"]
+    else:
+        method = "SPA"
 
     source.instrument = instrument
     # Get Samples for variables
@@ -100,13 +106,25 @@ def Get_SNR_Matrix(
                 setattr(instrument, var_x, sample_x[i])
             Recalculate_Noise(source, instrument)
         elif recalculate_noise in ["neither"]:
-            # Update Attribute (also updates dictionary)
-            setattr(source, var_x, sample_x[i])
+            if var_x == "chii":
+                # Used to change both spins simultaneously
+                # Update Attribute (also updates dictionary)
+                setattr(source, "chi1", sample_x[i])
+                setattr(source, "chi2", sample_x[i])
+            else:
+                # Update Attribute (also updates dictionary)
+                setattr(source, var_x, sample_x[i])
 
         for j in range(sampleSize_y):
             if recalculate_noise in ["x", "neither"]:
-                # Update Attribute (also updates dictionary)
-                setattr(source, var_y, sample_y[j])
+                if var_y == "chii":
+                    # Used to change both spins simultaneously
+                    # Update Attribute (also updates dictionary)
+                    setattr(source, "chi1", sample_y[j])
+                    setattr(source, "chi2", sample_y[j])
+                else:
+                    # Update Attribute (also updates dictionary)
+                    setattr(source, var_y, sample_y[j])
             elif recalculate_noise in ["both"]:
                 # Update Attribute (also updates dictionary)
                 if isinstance(instrument, detector.GroundBased):
@@ -124,15 +142,31 @@ def Get_SNR_Matrix(
                     setattr(instrument, var_y, sample_y[j])
                 Recalculate_Noise(source, instrument)
 
-            source.Check_Freq_Evol()
-            if source.ismono:  # Monochromatic Source and not diff EOB SNR
+            binary.Check_Freq_Evol(
+                source, T_evol=None, T_evol_frame="observer", f_gw_frame="observer"
+            )
+            if source.ismono:
+                # Monochromatic Source and not diff EOB SNR
                 if hasattr(source, "h_gw"):
                     del source.h_gw
-                SNRMatrix[j, i] = Calc_Mono_SNR(source, instrument, inc=inc)
+                if method == "PN":
+                    if recalculate_strain:
+                        # If we need to calculate the waveform everytime
+                        # Delete old PhenomD waveform
+                        if hasattr(source, "_phenomD_f"):
+                            del source._phenomD_f
+                        if hasattr(source, "_phenomD_h"):
+                            del source._phenomD_h
+                    if hasattr(source, "f"):
+                        del source.f
+                    if hasattr(source, "h_f"):
+                        del source.h_f
+                SNRMatrix[j, i] = Calc_Mono_SNR(
+                    source, instrument, inc=inc, method=method
+                )
             else:  # Chirping Source
-                if (
-                    recalculate_strain == True
-                ):  # If we need to calculate the waveform everytime
+                if recalculate_strain:
+                    # If we need to calculate the waveform everytime
                     # Delete old PhenomD waveform
                     if hasattr(source, "_phenomD_f"):
                         del source._phenomD_f
@@ -145,7 +179,6 @@ def Get_SNR_Matrix(
                 SNRMatrix[j, i] = Calc_Chirp_SNR(
                     source, instrument, integral_consts=integral_consts
                 )
-
     if switch:
         return [original_sample_x, original_sample_y, SNRMatrix.T]
     else:
@@ -157,37 +190,42 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    var_x : str
+    var_x: str
         x-axis variable
-    sample_rate_x : int
-        Number of samples at which SNRMatrix is calculated corresponding to the x-axis variable
-    var_y : str
+    sample_rate_x: int
+        Number of samples at which ``SNRMatrix`` is calculated corresponding to the x-axis variable
+    var_y: str
         y-axis variable
-    sample_rate_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    sample_rate_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
 
     Returns
     -------
-    sample_x : array
-        samples at which SNRMatrix was calculated corresponding to the x-axis variable
-    sample_y : array
-        samples at which SNRMatrix was calculated corresponding to the y-axis variable
+    sample_x: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the x-axis variable
+    sample_y: array
+        samples at which ``SNRMatrix`` was calculated corresponding to the y-axis variable
 
     Notes
     -----
         The function uses that to create a
-        sample space for the variable either in linear space or logspace for M,z,L,A_acc
+        sample space for the variable either in linear space or logspace for ``M, z, L, A_acc``
         for everything else.
-
     """
     sample_x = []
     sample_y = []
     recalculate_strain = False
     recalculate_noise = "neither"
+
+    # Used to change both spins simultaneously, should be arbitary if one uses chi1 or chi2 since they are set to the same value in `Get_SNR_Matrix`
+    if var_x == "chii":
+        var_x = "chi1"
+    elif var_y == "chii":
+        var_y = "chi1"
 
     if var_x in source.var_dict.keys():
         if isinstance(source.var_dict[var_x]["min"], u.Quantity):
@@ -234,7 +272,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
     # order of magnitude cut
     oom_cut = 2.0
     if (
-        var_x_min != None and var_x_max != None
+        var_x_min is not None and var_x_max is not None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_x == "n_p":
             instrument.var_dict[var_x]["sampled"] = True
@@ -264,7 +302,7 @@ def Get_Samples(source, instrument, var_x, sample_rate_x, var_y, sample_rate_y):
         raise ValueError(var_x + " does not have an assigned min and/or max.")
 
     if (
-        var_y_min != None and var_y_max != None
+        var_y_min is not None and var_y_max is not None
     ):  # If the variable has non-None 'min',and 'max' dictionary attributes
         if var_y == "n_p":
             instrument.var_dict[var_y]["sampled"] = True
@@ -301,9 +339,9 @@ def Recalculate_Noise(source, instrument):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
     """
     if hasattr(instrument, "I_type") or hasattr(instrument, "load_location"):
@@ -328,29 +366,57 @@ def Recalculate_Noise(source, instrument):
         source.instrument = instrument
 
 
-def Calc_Mono_SNR(source, instrument, inc=None):
-    """Calculates the SNR for a monochromatic source
+def Calc_Mono_SNR(source, instrument, inc=None, method="SPA"):
+    r"""Calculates the SNR for a monochromatic source
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
-    inc : None,float,int, optional
+    inc: None,float,int, optional
         The inclination of the monochromatic source in radians.
+    method: str, {'SPA','PN'}
+        Switches between methods of calculating the monochromatic strain based on the stationary phase approximation,
+        or a rescaling of the source waveform in the low frequency regime (Post-Newtonian approximation)
 
+    Notes
+    -----
+    When comparing :math:`h_{0}` from ``Get_Mono_Strain`` (i.e., the typical monochromatic stationary phase approximation with the IMRPhenomD :math:`h_{0}` from :math:`|\tilde{h}(f)|\sqrt{2\dot{f}}`,
+    the former is a factor of :math:`\frac{\pi}{2}` larger. We scale this out to make the transition between monochromatic and chirping if ``'SPA'`` is used.
     """
     if not hasattr(source, "instrument"):
         source.instrument = instrument
 
-    # Assumes mass and frequency in source class are in the source frame
-    source.h_gw = binary.Get_Mono_Strain(source, inc=inc, frame="source")
-    indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
-
-    return source.h_gw * np.sqrt(
-        np.max(np.unique(instrument.T_obs.to("s"))) / instrument.S_n_f[indxfgw]
+    # Assumes mass and frequency in source class are in the source frame and observer frame, respectively
+    source.h_gw = binary.Get_Mono_Strain(
+        source,
+        inc=inc,
+        freq=source.f_gw,
+        f_gw_frame="observer",
+        pn_frame="observer",
+        out_frame="observer",
+        method=method,
     )
+    if method == "SPA":
+        scale = 2 / np.pi
+    else:
+        scale = 1.0
+
+    indxfgw = np.abs(instrument.fT - source.f_gw).argmin()
+    if indxfgw == 0 or indxfgw >= len(instrument.fT) - 1:
+        # The source frequency is assumed to be outside the instrument's frequency, thus the SNR is ~0.
+        # print(f"Your assigned source GW frequency is {source.f_gw} and the instrument frequency range is [{np.unique(np.min(instrument.fT))[0]:.1e},{np.unique(np.max(instrument.fT))[0]:.1e}]")
+        return 1e-30
+    else:
+        return (
+            scale
+            * source.h_gw
+            * np.sqrt(
+                np.max(np.unique(instrument.T_obs.to("s"))) / instrument.S_n_f[indxfgw]
+            )
+        )
 
 
 def Calc_Chirp_SNR(source, instrument, integral_consts=None):
@@ -358,10 +424,12 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
 
     Parameters
     ----------
-    source : object
+    source: object
         Instance of a gravitational wave source class
-    instrument : object
+    instrument: object
         Instance of a gravitational wave detector class
+    integral_consts: int, float, Optional
+        Used to adjust the SNR scaling
 
     Notes
     -----
@@ -379,12 +447,16 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
     if not hasattr(source, "instrument"):
         source.instrument = instrument
     if not hasattr(source, "f_T_obs"):
-        source.Check_Freq_Evol()
+        binary.Check_Freq_Evol(source)
 
     # Only want to integrate from observed frequency (f(T_obs_before_merger)) till merger
     indxfgw_start = np.abs(source.f - source.f_T_obs).argmin()
+    if indxfgw_start == 0:
+        statement_1 = "Uh, you probably should set your source f_min to lower. "
+        statement_1 += f"Your minimum calculated frequency is {source.f[0]} and f(T_obs) is {source.f_T_obs}"
+        print(statement_1)
     indxfgw_end = len(source.f)
-    if indxfgw_start >= len(source.f) - 1:
+    if indxfgw_start >= indxfgw_end - 1:
         # If the SMBH has already merged set the SNR to ~0
         return 1e-30
     else:
@@ -402,16 +474,9 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
         fill_value=30.0,
         bounds_error=False,
     )
-    S_n_f_interp_new = S_n_f_interp_old(np.log10(f_cut.value))
-    S_n_f_interp = 10 ** S_n_f_interp_new
+    S_n_f_interp = 10 ** S_n_f_interp_old(np.log10(f_cut.value))
 
-    if isinstance(instrument, detector.PTA):
-        # Rescaled by 1.5 to make SNR plots match...
-        integral_consts = 4.0 * 1.5
-
-    elif isinstance(instrument, detector.SpaceBased) or isinstance(
-        instrument, detector.GroundBased
-    ):
+    if not isinstance(integral_consts, (int, float)):
         integral_consts = 16.0 / 5.0
 
     # CALCULATE SNR FOR BOTH NOISE CURVES

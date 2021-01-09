@@ -1,12 +1,9 @@
 import numpy as np
-import os, sys
+import os
+import sys
 import astropy.constants as const
 import astropy.units as u
-import scipy.interpolate as interp
 import scipy.stats as stats
-
-from astropy.cosmology import z_at_value
-from astropy.cosmology import WMAP9 as cosmo
 
 import gwent
 from . import utils
@@ -28,76 +25,76 @@ class PTA:
     Parameters
     ----------
 
-    name : string
+    name: string
         name of the instrument
 
-    n_p : int
+    n_p: int
         the number of pulsars in the PTA
 
-    T_obs : float,array, list, optional
+    T_obs: float,array, list, optional
         the observation time of the PTA in [years]
-        If T_obs is a float, the observation time is used as the observation time for all pulsars
-        If T_obs is a list of length of n_p, the observation times are used as the corresponding pulsar observation times.
-        If T_obs is a list of length 2, it is assumed the values are the minimum and maximum observation time values
+        If ``T_obs`` is a float, the observation time is used as the observation time for all pulsars
+        If ``T_obs`` is a list of length of ``n_p``, the observation times are used as the corresponding pulsar observation times.
+        If ``T_obs`` is a list of length 2, it is assumed the values are the minimum and maximum observation time values
         (ie. [min,max]) from which individual pulsar observation times are uniformly sampled.
-    sigma : float, array, list, optional
+    sigma: float, array, list, optional
         the rms error on the pulsar TOAs in [sec]
-        If sigma is a float, the given rms error is used for all pulsars.
-        If sigma is a list of length of n_p, the amplitudes are used as the corresponding pulsar rms error.
-        If sigma is a list of length 2, it is assumed the values are the minimum and maximum rms errors values
+        If ``sigma`` is a float, the given rms error is used for all pulsars.
+        If ``sigma`` is a list of length of n_p, the amplitudes are used as the corresponding pulsar rms error.
+        If ``sigma`` is a list of length 2, it is assumed the values are the minimum and maximum rms errors values
         (ie. [min,max]) from which individual pulsar rms errors are uniformly sampled.
-    cadence : float, array, list, optional
+    cadence: float, array, list, optional
         How often the pulsars are observed in [num/year]
-        If cadence is a float, the given cadence is used for all pulsars.
-        If cadence is a list of length of n_p, the amplitudes are used as the corresponding pulsar cadence.
-        If cadence is a list of length 2, it is assumed the values are the minimum and maximum cadence values
+        If ``cadence`` is a float, the given cadence is used for all pulsars.
+        If ``cadence`` is a list of length of n_p, the amplitudes are used as the corresponding pulsar cadence.
+        If ``cadence`` is a list of length 2, it is assumed the values are the minimum and maximum cadence values
         (ie. [min,max]) from which individual pulsar cadences are uniformly sampled.
-    sb_amp : float, optional
+    sb_amp: float, optional
         Amplitude of the Stochastic background added as red noise
-    sb_alpha : float, optional
+    sb_alpha: float, optional
         the Stochastic background power law, if empty and sb_amp is set, it is assumed to be -2/3
-    rn_amp : array, list, optional
+    rn_amp: array, list, optional
         Individual pulsar red noise amplitude.
-        If rn_amp is a list of length of n_p, the amplitudes are used as the corresponding pulsar RN injection.
-        If rn_amp is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
+        If ``rn_amp`` is a list of length of ``n_p``, the amplitudes are used as the corresponding pulsar RN injection.
+        If ``rn_amp`` is a list of length 2, it is assumed the values are the minimum and maximum RN amplitude values
         (ie. [min,max]) from which individual pulsar RN amplitudes are uniformly sampled.
-    rn_alpha : array, list, optional
+    rn_alpha: array, list, optional
         Individual pulsar red noise alpha (power law spectral index).
-        If rn_alpha is a list of length of n_p, the alpha indices are used as the corresponding pulsar RN injection.
-        If rn_alpha is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
+        If ``rn_alpha`` is a list of length of ``n_p``, the alpha indices are used as the corresponding pulsar RN injection.
+        If ``rn_alpha`` is a list of length 2, it is assumed the values are the minimum and maximum RN alpha values
         (ie. [min,max]) from which individual pulsar RN alphas are uniformly sampled.
-    phi : list, array, optional
+    phi: list, array, optional
         Individual pulsar longitude in ecliptic coordinates.
         If not defined, NANOGrav 11yr pulsar locations are used.
-        If n_p > 34 (the number of pulsars in the 11yr dataset),
+        If ``n_p`` > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
-    theta : array, list, optional
+    theta: array, list, optional
         Individual pulsar colatitude in ecliptic coordinates.
         If not defined, NANOGrav 11yr pulsar locations are used.
-        If n_p > 34 (the number of pulsars in the 11yr dataset),
+        If ``n_p`` > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsars.
-    use_11yr : bool, optional
+    use_11yr: bool, optional
         Uses the NANOGrav 11yr noise as the individual pulsar noises,
-        if n_p > 34 (the number of pulsars in the 11yr dataset),
+        if ``n_p`` > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
-    use_rn : bool, optional
+    use_rn: bool, optional
         If no rn_amp assigned, uses the NANOGrav 11yr noise as the individual pulsar RN noises,
-        if n_p > 34 (the number of pulsars in the 11yr dataset),
+        if ``n_p`` > 34 (the number of pulsars in the 11yr dataset),
         it draws more pulsars from distributions based on the NANOGrav 11yr pulsar noise
-    load_location : string, optional
+    load_location: string, optional
         If you want to load a PTA curve from a file, it's the file path
-    I_type : string, {'E','A','h'}
+    I_type: string, {'E','A','h'}
         Sets the type of input data.
-        'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
-        'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
-        'h' is the characteristic strain $h_{n}(f)$ ('h')
-    f_low : float, optional
+        'E' is the effective strain spectral density :math:`S_{n}(f)` ('ENSD'),
+        'A' is the amplitude spectral density, :math:`\sqrt{S_{n}(f)}` ('ASD'),
+        'h' is the characteristic strain :math:`h_{n}(f)` ('h')
+    f_min: float, optional
         Assigned lowest frequency of PTA (default assigns 1/(5*T_obs))
-    f_high : float, optional
+    f_max: float, optional
         Assigned highest frequency of PTA (default is Nyquist freq cadence/2)
-    nfreqs : int, optional
+    nfreqs: int, optional
         Number of frequencies in logspace the sensitivity is calculated
-    nbins : int, optional
+    nbins: int, optional
         Used to add values to every bin for sampled parameters. Default is 8 for smooth, non-zero distributions.
         Changing this could change distribution, so be wary, not sure how much it affects anything.
     """
@@ -137,10 +134,10 @@ class PTA:
                 self.load_location = value
             elif keys == "I_type":
                 self.I_type = value
-            elif keys == "f_low":
-                self.f_low = utils.make_quant(value, "Hz")
-            elif keys == "f_high":
-                self.f_high = utils.make_quant(value, "Hz")
+            elif keys == "f_min":
+                self.f_min = utils.make_quant(value, "Hz")
+            elif keys == "f_max":
+                self.f_max = utils.make_quant(value, "Hz")
             elif keys == "nfreqs":
                 self.nfreqs = value
             elif keys == "nbins":
@@ -160,10 +157,10 @@ class PTA:
         if not hasattr(self, "use_rn"):
             self.use_rn = False
 
-        if hasattr(self, "f_low") and hasattr(self, "f_high"):
+        if hasattr(self, "f_min") and hasattr(self, "f_max"):
             self.fT = (
                 np.logspace(
-                    np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs
+                    np.log10(self.f_min.value), np.log10(self.f_max.value), self.nfreqs
                 )
                 * u.Hz
             )
@@ -345,8 +342,8 @@ class PTA:
 
         Notes
         -----
-        The file is in the form of observation times (T_obs) in the first column,
-        sky locations (phi,theta) in the second and third columns,
+        The file is in the form of observation times (``T_obs``) in the first column,
+        sky locations (``phi``,``theta``) in the second and third columns,
         Individual Pulsar cadences and WN RMS (sigmas) in the fourth and fifth,
         RN Amplitudes, and RN Alphas in the last two columns.
         """
@@ -356,13 +353,13 @@ class PTA:
         self._NANOGrav_11yr_params = np.loadtxt(NANOGrav_11yr_params_filedirectory)
 
     def Get_Param_Distributions(self, var_name, NG_11yr_idx):
-        """Gets the noise parameter values (sigma, Rn_amplitudes,RN alphas) and sky locations (phis, thetas)
+        """Gets the noise parameter values (``sigma``, ``rn_amp``, ``rn_alpha``) and sky locations (``phis``, ``thetas``)
         and generates populated arrays from which distributions can be made. If no user values for a param are given,
         it uses the NANOGrav 11yr parameters.
 
-        var_name : string
+        var_name: string
             The name of the noise parameter to assign sampled parameters
-        NG_11yr_idx : int
+        NG_11yr_idx: int
             Index of corresponding value in NANOGrav 11yr params
         """
 
@@ -392,13 +389,13 @@ class PTA:
             if isinstance(var, u.Quantity):
                 var = var.value
             if isinstance(var, (list, np.ndarray)):
-                if self.var_dict[var_name]["sampled"] == False:
+                if not self.var_dict[var_name]["sampled"]:
                     if len(var) == self.n_p:
                         return var
                     elif len(var) == 1:
                         return np.ones(self.n_p) * var
                     else:
-                        if self.var_dict["n_p"]["sampled"] == True:
+                        if self.var_dict["n_p"]["sampled"]:
                             unique_vals = np.unique(var)
                             if len(unique_vals) == 1:
                                 return unique_vals[0]
@@ -423,9 +420,7 @@ class PTA:
                                     )
                         else:
                             raise ValueError(
-                                "{} must be a single value, or the same length as n_p: {}".format(
-                                    var_name, self.n_p
-                                )
+                                f"{var_name} must be a single value, or the same length as n_p: {self.n_p}"
                             )
                 else:
                     if len(var) == 2:
@@ -441,9 +436,7 @@ class PTA:
                         samp_var = var
                     else:
                         raise ValueError(
-                            "To sample {}, it must be either [min,max], or an array of individual pulsar {} of length n_p: {}".format(
-                                var_name, var_name, self.n_p
-                            )
+                            f"To sample {var_name}, it must be either [min,max], or an array of individual pulsar {var_name} of length n_p: {self.n_p}"
                         )
 
                     if var_name == "rn_amp":
@@ -457,10 +450,10 @@ class PTA:
                         )
             else:
                 if var_name in self.var_dict.keys():
-                    if self.var_dict[var_name]["sampled"] == False:
+                    if not self.var_dict[var_name]["sampled"]:
                         return np.ones(self.n_p) * var
                 else:
-                    self.var_dict[var_name]["sampled"] == True
+                    self.var_dict[var_name]["sampled"] = True
                     samp_var = self._NANOGrav_11yr_params[NG_11yr_idx]
                     if var_name == "phi":
                         # Add non-zero probability of picking 0 and 2pi
@@ -486,12 +479,19 @@ class PTA:
                         )
 
     def Get_Sample_Draws(self, var_name, num_draws):
-        """For observation times, all noise parameters (sigma, Rn_amplitudes,RN alphas), cadence, and sky locations (phis, thetas),
+        """For observation times, all noise parameters (``sigma``, ``rn_amp``, ``rn_alpha``), ``cadence``, and sky locations (``phis``, ``thetas``),
         uses the individual parameter value ranges and generates distributions from which to draw new parameters.
+
+        Parameters
+        ----------
+        var_name: string
+            The name of the noise parameter to assign sampled parameters
+        num_draws: int,float
+            The number of draws to return
 
         Notes
         -----
-        To draw from the generated distributions, one does draws = self._distribution.rvs(size=sample_size)
+        To draw from the generated distributions, one does ``draws = self._distribution.rvs(size=sample_size)``
         """
         var_list = ["T_obs", "phi", "theta", "cadence", "sigma", "rn_amp", "rn_alpha"]
 
@@ -525,7 +525,7 @@ class PTA:
         Notes
         -----
         Assigns pulsar parameters based on what the initial values were given per parameter.
-        If necessary parameters are left unassigned, it uses 11yr values for n_p <= 34, and samples from the 11yr parameters if n_p > 34
+        If necessary parameters are left unassigned, it uses 11yr values for ``n_p`` <= 34, and samples from the 11yr parameters if ``n_p`` > 34
         If a range of values were given for a parameter, the per pulsar parameters are drawn from a uniform distribution
         assigns the new pulsar parameters to the corresponding PTA class parameter.
         See Hazboun, Romano, Smith (2019) <https://arxiv.org/abs/1907.04341> for details
@@ -547,10 +547,10 @@ class PTA:
 
         for i, var in enumerate(var_list):
             if var in self.var_dict.keys():
-                if self.var_dict[var]["sampled"] == True:
+                if self.var_dict[var]["sampled"]:
                     setattr(self, var, self.Get_Sample_Draws(var, self.n_p))
                 else:
-                    if self.var_dict["n_p"]["sampled"] == True:
+                    if self.var_dict["n_p"]["sampled"]:
                         prev_var = getattr(self, var)
                         if isinstance(prev_var, u.Quantity):
                             prev_var = prev_var.value
@@ -685,24 +685,22 @@ class Interferometer:
     Parameters
     ----------
 
-    name : string
+    name: string
         name of the instrument
-
-    T_obs : float
+    T_obs: float
         the observation time of the PTA in [years]
-
-    load_location : string, optional
+    load_location: string, optional
         If you want to load an instrument curve from a file, it's the file path
-    I_type : string, {'E','A','h'}
+    I_type: string, {'E','A','h'}
         Sets the type of input data.
-        'E' is the effective strain spectral density $S_{n}(f)$ ('ENSD'),
-        'A' is the amplitude spectral density, $\sqrt{S_{n}(f)}$ ('ASD'),
-        'h' is the characteristic strain $h_{n}(f)$ ('h')
-    f_low : float, optional
+        ``'E'`` is the effective strain spectral density :math:`S_{n}(f)` (``'ENSD'``),
+        ``'A'`` is the amplitude spectral density, :math:`\sqrt{S_{n}(f)}` (``'ASD'``),
+        ``'h'`` is the characteristic strain :math:`h_{n}(f)` (``'h'``)
+    f_min: float, optional
         Assigned lowest frequency of instrument (default is assigned in particular child classes)
-    f_high : float, optional
+    f_max: float, optional
         Assigned highest frequency of instrument (default is assigned in particular child classes)
-    nfreqs : int, optional
+    nfreqs: int, optional
         Number of frequencies in logspace the sensitivity is calculated (default is 1e3)
 
     """
@@ -715,10 +713,10 @@ class Interferometer:
                 self.load_location = value
             elif keys == "I_type":
                 self.I_type = value
-            elif keys == "f_low":
-                self.f_low = utils.make_quant(value, "Hz")
-            elif keys == "f_high":
-                self.f_high = utils.make_quant(value, "Hz")
+            elif keys == "f_min":
+                self.f_min = utils.make_quant(value, "Hz")
+            elif keys == "f_max":
+                self.f_max = utils.make_quant(value, "Hz")
             elif keys == "nfreqs":
                 self.nfreqs = value
 
@@ -754,8 +752,8 @@ class Interferometer:
             if isinstance(self, GroundBased):
                 self._fT = (
                     np.logspace(
-                        np.log10(self.f_low.value),
-                        np.log10(self.f_high.value),
+                        np.log10(self.f_min.value),
+                        np.log10(self.f_max.value),
                         self.nfreqs,
                     )
                     * u.Hz
@@ -826,7 +824,7 @@ class GroundBased(Interferometer):
 
     Parameters
     ----------
-    noise_dict : dictionary, optional
+    noise_dict: dictionary, optional
         A nested noise dictionary that has the main variable parameter name(s) in the top level,
         the next level of the dictionary contains the subparameter variable name(s) and the desired value
         to which the subparameter will be changed. The subparameter value can also be an array/list of the
@@ -846,10 +844,10 @@ class GroundBased(Interferometer):
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self, "f_low"):
-            self.f_low = 1.0 * u.Hz
-        if not hasattr(self, "f_high"):
-            self.f_high = 1e4 * u.Hz
+        if not hasattr(self, "f_min"):
+            self.f_min = 1.0 * u.Hz
+        if not hasattr(self, "f_max"):
+            self.f_max = 1e4 * u.Hz
 
         if not hasattr(self, "load_location"):
             if not hasattr(self, "noise_dict"):
@@ -916,8 +914,7 @@ class GroundBased(Interferometer):
 
         Parameters
         ----------
-
-        noise_dict : dictionary
+        noise_dict: dictionary
             A nested noise dictionary that has the main variable parameter name(s) in the top level,
             the next level of the dictionary contains the subparameter variable name(s) and the desired value
             to which the subparameter will be changed. The subparameter value can also be an array/list of the
@@ -925,7 +922,7 @@ class GroundBased(Interferometer):
 
         Examples
         --------
-        obj.Set_Noise_Dict({'Infrastructure':{'Length':[3000,1000,5000],'Temp':500},'Laser':{'Wavelength':1e-5,'Power':130}})
+        ``obj.Set_Noise_Dict({'Infrastructure':{'Length':[3000,1000,5000],'Temp':500},'Laser':{'Wavelength':1e-5,'Power':130}})``
 
         """
         if not hasattr(self, "_ifo"):
@@ -1028,23 +1025,28 @@ class SpaceBased(Interferometer):
 
     Parameters
     ----------
-    L : float
+    L: float
         the armlength the of detector in [meters]
-    A_acc : float
+    A_acc: float
         the Amplitude of the Acceleration Noise in [meters/second^2]
-    f_acc_break_low : float
+    f_acc_break_low: float
         the lower break frequency of the acceleration noise in [Hz]
-    f_acc_break_high : float
+    f_acc_break_high: float
         the higher break frequency of the acceleration noise in [Hz]
-    A_IFO : float
+    A_IFO: float
         the amplitude of the interferometer
-
-    T_type : string, {'N','A'}
+    T_type: string, {`'N'`,`'A'`}
         Picks the transfer function generation method
-        'N' uses the numerically approximated method in Robson, Cornish, and Liu, 2019
-        'A' uses the analytic fit in Larson, Hiscock, and Hellings, 2000
-    Background : Boolean
+        ``'N'`` uses the numerically approximated method in Robson, Cornish, and Liu, 2019
+        ``'A'`` uses the analytic fit in Larson, Hiscock, and Hellings, 2000
+    Background: Boolean, optional
         Add in a Galactic Binary Confusion Noise
+    Background_model: int, {0,1}
+        Used to selectGalactic Binary Confusion Noise model: 0 is the Cornish and Robson 2017 model
+        with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
+        and 1 is a model of the Galactic confusion noise parameterized as a function of T_obs
+    openingangle: int,float,Quantity, optional
+        Determines the opening angle of the instrument, if unassigned use the value in in Robson, Cornish, and Liu, 2019.
 
     """
 
@@ -1056,14 +1058,22 @@ class SpaceBased(Interferometer):
                 self.T_type = value
             elif keys == "Background":
                 self.Background = value
+            elif keys == "Background_model":
+                self.Background = True
+                self.Background_model = value
+            elif keys == "openingangle":
+                self.openingangle = value
 
         if not hasattr(self, "nfreqs"):
             self.nfreqs = int(1e3)
-        if not hasattr(self, "f_low"):
-            self.f_low = 1e-5 * u.Hz
-        if not hasattr(self, "f_high"):
-            self.f_high = 1.0 * u.Hz
-        if not hasattr(self, "Background"):
+        if not hasattr(self, "f_min"):
+            self.f_min = 1e-5 * u.Hz
+        if not hasattr(self, "f_max"):
+            self.f_max = 1.0 * u.Hz
+        if hasattr(self, "Background"):
+            if not hasattr(self, "Background_model"):
+                self.Background_model = 0
+        else:
             self.Background = False
 
         if len(args) != 0:
@@ -1218,8 +1228,8 @@ class SpaceBased(Interferometer):
         fc = const.c / (2 * self.L)  # light round trip freq
         LISA_Transfer_Function_f = fc * self._transferfunctiondata[:, 0]
 
-        idx_f_5 = np.abs(LISA_Transfer_Function_f - self.f_low).argmin()
-        idx_f_1 = np.abs(LISA_Transfer_Function_f - self.f_high).argmin()
+        idx_f_5 = np.abs(LISA_Transfer_Function_f - self.f_min).argmin()
+        idx_f_1 = np.abs(LISA_Transfer_Function_f - self.f_max).argmin()
 
         # 3/10 is normalization 2/5sin(openingangle)
         # Some papers use 3/20, not summing over 2 independent low-freq data channels
@@ -1228,11 +1238,17 @@ class SpaceBased(Interferometer):
         )
         self.fT = LISA_Transfer_Function_f[idx_f_5:idx_f_1]
 
-    def Get_Analytic_Transfer_Function(self, openingangle=None):
-        # Response function approximation from Calculation described by Cornish, Robson, Liu 2019
+    def Get_Analytic_Transfer_Function(self):
+        """Response function approximation from Calculation described by Cornish, Robson, Liu 2019
+        Uses ``openingangle`` property to determine the opening angle of the instrument, if unassigned use the value in the above paper.
+        """
+        if hasattr(self, "openingangle"):
+            openingangle = self.openingangle
+        else:
+            openingangle = None
         self.fT = (
             np.logspace(
-                np.log10(self.f_low.value), np.log10(self.f_high.value), self.nfreqs
+                np.log10(self.f_min.value), np.log10(self.f_max.value), self.nfreqs
             )
             * u.Hz
         )
@@ -1267,23 +1283,65 @@ class SpaceBased(Interferometer):
 
     def Add_Background(self):
         """
-        Galactic confusions noise parameters as a function of T_obs
+        Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
+        corresponding to array index 0,1,2,3 respectively
+        Uses Background_model to select between Galactic Binary Confusion Noise models: 0 is the Cornish and Robson 2017 model
+        with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477),
+        and 1 is a model of the Galactic confusion noise parameterized as a function of ``T_obs``
         """
-        A = 1.4e-44
-        agam = 1100
-        bgam = 3 / 10
-        afk = 0.0016
-        bfk = -2 / 9
-        f_k = afk * self.T_obs ** bfk
-        gamma = agam * self.T_obs ** bgam
+        if self.Background_model == 0:
+            """
+            Galactic confusions noise parameters for 6months, 1yr, 2yr, and 4yr
+            corresponding to array index 0,1,2,3 respectively
+            From Cornish and Robson 2017 with corrections from Schmitz, Kai 2020 (https://www.mdpi.com/2073-8994/12/9/1477)
+            """
+            f = self.fT.to("Hz")
+            A = 9e-38 / u.Hz
+            a = [0.133, 0.171, 0.165, 0.138]
+            b = [x / u.mHz for x in [0.243, 0.292, 0.299, -0.221]]
+            k = [x / u.mHz for x in [0.482, 1.020, 0.611, 0.521]]
+            g = [x / u.mHz for x in [0.917, 1.680, 1.340, 1.680]]
+            f_k = [x * u.mHz for x in [2.58, 2.15, 1.73, 1.13]]
+            f_ref = 1000 * u.mHz
+            if self.T_obs < 1.0 * u.yr:
+                index = 0
+            elif self.T_obs >= 1.0 * u.yr and self.T_obs < 2.0 * u.yr:
+                index = 1
+            elif self.T_obs >= 2.0 * u.yr and self.T_obs < 4.0 * u.yr:
+                index = 2
+            else:
+                index = 3
 
-        f = self.fT.value
-        S_c_f = (
-            A
-            * (f ** (-7 / 3))
-            * (1 + np.tanh(gamma.value * (f_k.value - f)))
-            * (1 / u.Hz)
-        )  # White Dwarf Background Noise
+            gfkf = g[index].to("1/Hz") * (f_k[index].to("Hz") - f)
+            kf = k[index].to("1/Hz") * f
+            S_c_f = (
+                A
+                * ((1.0 * u.mHz).to("Hz") / f) ** (7 / 3)
+                * np.exp(
+                    -((f / f_ref.to("Hz")) ** a[index])
+                    - b[index].to("1/Hz") * f * np.sin(kf.to("").value)
+                )
+                * (1 + np.tanh(gfkf.to("").value))
+            )  # White Dwarf Background Noise
+        elif self.Background_model == 1:
+            """
+            Galactic confusions noise parameters as a function of T_obs
+            """
+            A = 1.4e-44
+            agam = 1100
+            bgam = 3 / 10
+            afk = 0.0016
+            bfk = -2 / 9
+            f_k = afk * self.T_obs ** bfk
+            gamma = agam * self.T_obs ** bgam
+
+            f = self.fT.value
+            S_c_f = (
+                A
+                * (f ** (-7 / 3))
+                * (1 + np.tanh(gamma.value * (f_k.value - f)))
+                * (1 / u.Hz)
+            )  # White Dwarf Background Noise
         return S_c_f
 
 
@@ -1293,7 +1351,7 @@ def Load_Data(detector):
 
     Parameters
     ----------
-    detector : object
+    detector: object
         Instance of a detector class
 
     """
