@@ -428,11 +428,11 @@ def Get_PyPhenomD(source, pct_of_peak=0.01):
     ##################
     # Finds f_ringdown and f_damp from fit taken from <https://arxiv.org/abs/gr-qc/0512160>
     n = 0  # QNM indices
-    l = 2
+    ell = 2
     m = 2
     numn = 3  # number of n's included in the table
 
-    index = (l - 2) * (2 * l + 1) * numn + (l - m) * numn + n
+    index = (ell - 2) * (2 * ell + 1) * numn + (ell - m) * numn + n
     f_fit = fitcoeffs[index][3:6]
     q_fit = fitcoeffs[index][6:9]
 

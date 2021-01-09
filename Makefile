@@ -51,16 +51,17 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
-	flake8 gwent tests
+	flake8 --exclude=vendor --ignore=E203,E402,E501,F401,W503
 
 test: ## run tests quickly with the default Python
-	python setup.py test
+	#python setup.py test
+	cd tests && pytest 
 
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source gwent setup.py test
+	pytest tests --cov=gwent
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html

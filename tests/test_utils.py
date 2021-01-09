@@ -17,7 +17,7 @@ def test_conversion_error():
         utils.make_quant(unit_1, "s")
 
 
-#### LISA Proposal 2
+# LISA Proposal 2
 # Values from Robson, Cornish, and Liu 2019 https://arxiv.org/abs/1803.01944 using the Transfer Function Approximation within.
 L = 2.5 * u.Gm  # armlength in Gm
 L = L.to("m")

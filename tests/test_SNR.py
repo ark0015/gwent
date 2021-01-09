@@ -9,15 +9,15 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 
-import os, sys
+import os
+import sys
 
 current_path = os.getcwd()
 sys.path.insert(0, current_path)
 """
 splt_path = current_path.split("/")
-top_path_idx = splt_path.index("Research")
-top_directory = "/".join(splt_path[0 : top_path_idx + 1])
-gwent_path = top_directory + "/gwent/"
+gwent_path_idx = splt_path.index("Research")
+gwent_path = "/".join(splt_path[0 : gwent_path_idx + 1])
 sys.path.insert(0, gwent_path)
 """
 
