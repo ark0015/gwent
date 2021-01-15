@@ -9,12 +9,12 @@ authors:
   - name: Andrew R. Kaiser^[Corresponding author]
     orcid: 0000-0002-3654-980X
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Sean T. McWilliams
-    orcid: 0000-0003-2397-8290
-    affiliation: "1, 2"
   - name: Jeffrey S. Hazboun
     orcid: 0000-0003-2742-3321
     affiliation: 3
+  - name: Sean T. McWilliams
+    orcid: 0000-0003-2397-8290
+    affiliation: "1, 2"
 affiliations:
  - name: West Virginia University
    index: 1
