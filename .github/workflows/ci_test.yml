@@ -7,12 +7,6 @@ on:
   pull_request:
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - uses: psf/black@stable
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -46,7 +40,9 @@ jobs:
       run: |
         pip install lalsuite
     - name: Install other requirements
-      run: pip install -r requirements.txt
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements_dev.txt
     - name: Display Python, pip, and setuptools version
       run: |
         python -c "import sys; print(f'Python {sys.version}')"
