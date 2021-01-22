@@ -50,7 +50,7 @@ jobs:
         python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
     - name: Run Tests
       run: |
-        pytest --cov=./ --cov-report=xml
+        pytest --cov=gwent --cov-report=xml
         make lint
     - name: Codecov
       uses: codecov/codecov-action@v1
