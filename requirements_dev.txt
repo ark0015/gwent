@@ -1,4 +1,5 @@
 pip>=19.3
+black >= 20.0
 bumpversion==0.5.3
 wheel==0.32.1
 watchdog==0.9.0
@@ -9,6 +10,6 @@ Sphinx==1.8.1
 twine==1.12.1
 numpydoc>=0.8.0
 
-pytest==3.8.2
-pytest-runner==4.2
+pytest>=3.8.2
+pytest-runner>=4.2
 
