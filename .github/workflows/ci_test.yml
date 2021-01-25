@@ -51,7 +51,7 @@ jobs:
         pip freeze
     - name: Run Tests
       run: |
-        pytest --cov-config=.coveragerc --cov=gwent gwent/tests/
+        pytest --cov-config=.coveragerc --cov=gwent tests/
         make lint
     - name: Codecov
       uses: codecov/codecov-action@v1
