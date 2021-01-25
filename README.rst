@@ -14,6 +14,10 @@ gwent
         :alt: Documentation Status
 
 
+.. image:: https://codecov.io/gh/ark0015/gwent/branch/gwent-dev/graph/badge.svg?token=897QOE4EBQ
+        :target: https://codecov.io/gh/ark0015/gwent
+
+
 Gravitational Wave dEtector desigN Toolkit.
 
 Generates strain sensitivity curves and Waterfall plots for various gravitational wave detector designs.
