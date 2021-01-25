@@ -1,0 +1,7 @@
+[run]
+source = gwent
+omit =
+    gwent/__init__*
+    gwent/vendor/*
+    gwent/vendor/pygwinc_clone/*
+    gwent/vendor/pygwinc_clone/gwinc/*

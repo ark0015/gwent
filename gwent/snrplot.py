@@ -400,7 +400,6 @@ def Plot_SNR(
         distticks = [z_at_value(cosmo.luminosity_distance, dist) for dist in dists]
         # Set other side y-axis for lookback time scalings
         ax2.set_yticks(np.log10(distticks))
-        # ax2.set_yticklabels(['%f' %dist for dist in distticks],fontsize = axissize)
         ax2.set_yticklabels(
             [
                 r"$10^{%i}$" % np.log10(dist)
@@ -410,8 +409,6 @@ def Plot_SNR(
             ]
         )
         ax2.set_ylabel(r"$D_{L}$ [Gpc]")
-
-        # cbar = fig.colorbar(CS1,cax=cbar_ax,ax=(ax,ax2),pad=0.01,ticks=print_logLevels)
     elif lb_axis:
         if var_y != "z":
             raise ValueError(

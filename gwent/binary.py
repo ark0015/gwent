@@ -428,7 +428,6 @@ class BBHTimeDomain(BinaryBlackHole):
         # Filter/Window
         hann_window = np.hanning(len(interp_t))  # Two sided
         if windowing == "left":
-            #########################
             """Applies window to first (left) half"""
             first_half = hann_window[
                 : int(len(interp_t) / 2)
@@ -436,12 +435,10 @@ class BBHTimeDomain(BinaryBlackHole):
             second_half = np.ones(
                 len(interp_t) - len(first_half)
             )  # no windowing on second half of waveform
-            #########################
             window = np.append(
                 first_half, second_half
             )  # Only apply window to first half of waveform
         elif windowing == "right":
-            #########################
             """Applies window to second (right) half"""
             second_half = hann_window[
                 int(len(interp_t) / 2) :
@@ -449,7 +446,6 @@ class BBHTimeDomain(BinaryBlackHole):
             first_half = np.ones(
                 len(interp_t) - len(second_half)
             )  # no windowing on first half of waveform
-            #########################
             window = np.append(first_half, second_half)
         elif windowing == "all":
             window = hann_window
