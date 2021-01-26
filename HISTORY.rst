@@ -1,6 +1,16 @@
 =======
 History
 =======
+0.4.0 (2021-1-8)
+-------------------
+* Adding functionality to use lalsuite waveforms
+* Changing locations of multiple functions from BBHFrequencyDomain functions to general binary functions
+* Moved several functions from binary to waveform
+* Fixed several bugs with SNR calculations
+* Clarified certain constants
+* Added JOSS paper draft
+* Expanded testing and switched from TravisCI to Github Actions
+
 0.3.0 (2020-10-5)
 -------------------
 * Turning pygwinc install into vendor inside gwent

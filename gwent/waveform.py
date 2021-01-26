@@ -1,28 +1,417 @@
 import numpy as np
+import astropy.constants as const
+import astropy.units as u
+from astropy.cosmology import WMAP9 as cosmo
+
+import os
+import lalsimulation
+
+import gwent
+from . import binary
+
+current_path = os.path.abspath(gwent.__path__[0])
+load_directory = os.path.join(current_path, "LoadFiles/")
 
 
-def Get_Waveform(source, pct_of_peak=0.01):
-    """Uses Mass Ratio (q <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
+def Get_Waveform(
+    source,
+    approximant="pyPhenomD",
+    pct_of_peak=0.01,
+    lalsuite_kwargs={},
+    out_frame="observer",
+):
+    """Gets the frequency domain waveform of a particular source using approximant type in approximant.
+    this can either be the python implementation of IMRPhenomD given below, or a waveform modelled in
+    LIGO's lalsuite package. If a lalsuite approximant is used, source will be given plus and cross
+    properties with their phase and amplitude for user convenience.
+
+    Parameters
+    ----------
+    source: object
+            source object that contains all necessary source parameters
+    approximant: str, optional
+            the approximant used to calculate the frequency domain waveform of the source.
+            Can either be the python implementation of IMRPhenomD (``'pyPhenomD'``, the default) given below,
+            or a waveform modelled in LIGO's ``lalsuite``'s ``lalsimulation`` package.
+    pct_of_peak: float, optional
+            ``pyPhenomD`` kwarg, the percentange of the strain at merger that dictates the maximum frequency the waveform is calculated at in geometrized units (G=c=1)
+    lalsuite_kwargs: dict, optional
+            More specific user-defined kwargs for the different lalsuite waveforms
+    out_frame: str, {'observer','source'}
+        Determines whether the returned frequency is in the source or observer frame.
+
+    Returns
+    -------
+    freqs: numpy array of floats
+        the waveform frequencies in Hertz
+    strain: numpy array of floats
+        the waveform amplitude strain in dimensionless units
+    """
+    if approximant == "pyPhenomD":
+        if not hasattr(source, "_fitcoeffs"):
+            Get_Fitcoeffs(source)
+        if not all([hasattr(source, "_phenomD_f"), hasattr(source, "_phenomD_h")]):
+            [source._phenomD_f, source._phenomD_h] = Get_PyPhenomD(
+                source, pct_of_peak=pct_of_peak
+            )
+
+        return Strain_Conv(
+            source, source._phenomD_f, source._phenomD_h, out_frame=out_frame
+        )
+    elif approximant in dir(lalsimulation) or isinstance(approximant, int):
+        if isinstance(approximant, int):
+            approx = approximant
+        else:
+            approx = getattr(lalsimulation, approximant)
+
+        waveform_dict = {}
+
+        M_time = (
+            source.M.to("kg") * const.G / const.c ** 3
+        )  # Converts M = [M] to M = [sec]
+
+        # Used for finding the starting frequency based on our SNR calculation assumption of
+        # wanting to integrate from observed frequency (f(T_obs_before_merger)) till merger
+        if not hasattr(source, "f_T_obs"):
+            if not hasattr(source, "instrument"):
+                # No instrument? We set some time observed
+                binary.Check_Freq_Evol(source, T_evol=4.0 * u.yr)
+            else:
+                binary.Check_Freq_Evol(source)
+        # Uses source f_T_obs (observed frequency T_obs before merger) in detector frame so we convert to source frame
+        default_f_min = source.f_T_obs * (1 + source.z) / 2.0
+        # Uses Mf space as the end frequency (might be a little arbitrary, but lalsuite cuts the waveform off after f_cut anyway), then convert to Hz for lalsuite
+        default_f_max = 1.0 / M_time
+        # Find even spacing given nfreqs of the source (default is 1e3)
+        # default_deltaF = (default_f_max - default_f_min) / source.nfreqs
+
+        # Spacing required to include defaut_f_min in frequency
+        # WARNING: THIS CAN RESULT IN AN EXTREMELY LONG ARRAY
+        default_deltaF = default_f_min
+
+        waveform_dict.update(
+            {
+                "m1": source.M.to("kg").value / (1 + source.q),
+                "m2": source.M.to("kg").value * source.q / (1 + source.q),
+                "S1x": 0,
+                "S1y": 0,
+                "S1z": 0,
+                "S2x": 0,
+                "S2y": 0,
+                "S2z": 0,
+                "distance": cosmo.luminosity_distance(source.z).to("m").value,
+                "inclination": 0,
+                "phiRef": 0,
+                "longAscNodes": 0,
+                "eccentricity": 0,
+                "meanPerAno": 0,
+                "deltaF": default_deltaF.value,
+                "f_min": default_f_min.value,
+                "f_max": default_f_max.value,
+                "f_ref": 0,
+                "LALpars": {},
+                "approximant": approx,
+            }
+        )
+
+        if "m1" in lalsuite_kwargs.keys():
+            waveform_dict["m1"] = lalsuite_kwargs["m1"]
+        if "m2" in lalsuite_kwargs.keys():
+            waveform_dict["m2"] = lalsuite_kwargs["m2"]
+        if "S1x" in lalsuite_kwargs.keys():
+            waveform_dict["S1x"] = lalsuite_kwargs["S1x"]
+        if "S1y" in lalsuite_kwargs.keys():
+            waveform_dict["S1y"] = lalsuite_kwargs["S1y"]
+
+        if "S1z" in lalsuite_kwargs.keys():
+            waveform_dict["S1z"] = lalsuite_kwargs["S1z"]
+        elif "chi1" in lalsuite_kwargs.keys():
+            waveform_dict["S1z"] = lalsuite_kwargs["chi1"]
+        elif hasattr(source, "chi1"):
+            waveform_dict["S1z"] = source.chi1
+
+        if "S2x" in lalsuite_kwargs.keys():
+            waveform_dict["S2x"] = lalsuite_kwargs["S2x"]
+        if "S2y" in lalsuite_kwargs.keys():
+            waveform_dict["S2y"] = lalsuite_kwargs["S2y"]
+
+        if "S2z" in lalsuite_kwargs.keys():
+            waveform_dict["S2z"] = lalsuite_kwargs["S2z"]
+        elif "chi2" in lalsuite_kwargs.keys():
+            waveform_dict["S2z"] = lalsuite_kwargs["chi2"]
+        elif hasattr(source, "chi2"):
+            waveform_dict["S2z"] = source.chi2
+
+        if "distance" in lalsuite_kwargs.keys():
+            waveform_dict["distance"] = lalsuite_kwargs["distance"]
+        if "inclination" in lalsuite_kwargs.keys():
+            waveform_dict["inclination"] = lalsuite_kwargs["inclination"]
+        if "phiRef" in lalsuite_kwargs.keys():
+            waveform_dict["phiRef"] = lalsuite_kwargs["phiRef"]
+        if "longAscNodes" in lalsuite_kwargs.keys():
+            waveform_dict["longAscNodes"] = lalsuite_kwargs["longAscNodes"]
+        if "eccentricity" in lalsuite_kwargs.keys():
+            waveform_dict["eccentricity"] = lalsuite_kwargs["eccentricity"]
+        if "meanPerAno" in lalsuite_kwargs.keys():
+            waveform_dict["meanPerAno"] = lalsuite_kwargs["meanPerAno"]
+
+        if "deltaF" in lalsuite_kwargs.keys():
+            waveform_dict["deltaF"] = lalsuite_kwargs["deltaF"]
+        if "f_min" in lalsuite_kwargs.keys():
+            if isinstance(lalsuite_kwargs["f_min"], u.Quantity):
+                waveform_dict["f_min"] = lalsuite_kwargs["f_min"].value
+            else:
+                waveform_dict["f_min"] = lalsuite_kwargs["f_min"]
+        elif hasattr(source, "f_min"):
+            new_f_min = source.f_min / M_time
+            waveform_dict["f_min"] = new_f_min.to("Hz").value
+
+        if "f_max" in lalsuite_kwargs.keys():
+            if isinstance(lalsuite_kwargs["f_max"], u.Quantity):
+                waveform_dict["f_max"] = lalsuite_kwargs["f_max"].value
+            else:
+                waveform_dict["f_max"] = lalsuite_kwargs["f_max"]
+        elif hasattr(source, "f_max"):
+            new_f_max = source.f_max / M_time
+            waveform_dict["f_max"] = new_f_max.to("Hz").value
+
+        if "f_ref" in lalsuite_kwargs.keys():
+            if isinstance(lalsuite_kwargs["f_ref"], u.Quantity):
+                waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"].value
+            else:
+                waveform_dict["f_ref"] = lalsuite_kwargs["f_ref"]
+        if "LALpars" in lalsuite_kwargs.keys():
+            waveform_dict["LALpars"] = lalsuite_kwargs["LALpars"]
+
+        Get_Proper_Freq_Params(waveform_dict)
+
+        return Get_LALSuite_Waveform(source, waveform_dict, out_frame=out_frame)
+    else:
+        raise ValueError(
+            f"{approximant}, not an available waveform. Must select either pyPhenomD or one from lalsuite's FD waveform approximants"
+        )
+
+
+def Get_Proper_Freq_Params(waveform_dict):
+    """Used to check if the calculated array is too big, and to assure f_min is included by adjusting ``deltaF``"""
+    in_deltaF = waveform_dict["deltaF"]
+    in_f_min = waveform_dict["f_min"]
+    in_f_max = waveform_dict["f_max"]
+
+    # Smallest deltaF before lalsuite can't shift t_coalescence to 0 (?)
+    deltaF_min = 5e-10
+    # Maximum array size before we found trouble with memory
+    array_max = 2e5
+
+    if in_deltaF != in_f_min:
+        out_deltaF = in_f_min
+        out_f_min = in_f_min
+        if out_deltaF < deltaF_min:
+            print("deltaF is too small, setting to min value we checked: ", deltaF_min)
+            out_deltaF = deltaF_min
+            out_f_min = deltaF_min
+    elif in_deltaF < deltaF_min:
+        print("deltaF is too small, setting to min value we checked: ", deltaF_min)
+        out_deltaF = deltaF_min
+        out_f_min = deltaF_min
+    else:
+        out_deltaF = in_deltaF
+        out_f_min = in_f_min
+
+    # Size based on np arange size
+    arr_size = np.ceil((in_f_max - (out_f_min)) / (out_deltaF))
+    if arr_size > array_max:
+        errstr_1 = f"predicted frequency array size is very large: {arr_size}. "
+        errstr_1 += "This will probably cause memory errors..."
+        errstr_1 += "We will attempt to shrink it by reducing f_max."
+        # raise ValueError(errstr_1)
+        # print(errstr_1)
+        new_arr_size = arr_size
+        out_f_max = in_f_max
+        scale = 2.0
+        while new_arr_size > array_max:
+            out_f_max = out_f_max / scale
+            new_arr_size = np.ceil((out_f_max - (out_f_min)) / (out_deltaF))
+            scale += 1
+    else:
+        out_f_max = in_f_max
+
+    waveform_dict.update({"deltaF": out_deltaF, "f_min": out_f_min, "f_max": out_f_max})
+    return waveform_dict
+
+
+def Get_Fitcoeffs(source):
+    """Loads Quasi-Normal Mode fitting files for speed later."""
+    fit_coeffs_filedirectory = os.path.join(
+        load_directory, "PhenomDFiles/fitcoeffsWEB.dat"
+    )
+    source._fitcoeffs = np.loadtxt(fit_coeffs_filedirectory)
+
+
+def Get_Amp_Phase(h):
+    """Separates the amplitude and phase from complex strain polarizations (``hcross``,``hplus``)."""
+    amp = np.abs(h)
+    phase = np.unwrap(np.angle(h))
+    return amp, phase
+
+
+def Get_Full_Amp(h_plus_f, h_cross_f):
+    """Gets the raw amplitude from the plus and cross GW polarizations."""
+    return np.sqrt((np.abs(h_cross_f)) ** 2 + (np.abs(h_plus_f)) ** 2)
+
+
+def Strain_Conv(
+    source, freqs, strain, inverse=False, in_frame="source", out_frame="observer"
+):
+    """Converts frequency and strain in natural units (G=c=1) to Hertz and raw Fourier strain amplitude (1/Hertz), respectively.
+    If inverse is true, it does the reverse and assumes the strain and frequency are given in the detector frame.
+
+    Parameters
+    ----------
+    source
+        Instance of gravitational wave source class
+    freqs: array
+        the frequency of the source in either natural units (G=c=1) or Hertz
+    strain: array
+        the strain of the source in natural units (G=c=1) or raw Fourier strain amplitude (1/Hertz)
+    inverse: bool, optional
+        Converts non-naturalized (Hertz and dimensionless) frequency and strain to ``Mf`` and strain in G=c=1 units
+    in_frame: str, {'source','observer'}
+        If inverse is true, determines whether the source frequency ``f_gw`` is in the source or observer frame.
+    out_frame: str, {'observer','source'}
+        Determines whether the returned frequency is in the source or observer frame.
+    """
+    DL = cosmo.luminosity_distance(source.z)
+    DL = DL.to("m")
+
+    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    M_time = source.M.to("kg") * m_conv
+    # M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
+
+    # frequency and strain of source in source frame
+    freq_conv = 1 / M_time
+    # Normalized factor to match Stationary phase approx at low frequencies
+    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_time ** 2
+    if inverse:
+        if in_frame == "source":
+            # converted to source frame natural units
+            conv_freqs = freqs / freq_conv
+            conv_strain = strain / strain_conv
+        elif in_frame == "observer":
+            # converted to source frame natural units
+            conv_freqs = (freqs / freq_conv) * (1 + source.z)
+            conv_strain = strain / strain_conv / (1 + source.z) ** 2
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+    else:
+        if out_frame == "source":
+            # converted to source frame physical units
+            conv_freqs = freqs * freq_conv
+            conv_strain = strain * strain_conv
+        elif out_frame == "observer":
+            # converted to detector frame physical units
+            conv_freqs = (freqs * freq_conv) / (1 + source.z)
+            conv_strain = strain * strain_conv * (1 + source.z) ** 2
+        else:
+            raise ValueError("The reference frame can only be observer or source.")
+
+    return [conv_freqs, conv_strain]
+
+
+def Get_LALSuite_Waveform(source, waveform_dict, out_frame="observer"):
+    """Gets the frequency domain waveform of a particular source using a waveform modelled in
+    LIGO's ``lalsuite`` package. The source is given plus and cross
+    properties with their phase and amplitude for user convenience.
+
+    Parameters
+    ----------
+    source: object
+            source object from ``binary``, contains all source parameters
+    waveform_dict: dictionary
+            The dictionary is comprised of necessities for the ``SimInspiralChooseFDWaveform`` call in ``lalsimulation`` comprised of:
+            ``m1``    mass of companion 1 (kg)
+            ``m2``    mass of companion 2 (kg)
+            ``S1x``    x-component of the dimensionless spin of object 1
+            ``S1y``    y-component of the dimensionless spin of object 1
+            ``S1z``    z-component of the dimensionless spin of object 1
+            ``S2x``    x-component of the dimensionless spin of object 2
+            ``S2y``    y-component of the dimensionless spin of object 2
+            ``S2z``    z-component of the dimensionless spin of object 2
+            ``distance``    distance of source (m)
+            ``inclination``    inclination of source (rad)
+            ``phiRef``    reference orbital phase (rad)
+            ``longAscNodes``    longitude of ascending nodes, degenerate with the polarization angle, Omega in documentation
+            ``eccentricity``    eccentricity at reference epoch
+            ``meanPerAno``    mean anomaly of periastron
+            ``deltaF``    sampling interval (Hz)
+            ``f_min``    starting GW frequency (Hz)
+            ``f_max``    ending GW frequency (Hz)
+            ``f_ref``    Reference frequency (Hz)
+            ``LALparams``    LAL dictionary containing accessory parameters
+            ``approximant``    post-Newtonian approximant to use for waveform production
+    out_frame: str, {'observer','source'}
+        Determines whether the returned frequency is in the source or observer frame.
+    """
+    h_f_plus, h_f_cross = lalsimulation.SimInspiralChooseFDWaveform(**waveform_dict)
+    h_f_plus_amp, h_f_plus_phase = Get_Amp_Phase(h_f_plus.data.data)
+    h_f_cross_amp, h_f_cross_phase = Get_Amp_Phase(h_f_cross.data.data)
+
+    source.h_f_plus_amp = h_f_plus_amp
+    source.h_f_plus_phase = h_f_plus_phase
+    source.h_f_cross_amp = h_f_cross_amp
+    source.h_f_cross_phase = h_f_cross_phase
+
+    full_amp = Get_Full_Amp(h_f_plus_amp, h_f_cross_amp)
+    # Need to trim because SimInspiralChooseFDWaveform returns nans and zeros outside of ranges (f_min,f_cutoff)
+    trimmed_full_amp = []
+    for amp in full_amp:
+        if not np.isnan(amp) and amp != 0.0:
+            trimmed_full_amp.append(amp)
+    trimmed_full_amp = np.asarray(trimmed_full_amp)
+    lin_freqs = np.arange(0, waveform_dict["f_max"], waveform_dict["deltaF"])
+    trimmed_freqs = lin_freqs[1 : trimmed_full_amp.shape[0] + 1]
+
+    # The difference between the two is `gwent` has a factor of :math:`\sqrt{\frac{1}{24}}(1+z)^{2}`
+    # and `LALSuite` has a factor of :math:`2\sqrt{\frac{1}{64}}`.
+    # Thus, :math:`h_{\mathrm{gwent}} = \sqrt{\frac{2}{3}}(1+z)^{2}h_{\mathrm{LAL}}`,
+    # this factor is reduced by :math:`\sqrt{\frac{1}{2}}` if using the cross and plus polarizations to get the total Fourier strain amplitude.
+
+    if out_frame == "observer":
+        # frequency and strain of source in detector frame and physical units: Hertz and raw Fourier strain amplitude (1/Hertz)
+        freqs = trimmed_freqs / (1 + source.z) * u.Hz
+        strain = np.sqrt(1 / 3) * (1 + source.z) ** 2 * trimmed_full_amp / u.Hz
+    elif out_frame == "source":
+        # frequency and strain of source in source frame and physical units: Hertz and raw Fourier strain amplitude (1/Hertz)
+        freqs = trimmed_freqs * u.Hz
+        strain = np.sqrt(1 / 3) * trimmed_full_amp / u.Hz
+    else:
+        raise ValueError("The reference frame can only be observer or source.")
+
+    return [freqs, strain]
+
+
+def Get_PyPhenomD(source, pct_of_peak=0.01):
+    """Uses Mass Ratio (``q`` <= 18), aligned spins (abs(a/m)~0.85 or when q=1 abs(a/m)<0.98),
     fitting coefficients for QNM type, and sampling rate
     Returns the frequency, the Phenom amplitude of the inspiral-merger-ringdown
     Uses methods found in <https://arxiv.org/abs/1508.07253> and <https://arxiv.org/abs/1508.07250>
 
     Parameters
     ----------
-    source : object
-            source object from StrainandNoise, contains all source parameters
-    pct_of_peak : float, optional
+    source: object
+            source object from ``binary``, contains all source parameters
+    pct_of_peak: float, optional
             the percentange of the strain at merger that dictates the maximum frequency the waveform is calculated at in geometrized units (G=c=1)
 
     Returns
     -------
-    Mf : numpy array of floats
+    Mf: numpy array of floats
         the waveform frequencies in geometrized units (G=c=1)
-    fullwaveform : numpy array of floats
+    fullwaveform: numpy array of floats
         the waveform strain in geometrized units (G=c=1)
 
     """
-    f_low = source.f_low
+    f_min = source.f_min
     N = source.nfreqs
     q = source.q
     x1 = source.chi1
@@ -39,11 +428,11 @@ def Get_Waveform(source, pct_of_peak=0.01):
     ##################
     # Finds f_ringdown and f_damp from fit taken from <https://arxiv.org/abs/gr-qc/0512160>
     n = 0  # QNM indices
-    l = 2
+    ell = 2
     m = 2
     numn = 3  # number of n's included in the table
 
-    index = (l - 2) * (2 * l + 1) * numn + (l - m) * numn + n
+    index = (ell - 2) * (2 * ell + 1) * numn + (ell - m) * numn + n
     f_fit = fitcoeffs[index][3:6]
     q_fit = fitcoeffs[index][6:9]
 
@@ -70,12 +459,12 @@ def Get_Waveform(source, pct_of_peak=0.01):
     )
 
     # If lowest frequency is greater than cutoffFreq, then raise error.
-    if f_low >= cutoffFreq:
+    if f_min >= cutoffFreq:
         raise ValueError(
-            "Lower frequency bound (ie. f_low) must be lower than that of the merger ringdown."
+            "Lower frequency bound (ie. f_min) must be lower than that of the merger ringdown."
         )
 
-    Mf = np.logspace(np.log10(f_low), np.log10(cutoffFreq), N)
+    Mf = np.logspace(np.log10(f_min), np.log10(cutoffFreq), N)
 
     v1 = A_insp(f1, eta, x1, x2, x_PN)
     v2 = Lambda(eta, x_PN, 3)
@@ -113,9 +502,9 @@ def A_norm(freqs, eta):
 
     Parameters
     ----------
-    freqs : array
+    freqs: array
         The frequencies in Natural units (Mf, G=c=1) of the waveform
-    eta : float
+    eta: float
         The reduced mass ratio
 
     """
@@ -128,15 +517,15 @@ def A_insp(freqs, eta, x1, x2, X_PN):
 
     Parameters
     ----------
-    freqs : array
-        The frequencies in Natural units (Mf, G=c=1) of the waveform
-    eta : float
+    freqs: array
+        The frequencies in Natural units (``Mf``, G=c=1) of the waveform
+    eta: float
         The reduced mass ratio
-    x1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    x2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2.
-    x_PN : float
+    x1: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m1``.
+    x2: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m2``.
+    x_PN: float
         The PN reduced spin parameter
 
     """
@@ -154,15 +543,15 @@ def DA_insp(freqs, eta, x1, x2, X_PN):
 
     Parameters
     ----------
-    freqs : array
-        The frequencies in Natural units (Mf, G=c=1) of the waveform
-    eta : float
+    freqs: array
+        The frequencies in Natural units (``Mf``, G=c=1) of the waveform
+    eta: float
         The reduced mass ratio
-    x1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    x2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2.
-    x_PN : float
+    x1: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m1``.
+    x2: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m2``.
+    x_PN: float
         The PN reduced spin parameter
 
     """
@@ -183,13 +572,13 @@ def A_MR(freqs, f_RD, f_damp, Gammas):
 
     Parameters
     ----------
-    freqs : array
-        The frequencies in Natural units (Mf, G=c=1) of the waveform
-    f_RD : float
+    freqs: array
+        The frequencies in Natural units (``Mf``, G=c=1) of the waveform
+    f_RD: float
         Frequency of the Ringdown transition
-    f_damp : float
+    f_damp: float
         Damping frequency
-    Gammas : array-like
+    Gammas: array-like
         Normalizes lorentzian to correct shape
 
     """
@@ -207,13 +596,13 @@ def DA_MR(freqs, f_RD, f_damp, Gammas):
 
     Parameters
     ----------
-    freqs : array
-        The frequencies in Natural units (Mf, G=c=1) of the waveform
-    f_RD : float
+    freqs: array
+        The frequencies in Natural units (``Mf``, G=c=1) of the waveform
+    f_RD: float
         Frequency of the Ringdown transition
-    f_damp : float
+    f_damp: float
         Damping frequency
-    Gammas : array-like
+    Gammas: array-like
         Normalizes lorentzian to correct shape
 
     """
@@ -244,9 +633,9 @@ def A_int(freqs, delt):
 
     Parameters
     ----------
-    freqs : array
-        The frequencies in Natural units (Mf, G=c=1) of the waveform
-    delt : array
+    freqs: array
+        The frequencies in Natural units (``Mf``, G=c=1) of the waveform
+    delt: array
         Coefficient solutions to match the inspiral to the merger-ringdown portion of the waveform
 
     """
@@ -264,11 +653,11 @@ def Lambda(eta, x_PN, lmbda):
 
     Parameters
     ----------
-    eta : float
+    eta: float
         The reduced mass ratio
-    x_PN : float
+    x_PN: float
         The PN reduced spin parameter
-    lmbda : int
+    lmbda: int
         Iterator for different Lambda variables using the zeta function
 
     """
@@ -408,15 +797,13 @@ def PN_coeffs(eta, x1, x2, i):
 
     Parameters
     ----------
-    eta : float
+    eta: float
         The reduced mass ratio
-    x1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    x2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2.
-    q : float
-        The mass ratio m1/m2, m1<=m2
-    i : int
+    x1: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m1``.
+    x2: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m2``.
+    i: int
         iterator to dictate which PN Amplitude to use
 
     Notes
@@ -474,17 +861,17 @@ def Calc_f_peak(f_RD, f_damp, Gammas):
 
     Parameters
     ----------
-    f_RD : float
+    f_RD: float
         Frequency of the Ringdown transition
-    f_damp : float
+    f_damp: float
         Damping frequency
-    Gammas : array-like
+    Gammas: array-like
         Normalizes lorentzian to correct shape
 
     Notes
     -----
-    There is a problem with this expression from the paper becoming imaginary if gamma2 >= 1
-    so if gamma2 >= 1 then set the square root term to zero.
+    There is a problem with this expression from the paper becoming imaginary if ``gamma2`` >= 1
+    so if ``gamma2`` >= 1 then set the square root term to zero.
 
     """
     if Gammas[1] <= 1:
@@ -501,14 +888,13 @@ def Find_Cutoff_Freq(f_RD, f_damp, Gammas, pct_of_peak=0.0001):
 
     Parameters
     ----------
-    f_RD : float
+    f_RD: float
         Frequency of the Ringdown transition
-    f_damp : float
+    f_damp: float
         Damping frequency
-    Gammas : array-like
+    Gammas: array-like
         Normalizes lorentzian to correct shape
-
-    pct_of_peak : float, optional
+    pct_of_peak: float, optional
         the percentange of the strain at merger that dictates the maximum
         frequency the waveform is calculated at in geometrized units (G=c=1)
 
@@ -529,19 +915,19 @@ def a_final(x1, x2, q, eta):
 
     Parameters
     ----------
-    x1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    x2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2.
-    q : float
-        The mass ratio m1/m2, m1<=m2
-    eta : float
+    x1: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m1``.
+    x2: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m2``.
+    q: float
+        The mass ratio ``m1/m2``, ``m1<=m2``
+    eta: float
         The reduced mass ratio
 
     Notes
     -----
     Uses eq. 3 in <https://arxiv.org/abs/0904.2577>, changed to match our q convention
-    a=J/M**2 where J = x1*m1**2 + x2*m2**2
+    :math:`a=J/M^{2}` where ``J = x1*m1**2 + x2*m2**2``
 
     """
     a = (q ** 2 * x1 + x2) / (q ** 2 + 1)
@@ -566,12 +952,12 @@ def chi_PN(eta, x1, x2):
 
     Parameters
     ----------
-    eta : float
+    eta: float
         The reduced mass ratio
-    x1 : float
-        The dimensionless spin parameter abs(a/m) for black hole m1.
-    x2 : float
-        The dimensionless spin parameter abs(a/m) for black hole m2.
+    x1: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m1``.
+    x2: float
+        The dimensionless spin parameter abs(a/m) for black hole ``m2``.
 
     Notes
     -----

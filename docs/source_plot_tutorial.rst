@@ -1,4 +1,4 @@
-.. module:: gwent
+.. module:: hasasia
 
 .. note:: This tutorial was generated from a Jupyter notebook that can be
           downloaded `here <_static/notebooks/source_plot_tutorial.ipynb>`_.
@@ -14,19 +14,14 @@ domain.
 
 First, we load important packages
 
-
 .. code:: python
 
     import numpy as np
-    import os,sys
-    
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     
     from cycler import cycler
     from scipy.constants import golden_ratio
-    
-    import astropy.constants as const
     import astropy.units as u
     
     import gwent
@@ -104,9 +99,10 @@ Values taken from the ESA L3 proposal, Amaro-Seaone, et al., 2017
     
     Background = False
     
-    LISA_prop1 = detector.SpaceBased('LISA',\
-                              LISA_T_obs,L,A_acc,f_acc_break_low,f_acc_break_high,A_IMS,f_IMS_break,\
-                              Background=Background)
+    LISA_prop1 = detector.SpaceBased('LISA',
+                                     LISA_T_obs,L,A_acc,f_acc_break_low,
+                                     f_acc_break_high,A_IMS,f_IMS_break,
+                                     Background=Background)
 
 aLIGO
 ~~~~~
@@ -133,16 +129,20 @@ Husa, et al. 2016 https://arxiv.org/abs/1508.07250
 
     M = [1e6,65.0,1e10]
     q = [1.0,18.0,1.0]
-    x1 = [0.95,0.0,-0.95]
-    x2 = [0.95,0.0,-0.95]
+    x1 = [0.5,0.0,-0.95]
+    x2 = [0.3,0.0,-0.95]
     z = [3.0,0.093,20.0]
 
 Uses the first parameter values that lie in the ``LISA_prop1`` detector
-band.
+band with the precessing phenomenological ``lalsuite`` waveform
+IMRPhenomPv3.
 
 .. code:: python
 
-    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],x1[0],x2[0])
+    lalsuite_kwargs = {"S1x": 0.5, "S1y": 0., "S1z": x1[0],
+                       "S2x": -0.2, "S2y": 0.5, "S2z": x2[0],
+                       "inclination":np.pi/2}
+    source_1 = binary.BBHFrequencyDomain(M[0],q[0],z[0],approximant='IMRPhenomPv3',lalsuite_kwargs=lalsuite_kwargs)
 
 Uses the second parameter values that lie in the ``aLIGO`` detector
 band.
@@ -167,15 +167,21 @@ Find out source 1’s frequency given some time from merger.
 .. code:: python
 
     print("Source frequency 10 years prior to merger in Observer frame: ",
-          source_1.Get_Source_Freq(10*u.yr,frame='observer'))
+          binary.Get_Source_Freq(source_1,10*u.yr,in_frame='observer',out_frame='source'))
     print("Source frequency 10 years prior to merger in Source frame: ",
-          source_1.Get_Source_Freq(10*u.yr,frame='source'))
+          binary.Get_Source_Freq(source_1,10*u.yr,in_frame='source',out_frame='source'))
+    print("Observed frequency 10 years prior to merger in Observer frame: ",
+          binary.Get_Source_Freq(source_1,10*u.yr,in_frame='observer',out_frame='observer'))
+    print("Observed frequency 10 years prior to merger in Source frame: ",
+          binary.Get_Source_Freq(source_1,10*u.yr,in_frame='source',out_frame='observer'))
 
 
 .. parsed-literal::
 
     Source frequency 10 years prior to merger in Observer frame:  4.9371229709723884e-05 1 / s
     Source frequency 10 years prior to merger in Source frame:  2.9356308823618684e-05 1 / s
+    Observed frequency 10 years prior to merger in Observer frame:  1.2342807427430971e-05 1 / s
+    Observed frequency 10 years prior to merger in Source frame:  7.339077205904671e-06 1 / s
 
 
 Find out source 2’s time to merger from a given frequency.
@@ -183,16 +189,22 @@ Find out source 2’s time to merger from a given frequency.
 
 .. code:: python
 
-    print("Time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame: ",
-          source_2.Get_Time_From_Merger(1/u.minute,frame='observer').to('yr'))
-    print("Time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame: ",
-          source_2.Get_Time_From_Merger(1/u.minute,frame='source').to('yr'))
+    print("Source time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame: ",
+          binary.Get_Time_From_Merger(source_2,freq=1/u.minute,in_frame='observer',out_frame='source').to('yr'))
+    print("Source time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame: ",
+          binary.Get_Time_From_Merger(source_2,freq=1/u.minute,in_frame='source',out_frame='source').to('yr'))
+    print("Observed ime from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame: ",
+          binary.Get_Time_From_Merger(source_2,freq=1/u.minute,in_frame='observer',out_frame='observer').to('yr'))
+    print("Observed time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame: ",
+          binary.Get_Time_From_Merger(source_2,freq=1/u.minute,in_frame='source',out_frame='observer').to('yr'))
 
 
 .. parsed-literal::
 
-    Time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame:  17.032270309184458 yr
-    Time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame:  21.59034784914432 yr
+    Source time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame:  17.032270309184415 yr
+    Source time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame:  21.590347849144273 yr
+    Observed ime from merger for BHB with GW frequency of 1/minute (~17mHz) in the Observer frame:  18.61627144793857 yr
+    Observed time from merger for BHB with GW frequency of 1/minute (~17mHz) in the Source frame:  23.59825019911469 yr
 
 
 Find out source 3’s observed frequency given some evolved time.
@@ -206,13 +218,13 @@ in the observer frame.
     #First we have to give the source some initial frequency
     source_3.f_gw = 8*u.nHz
     
-    source_3.Check_Freq_Evol(T_evol=5*u.yr,T_evol_frame='observer')
+    binary.Check_Freq_Evol(source_3,T_evol=5*u.yr,T_evol_frame='observer')
     print("Observed frequency after 5 years of evolution in Observer frame: ",
           source_3.f_T_obs)
     print("Does the source change a resolvable amount after evolving for 5 years in the Observer frame?: ",
           source_3.ismono)
     print("\n")
-    source_3.Check_Freq_Evol(T_evol=5*u.yr,T_evol_frame='source')
+    binary.Check_Freq_Evol(source_3,T_evol=5*u.yr,T_evol_frame='source')
     print("Observed frequency after 5 years of evolution in Source frame: ",
           source_3.f_T_obs)
     print("Does the source change a resolvable amount after evolving for 5 years in the Source frame?: ",
@@ -226,7 +238,7 @@ in the observer frame.
     
     
     Observed frequency after 5 years of evolution in Source frame:  5.732821260078733e-09 1 / s
-    Does the source change a resolvable amount after evolving for 5 years in the Source frame?:  True
+    Does the source change a resolvable amount after evolving for 5 years in the Source frame?:  False
 
 
 We can set the instrument that “observes” the source. If you orginally
@@ -236,15 +248,14 @@ frequency (``f_gw``) is set to the instrument’s most sensitive frequency
 .. code:: python
 
     source_3.instrument = NANOGrav_11yr_hasasia
-    source_3.Check_Freq_Evol()
-    print("Observed frequency after {}".format(np.max(source_3.instrument.T_obs.value)),
-          "years of evolution in Observer frame: ",
+    binary.Check_Freq_Evol(source_3)
+    print(f"Observed frequency after {np.max(source_3.instrument.T_obs)} years of evolution in Observer frame: ",
           source_3.f_T_obs)
 
 
 .. parsed-literal::
 
-    Observed frequency after 11.4 years of evolution in Observer frame:  1.3181810661218933e-08 1 / s
+    Observed frequency after 11.4 yr years of evolution in Observer frame:  1.3181810661218933e-08 1 / s
 
 
 Plots of Example GW Band
@@ -257,31 +268,20 @@ Chirping Sources
 ~~~~~~~~~~~~~~~~
 
 Displays two sources’ waveform throughout its observing run (from left
-to right: ``NANOGrav_11yr_hasasia``,\ ``LISA_prop1``,\ ``ET``).
+to right: ``NANOGrav_11yr_hasasia``,\ ``LISA_prop1``,\ ``ET``). Since
+the default frame for each source is the observer frame, we get the
+observed frequency of each source ``T_obs`` before merger.
 
 .. code:: python
 
-    source_1_t_T_obs_f = source_1.Get_Source_Freq(LISA_prop1.T_obs.to('s'))/(1+source_1.z)
+    source_1_t_T_obs_f = binary.Get_Source_Freq(source_1,LISA_prop1.T_obs,in_frame="observer",out_frame="observer")
     source_1_idx = np.abs(source_1.f-source_1_t_T_obs_f).argmin()
     
-    source_2_t_T_obs_f = source_2.Get_Source_Freq(aLIGO_1.T_obs.to('s'))/(1+source_2.z)
+    source_2_t_T_obs_f = binary.Get_Source_Freq(source_2,aLIGO_1.T_obs,in_frame="observer",out_frame="observer")
     source_2_idx = np.abs(source_2.f-source_2_t_T_obs_f).argmin()
     
-    source_3_t_T_obs_f = source_3.Get_Source_Freq(NANOGrav_11yr_hasasia.T_obs.to('s'))/(1+source_3.z)
+    source_3_t_T_obs_f = binary.Get_Source_Freq(source_3,NANOGrav_11yr_hasasia.T_obs,in_frame="observer",out_frame="observer")
     source_3_idx = np.abs(source_3.f-source_3_t_T_obs_f).argmin()
-
-.. code:: python
-
-    source_4 = binary.BBHFrequencyDomain(1e2,1.0,1.0,0.0,0.0)
-    source_5 = binary.BBHFrequencyDomain(1e8,1.0,0.1,0.0,0.0)
-    
-    source_4.f_gw = LISA_prop1.f_opt
-    source_4_t_T_obs_f = source_4.Get_Source_Freq(aLIGO_1.T_obs,frame="observer")
-    idx4 = np.abs(source_4.f-source_4_t_T_obs_f).argmin()
-    
-    source_5.f_gw = NANOGrav_11yr_hasasia.f_opt
-    source_5_t_T_obs_f = source_5.Get_Source_Freq(LISA_prop1.T_obs,frame="observer")
-    idx5 = np.abs(source_5.f-source_5_t_T_obs_f).argmin()
 
 .. code:: python
 
@@ -295,8 +295,11 @@ to right: ``NANOGrav_11yr_hasasia``,\ ``LISA_prop1``,\ ``ET``).
               label=r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $z = %.0f$, $q = %.0f$, $\chi_{i} = %.2f$'
                   %(np.log10(source_3.M.value),source_3.z,source_3.q,source_3.chi1))
     plt.loglog(source_1.f[source_1_idx:],binary.Get_Char_Strain(source_1)[source_1_idx:],
-              label=r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $z = %.0f$, $q = %.0f$, $\chi_{i} = %.2f$'
-                  %(np.log10(source_1.M.value),source_1.z,source_1.q,source_1.chi1))
+              label=r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $z = %.0f$, $q = %.0f$, $i = \frac{\pi}{2}$,'\
+               %(np.log10(source_1.M.value),source_1.z,source_1.q) +\
+               r' $\textbf{S}_{1} = (%.1f,%.1f,%.1f)$, $\textbf{S}_{2} = (%.1f,%.1f,%.1f)$'\
+               %(source_1.lalsuite_kwargs['S1x'],source_1.lalsuite_kwargs['S1y'],source_1.lalsuite_kwargs['S1z'],
+                 source_1.lalsuite_kwargs['S2x'],source_1.lalsuite_kwargs['S2y'],source_1.lalsuite_kwargs['S2z']))
     plt.loglog(source_2.f[source_2_idx:],binary.Get_Char_Strain(source_2)[source_2_idx:],
               label=r'$M = 10^{%.0f}$ $\mathrm{M}_{\odot}$, $z = %.1f$, $q = %.0f$, $\chi_{i} = %.1f$'
                   %(np.log10(source_2.M.value),source_2.z,source_2.q,source_2.chi1))
@@ -321,12 +324,12 @@ to right: ``NANOGrav_11yr_hasasia``,\ ``LISA_prop1``,\ ``ET``).
     
     plt.xlabel('Frequency [Hz]')
     plt.ylabel('Characteristic Strain')
-    plt.legend()
+    plt.legend(fontsize=7)
     plt.show()
 
 
 
-.. image:: source_plot_tutorial_files/source_plot_tutorial_36_0.png
+.. image:: source_plot_tutorial_files/source_plot_tutorial_34_0.png
 
 
 Monochromatic Sources
@@ -369,7 +372,7 @@ strain.
 
 
 
-.. image:: source_plot_tutorial_files/source_plot_tutorial_39_0.png
+.. image:: source_plot_tutorial_files/source_plot_tutorial_37_0.png
 
 
 Calculating the SNR
@@ -388,14 +391,14 @@ done above too).
 
 .. code:: python
 
-    snr.Calc_Mono_SNR(source_4,NANOGrav_11yr_hasasia)
+    snr.Calc_Mono_SNR(source_4,NANOGrav_11yr_hasasia).to('')
 
 
 
 
 .. math::
 
-    4.2836379 \; \mathrm{Hz^{2/3}\,s^{2/3}}
+    2.7270486 \; \mathrm{}
 
 
 
@@ -404,14 +407,14 @@ monochromatic SNR.
 
 .. code:: python
 
-    snr.Calc_Mono_SNR(source_4,NANOGrav_11yr_hasasia,inc=np.pi/2)
+    snr.Calc_Mono_SNR(source_4,NANOGrav_11yr_hasasia,inc=np.pi/2).to('')
 
 
 
 
 .. math::
 
-    2.3946264 \; \mathrm{Hz^{2/3}\,s^{2/3}}
+    1.5244665 \; \mathrm{}
 
 
 
@@ -433,7 +436,7 @@ the given instrument.
 
 .. parsed-literal::
 
-    19.298875833998
+    19.29898065079436
 
 
 
@@ -451,7 +454,7 @@ Response in LISA data
 
 .. parsed-literal::
 
-    3971.299610986342
+    1038.9835482056897
 
 
 
@@ -465,7 +468,7 @@ to merger at the edge of LISA’s frequency band.
 
 .. code:: python
 
-    source_1.Check_Freq_Evol(T_evol=1*u.hr)
+    binary.Check_Freq_Evol(source_1,T_evol=1*u.hr)
     snr.Calc_Chirp_SNR(source_1,LISA_prop1)
 
 
@@ -473,7 +476,7 @@ to merger at the edge of LISA’s frequency band.
 
 .. parsed-literal::
 
-    3962.951887907288
+    1035.346096569876
 
 
 
@@ -512,6 +515,6 @@ free to help out!
 
 
 
-.. image:: source_plot_tutorial_files/source_plot_tutorial_53_0.png
+.. image:: source_plot_tutorial_files/source_plot_tutorial_51_0.png
 
 

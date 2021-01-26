@@ -6,12 +6,16 @@ gwent
 .. image:: https://img.shields.io/pypi/v/gwent.svg
         :target: https://pypi.python.org/pypi/gwent
 
-.. image:: https://img.shields.io/travis/ark0015/gwent.svg
-        :target: https://travis-ci.org/ark0015/gwent
+.. image:: https://github.com/ark0015/gwent/workflows/CI-Tests/badge.svg
+        :target: https://github.com/ark0015/gwent/actions
 
 .. image:: https://readthedocs.org/projects/gwent/badge/?version=latest
         :target: https://gwent.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
+
+
+.. image:: https://codecov.io/gh/ark0015/gwent/branch/gwent-dev/graph/badge.svg?token=897QOE4EBQ
+        :target: https://codecov.io/gh/ark0015/gwent
 
 
 Gravitational Wave dEtector desigN Toolkit.

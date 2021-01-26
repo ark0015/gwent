@@ -102,4 +102,4 @@ ENV/
 .mypy_cache/
 
 #JOSS Paper (for now)
-paper/
+# paper/
