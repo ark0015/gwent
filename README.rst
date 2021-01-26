@@ -14,7 +14,7 @@ gwent
         :alt: Documentation Status
 
 
-.. image:: https://codecov.io/gh/ark0015/gwent/branch/gwent-dev/graph/badge.svg?token=897QOE4EBQ
+.. image:: https://codecov.io/gh/ark0015/gwent/branch/master/graph/badge.svg?token=897QOE4EBQ
         :target: https://codecov.io/gh/ark0015/gwent
 
 
@@ -82,20 +82,21 @@ This work and methodology is available on arXiv_. If you use ``gwent``, please c
 
 .. code-block:: tex
 
-    @ARTICLE{2020arXiv201002135K,
-           author = {{Kaiser}, Andrew R. and {McWilliams}, Sean T.},
-            title = "{Sensitivity of present and future black-hole binary observations across the gravitational wave spectrum}",
-          journal = {arXiv e-prints},
-         keywords = {General Relativity and Quantum Cosmology, Astrophysics - High Energy Astrophysical Phenomena, Astrophysics - Instrumentation and Methods for Astrophysics},
-             year = 2020,
-            month = oct,
-              eid = {arXiv:2010.02135},
-            pages = {arXiv:2010.02135},
-    archivePrefix = {arXiv},
-           eprint = {2010.02135},
-     primaryClass = {gr-qc},
-           adsurl = {https://ui.adsabs.harvard.edu/abs/2020arXiv201002135K},
-          adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    @ARTICLE{Kaiser:2021,
+      doi = {10.1088/1361-6382/abd4f6},
+      url = {https://doi.org/10.1088/1361-6382/abd4f6},
+      year = 2021,
+      month = {jan},
+      publisher = {{IOP} Publishing},
+      volume = {38},
+      number = {5},
+      pages = {055009},
+      author = {A R Kaiser and S T McWilliams},
+      title = {Sensitivity of present and future detectors across the black-hole binary gravitational wave spectrum},
+      journal = {Classical and Quantum Gravity},
+      eprint = {2010.02135},
+      adsurl = {https://ui.adsabs.harvard.edu/abs/2020arXiv201002135K},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
     }
 
 Credits
