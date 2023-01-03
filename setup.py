@@ -52,6 +52,7 @@ setup(
     keywords="gwent",
     name="gwent",
     packages=find_packages(include=["gwent"]),
+    package_dir={"gwent": "gwent"},
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
