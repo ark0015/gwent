@@ -60,7 +60,6 @@ test: ## run tests quickly with the default Python
 	pytest --cov-report html --cov-report xml \
 		--cov-config .coveragerc --cov-fail-under=$(COV_COVERAGE_PERCENT) \
 		--cov=gwent tests
-	pytest 
 
 test-all: ## run tests on every Python version with tox
 	tox
