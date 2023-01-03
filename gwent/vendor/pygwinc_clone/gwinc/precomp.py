@@ -46,7 +46,7 @@ def precompIFO(f, ifoin, PRfixed=True):
 
     # calculate optics' parameters
     ifo.Materials.MirrorVolume = (
-        pi * ifo.Materials.MassRadius ** 2 * ifo.Materials.MassThickness
+        pi * ifo.Materials.MassRadius**2 * ifo.Materials.MassThickness
     )
     ifo.Materials.MirrorMass = (
         ifo.Materials.MirrorVolume * ifo.Materials.Substrate.MassDensity
@@ -88,7 +88,7 @@ def precompIFO(f, ifoin, PRfixed=True):
 
     # waist size
     w0 = ws * sqrt(gcav / abs(gden))
-    zr = pi * w0 ** 2 / ifo.Laser.Wavelength
+    zr = pi * w0**2 / ifo.Laser.Wavelength
     z1 = armlen * g2 * (1 - g1) / gden
     z2 = armlen * g1 * (1 - g2) / gden
 
@@ -165,7 +165,7 @@ def precompPower(ifo, PRfixed=True):
     pcrit = ifo.Optics.pcrit
 
     # Finesse, effective number of bounces in cavity, power recycling factor
-    finesse = 2 * pi / (t1 ** 2 + 2 * loss)  # arm cavity finesse
+    finesse = 2 * pi / (t1**2 + 2 * loss)  # arm cavity finesse
     neff = 2 * finesse / pi
 
     # Arm cavity reflectivity with finite loss
@@ -180,10 +180,10 @@ def precompPower(ifo, PRfixed=True):
         )  # optimal recycling mirror transmission
         t5 = sqrt(Tpr)
         r5 = sqrt(1 - Tpr)
-    prfactor = t5 ** 2 / (1 + r5 * rarm * sqrt(1 - bsloss)) ** 2
+    prfactor = t5**2 / (1 + r5 * rarm * sqrt(1 - bsloss)) ** 2
 
     pbs = pin * prfactor  # BS power from input power
-    parm = pbs * garm ** 2 / 2  # arm power from BS power
+    parm = pbs * garm**2 / 2  # arm power from BS power
 
     asub = 1.3 * 2 * ifo.Optics.ITM.Thickness * ifo.Optics.SubstrateAbsorption
     pbsl = 2 * pcrit / (asub + acoat * neff)  # bs power limited by thermal lensing
@@ -223,5 +223,5 @@ def dhdl(f, armlen):
     )
     # keep DC value equal to 1
     sinc_sqr /= sinc_sqr[0]
-    dhdl_sqr = sinc_sqr / armlen ** 2
+    dhdl_sqr = sinc_sqr / armlen**2
     return dhdl_sqr, sinc_sqr

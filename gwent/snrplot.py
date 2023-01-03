@@ -395,7 +395,7 @@ def Plot_SNR(
         dists_max = cosmo.luminosity_distance(ylabel_max).to("Gpc")
         dists_max = np.ceil(np.log10(dists_max.value))
         dists = np.arange(dists_min, dists_max)
-        dists = 10 ** dists * u.Gpc
+        dists = 10**dists * u.Gpc
 
         distticks = [z_at_value(cosmo.luminosity_distance, dist) for dist in dists]
         # Set other side y-axis for lookback time scalings
@@ -494,7 +494,7 @@ def Plot_SNR(
         cbar.set_label(r"SNR")
         cbar.ax.set_yticklabels(
             [
-                r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
+                r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10**x)
                 for x in print_logLevels
             ],
             **yticklabels_kwargs
@@ -553,7 +553,7 @@ def Get_Axes_Labels(
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
         ax_dict[var_axis + "label"] = r"$M_{\mathrm{tot}}~[M_{\odot}]$"
         ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
+            r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10**x)
             for x in np.log10(orig_labels)
         ]
     elif var == "q":
@@ -581,7 +581,7 @@ def Get_Axes_Labels(
         ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
         ax_dict[var_axis + "label"] = r"Arm Length [m]"
         ax_dict[var_axis + "ticklabels"] = [
-            r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10 ** x)
+            r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10**x)
             for x in np.log10(orig_labels)
         ]
     elif var == "A_acc":
@@ -687,7 +687,7 @@ def Get_Axes_Labels(
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Infrastructure Length [m]"
             ax_dict[var_axis + "ticklabels"] = [
-                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10**y)
                 for y in np.log10(orig_labels)
             ]
         elif var_scale == "lin":
@@ -704,7 +704,7 @@ def Get_Axes_Labels(
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Laser Power [W]"
             ax_dict[var_axis + "ticklabels"] = [
-                r"$10^{%.0f}$" % x if abs(int(x)) > 1 else r"$%.1f$" % (10 ** x)
+                r"$10^{%.0f}$" % x if abs(int(x)) > 1 else r"$%.1f$" % (10**x)
                 for x in np.log10(orig_labels)
             ]
         elif var_scale == "lin":
@@ -717,7 +717,7 @@ def Get_Axes_Labels(
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Seismic Gamma"
             ax_dict[var_axis + "ticklabels"] = [
-                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10**y)
                 for y in np.log10(orig_labels)
             ]
         elif var_scale == "lin":
@@ -740,7 +740,7 @@ def Get_Axes_Labels(
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = r"Mirror Substrate Temp [K]"
             ax_dict[var_axis + "ticklabels"] = [
-                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10**y)
                 for y in np.log10(orig_labels)
             ]
     else:
@@ -757,7 +757,7 @@ def Get_Axes_Labels(
             ax_dict[var_axis + "ticks"] = np.log10(orig_labels)
             ax_dict[var_axis + "label"] = str(var)
             ax_dict[var_axis + "ticklabels"] = [
-                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10 ** y)
+                r"$10^{%.0f}$" % y if abs(int(y)) > 1 else r"$%.1f$" % (10**y)
                 for y in np.log10(orig_labels)
             ]
     if line_val is not None:

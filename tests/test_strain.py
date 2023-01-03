@@ -155,7 +155,7 @@ def test_pta_NANOGrav_cw_ul_file():
     NANOGrav_cw_ul = detector.PTA(
         "NANOGrav CW Upper Limit", load_location=NANOGrav_cw_ul_file, I_type="h"
     )
-    NANOGrav_cw_ul.S_n_f = NANOGrav_cw_ul.h_n_f ** 2 / NANOGrav_cw_ul.fT
+    NANOGrav_cw_ul.S_n_f = NANOGrav_cw_ul.h_n_f**2 / NANOGrav_cw_ul.fT
 
 
 # NANOGrav 11yr Characteristic Strain
@@ -565,7 +565,10 @@ def test_BBH_Mono_Funcs():
         source_5, freq=source_5.f_gw, in_frame="source", out_frame="source"
     )
     binary.Check_Freq_Evol(
-        source_5, T_evol=4 * u.yr.to("s"), T_evol_frame="observer", f_gw_frame="source",
+        source_5,
+        T_evol=4 * u.yr.to("s"),
+        T_evol_frame="observer",
+        f_gw_frame="source",
     )
 
 

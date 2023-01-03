@@ -39,7 +39,7 @@ def gas(f, ifo):
     waist = L * Lambda / pi
     waist = waist * sqrt(((g1 * g2) * (1 - g1 * g2)) / ((g1 + g2 - 2 * g1 * g2) ** 2))
     waist = sqrt(waist)  # Gaussian beam waist size
-    zr = pi * waist ** 2 / Lambda  # Rayleigh range
+    zr = pi * waist**2 / Lambda  # Rayleigh range
     z1 = (
         -((g2 * (1 - g1)) / (g1 + g2 - 2 * g1 * g2)) * L
     )  # location of ITM relative to the waist
@@ -49,7 +49,7 @@ def gas(f, ifo):
 
     # The exponential of Eq. 1 of P940008 is expanded to first order; this
     # can be integrated analytically
-    zint = log(z2 + sqrt(z2 ** 2 + zr ** 2)) - log(z1 + sqrt(z1 ** 2 + zr ** 2))
+    zint = log(z2 + sqrt(z2**2 + zr**2)) - log(z1 + sqrt(z1**2 + zr**2))
     zint = zint * zr / waist
     zint = zint - 2 * pi * L * f / v0
     # optical path length for one arm
@@ -57,5 +57,5 @@ def gas(f, ifo):
     # eliminate any negative values due to first order approx.
     zint[zint < 0] = 0
     # account for both arms & turn into strain noise power
-    n = 2 * zint / L ** 2
+    n = 2 * zint / L**2
     return n

@@ -239,8 +239,12 @@ class Struct(object):
             else:
                 base = "s"
             txt.write(
-                u"{key}{delimiter}{value:{base}}{end}\n".format(
-                    key=k, value=v, base=base, delimiter=delimiter, end=end,
+                "{key}{delimiter}{value:{base}}{end}\n".format(
+                    key=k,
+                    value=v,
+                    base=base,
+                    delimiter=delimiter,
+                    end=end,
                 )
             )
         if path:

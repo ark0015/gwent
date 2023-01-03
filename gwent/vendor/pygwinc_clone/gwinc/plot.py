@@ -31,7 +31,11 @@ def plot_noise(freq, traces, ax=None, **kwargs):
         # assuming all data is PSD
         data = sqrt(data)
         if name == "Total":
-            style = dict(color="#000000", alpha=0.6, lw=4,)
+            style = dict(
+                color="#000000",
+                alpha=0.6,
+                lw=4,
+            )
             ylim = [min(data) / 10, max(data)]
         if "label" not in style:
             style["label"] = name
@@ -42,11 +46,16 @@ def plot_noise(freq, traces, ax=None, **kwargs):
         ax.loglog(freq, data, **style)
 
     ax.grid(
-        True, which="both", lw=0.5, ls="-", alpha=0.5,
+        True,
+        which="both",
+        lw=0.5,
+        ls="-",
+        alpha=0.5,
     )
 
     ax.legend(
-        ncol=2, fontsize="small",
+        ncol=2,
+        fontsize="small",
     )
 
     ax.autoscale(enable=True, axis="y", tight=True)

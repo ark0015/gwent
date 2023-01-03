@@ -32,10 +32,10 @@ def seismicAll(f, ifo):
         nt, nr = seisBSC(f)
 
     # horizontal noise total
-    nh = (abs(hTable) ** 2) * nt ** 2
+    nh = (abs(hTable) ** 2) * nt**2
 
     # vertical noise total
-    nv = (abs(theta * vTable) ** 2) * nt ** 2
+    nv = (abs(theta * vTable) ** 2) * nt**2
 
     # new total noise
     n = nv + nh
@@ -80,7 +80,7 @@ def seis6D(f):
     nt_self = 10 ** (interp1d(SEI_F, log10(SEI_T_self))(f))
     nt_gnd = 10 * seisNLNM(f)
     blend_t = np.abs(100 / (1 + 1j * f / 0.01) ** 4)
-    nt = np.sqrt(nt_self ** 2 + (blend_t * nt_gnd) ** 2)
+    nt = np.sqrt(nt_self**2 + (blend_t * nt_gnd) ** 2)
 
     SEI_R_self = np.array(
         [2e-11, 5e-12, 1e-12, 6e-13, 3e-13, 2e-13, 6e-14, 2e-14, 2e-14]
@@ -88,7 +88,7 @@ def seis6D(f):
     nr_self = 10 ** (interp1d(SEI_F, log10(SEI_R_self))(f))
     nr_gnd = np.abs(1e-7 / (1 + 1j * f / 0.001))
     blend_r = np.abs(100 / (1 + 1j * f / 0.01) ** 4)
-    nr = np.sqrt(nr_self ** 2 + (blend_r * nr_gnd) ** 2)
+    nr = np.sqrt(nr_self**2 + (blend_r * nr_gnd) ** 2)
 
     return nt, nr
 

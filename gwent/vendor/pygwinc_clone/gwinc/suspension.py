@@ -27,12 +27,12 @@ def generate_symbolic_tfs(stages=4):
     A = sp.zeros(stages)
     for n in range(stages - 1):
         # mass and restoring forces (diagonal elements)
-        A[n, n] = k[n] + k[n + 1] - m[n] * w ** 2
+        A[n, n] = k[n] + k[n + 1] - m[n] * w**2
         # couplings to stages above and below
         A[n, n + 1] = -k[n + 1]
         A[n + 1, n] = -k[n + 1]
     # mass and restoring force of bottom stage
-    A[-1, -1] = k[-1] - m[-1] * w ** 2
+    A[-1, -1] = k[-1] - m[-1] * w**2
 
     # want TM equations of motion, so index 4
     b = sp.zeros(stages, 1)
@@ -51,16 +51,16 @@ def tst_force_to_tst_displ(k, m, f):
     m0, m1, m2, m3 = m
     w = 2 * pi * f
     X3 = (
-        k2 ** 2 * (k0 + k1 - m0 * w ** 2)
-        + (k1 ** 2 - (k0 + k1 - m0 * w ** 2) * (k1 + k2 - m1 * w ** 2))
-        * (k2 + k3 - m2 * w ** 2)
+        k2**2 * (k0 + k1 - m0 * w**2)
+        + (k1**2 - (k0 + k1 - m0 * w**2) * (k1 + k2 - m1 * w**2))
+        * (k2 + k3 - m2 * w**2)
     ) / (
-        -(k3 ** 2) * (k1 ** 2 - (k0 + k1 - m0 * w ** 2) * (k1 + k2 - m1 * w ** 2))
-        + (k3 - m3 * w ** 2)
+        -(k3**2) * (k1**2 - (k0 + k1 - m0 * w**2) * (k1 + k2 - m1 * w**2))
+        + (k3 - m3 * w**2)
         * (
-            k2 ** 2 * (k0 + k1 - m0 * w ** 2)
-            - (-(k1 ** 2) + (k0 + k1 - m0 * w ** 2) * (k1 + k2 - m1 * w ** 2))
-            * (k2 + k3 - m2 * w ** 2)
+            k2**2 * (k0 + k1 - m0 * w**2)
+            - (-(k1**2) + (k0 + k1 - m0 * w**2) * (k1 + k2 - m1 * w**2))
+            * (k2 + k3 - m2 * w**2)
         )
     )
     return X3
@@ -76,12 +76,12 @@ def top_displ_to_tst_displ(k, m, f):
         * k2
         * k3
         / (
-            k3 ** 2 * (k1 ** 2 - (k0 + k1 - m0 * w ** 2) * (k1 + k2 - m1 * w ** 2))
-            - (k3 - m3 * w ** 2)
+            k3**2 * (k1**2 - (k0 + k1 - m0 * w**2) * (k1 + k2 - m1 * w**2))
+            - (k3 - m3 * w**2)
             * (
-                k2 ** 2 * (k0 + k1 - m0 * w ** 2)
-                + (k1 ** 2 - (k0 + k1 - m0 * w ** 2) * (k1 + k2 - m1 * w ** 2))
-                * (k2 + k3 - m2 * w ** 2)
+                k2**2 * (k0 + k1 - m0 * w**2)
+                + (k1**2 - (k0 + k1 - m0 * w**2) * (k1 + k2 - m1 * w**2))
+                * (k2 + k3 - m2 * w**2)
             )
         )
     )
@@ -250,8 +250,8 @@ def suspQuad(f, ifo, material="Silica"):
 
     # wire geometry
     tension = Mg / N_w  # Tension
-    xsect = pi * r_w ** 2  # cross-sectional area
-    xII = r_w ** 4 * pi / 4  # x-sectional moment of inertia
+    xsect = pi * r_w**2  # cross-sectional area
+    xII = r_w**4 * pi / 4  # x-sectional moment of inertia
     mu_h = 4 / r_w  # surface to volume ratio, horizontal
     mu_v = 2 / r_w  # surface to volume ratio, vertical (wire)
 
@@ -260,20 +260,20 @@ def suspQuad(f, ifo, material="Silica"):
     tau_h = 7.37e-2 * 4 * (rho_w * C_w * xsect) / (pi * K_w)
 
     # vertical TE time constant, blades
-    tau_v = (rho_b * C_b * t_b ** 2) / (K_b * pi ** 2)
+    tau_v = (rho_b * C_b * t_b**2) / (K_b * pi**2)
 
     # vertical delta, blades
-    delta_v = Y_b * alpha_b ** 2 * Temp / (rho_b * C_b)
+    delta_v = Y_b * alpha_b**2 * Temp / (rho_b * C_b)
 
     # deal with ribbon geometry for last stage
     if FiberType == "Ribbon":
         W = sus.Ribbon.Width
         t = sus.Ribbon.Thickness
         xsect[-1] = W * t  # cross-sectional area
-        xII[-1] = (W * t ** 3) / 12  # x-sectional moment of inertia
+        xII[-1] = (W * t**3) / 12  # x-sectional moment of inertia
         mu_v[-1] = 2 * (W + t) / (W * t)
         mu_h[-1] = mu_v[-1] * (3 * N_w[-1] * W + t) / (N_w[-1] * W + t)
-        tau_h[-1] = (rho_w[-1] * C_w[-1] * t ** 2) / (K_w[-1] * pi ** 2)
+        tau_h[-1] = (rho_w[-1] * C_w[-1] * t**2) / (K_w[-1] * pi**2)
 
     # horizontal delta, wires
     delta_h = (
@@ -285,8 +285,8 @@ def suspQuad(f, ifo, material="Silica"):
         r_end = sus.Fiber.EndRadius
 
         # recompute these for
-        xsectEnd = pi * r_end ** 2  # cross-sectional area (for delta_h)
-        xII[-1] = pi * r_end ** 4 / 4  # x-sectional moment of inertia
+        xsectEnd = pi * r_end**2  # cross-sectional area (for delta_h)
+        xII[-1] = pi * r_end**4 / 4  # x-sectional moment of inertia
         mu_h[-1] = 4 / r_end  # surface to volume ratio, horizontal
 
         # use this xsect for thermo-elastic noise
@@ -317,14 +317,14 @@ def suspQuad(f, ifo, material="Silica"):
     for n, stage in enumerate(sus.Stage):
         # horizontal loss factor, wires
         phih[n, :] = phi_w[n] * (1 + mu_h[n] * ds_w[n]) + delta_h[n] * tau_h[n] * w / (
-            1 + w ** 2 * tau_h[n] ** 2
+            1 + w**2 * tau_h[n] ** 2
         )
 
         # complex spring constant, horizontal
         kh[n, :] = kh0[n] * (1 + 1j * phih[n, :] / dil[n])
 
         # vertical loss factor, blades
-        phiv[n, :] = phi_b[n] + delta_v[n] * tau_v[n] * w / (1 + w ** 2 * tau_v[n] ** 2)
+        phiv[n, :] = phi_b[n] + delta_v[n] * tau_v[n] * w / (1 + w**2 * tau_v[n] ** 2)
 
         # complex spring constant, vertical
         kv[n, :] = kv0[n] * (1 + 1j * phiv[n, :])
@@ -396,14 +396,14 @@ def suspQuad(f, ifo, material="Silica"):
     #     = T k (cos(k L) + k delta sin(k L))
     #   for w -> 0, this reduces to N_w * T * k
     kh4num = (
-        N_w[-1] * ten4 * k4 * simp3a * (simp3a ** 2 + dk4 ** 2) * (coskl + dk4 * sinkl)
+        N_w[-1] * ten4 * k4 * simp3a * (simp3a**2 + dk4**2) * (coskl + dk4 * sinkl)
     )
 
     # denominator, horiz spring constant, last stage
     #   D after equation 8 in GG
     #   D = sin(k L) - 2 k delta cos(k L)
     #   for w -> 0, this reduces to k (L - 2 delta)
-    kh4den = (simp3a ** 2 - dk4 ** 2) * sinkl - 2 * dk4 * coskl
+    kh4den = (simp3a**2 - dk4**2) * sinkl - 2 * dk4 * coskl
 
     # horizontal spring constant, last stage
     #   K_xx in eq 9 of GG
