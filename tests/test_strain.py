@@ -155,7 +155,7 @@ def test_pta_NANOGrav_cw_ul_file():
     NANOGrav_cw_ul = detector.PTA(
         "NANOGrav CW Upper Limit", load_location=NANOGrav_cw_ul_file, I_type="h"
     )
-    NANOGrav_cw_ul.S_n_f = NANOGrav_cw_ul.h_n_f ** 2 / NANOGrav_cw_ul.fT
+    NANOGrav_cw_ul.S_n_f = NANOGrav_cw_ul.h_n_f**2 / NANOGrav_cw_ul.fT
 
 
 # NANOGrav 11yr Characteristic Strain

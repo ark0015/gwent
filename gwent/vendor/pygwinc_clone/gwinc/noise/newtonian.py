@@ -60,7 +60,7 @@ def gravg(f, ifo):
     fgg = sqrt(ggcst * rho) / (2 * pi)
 
     # fixed numerical factors, 5/9/06, PF
-    n = (beta * 4 * pi / L * (fgg ** 2 / f ** 2) * ground) ** 2
+    n = (beta * 4 * pi / L * (fgg**2 / f**2) * ground) ** 2
 
     # The following two terms are corrections due to Jan Harms
     # https://git.ligo.org/rana-adhikari/CryogenicLIGO/issues/45
@@ -70,7 +70,7 @@ def gravg(f, ifo):
     n = n * exp(-4 * pi * f * h / c_rayleigh)
 
     # Feedforward cancellation
-    n /= omicron ** 2
+    n /= omicron**2
 
     return n * ifo.gwinc.sinc_sqr
 
@@ -107,15 +107,15 @@ def gravg_rayleigh(f, ifo):
     k = w / c_rayleigh
     kP = w / ifo.Seismic.pWaveSpeed
     kS = w / ifo.Seismic.sWaveSpeed
-    qzP = sqrt(k ** 2 - kP ** 2)
-    qzS = sqrt(k ** 2 - kS ** 2)
+    qzP = sqrt(k**2 - kP**2)
+    qzS = sqrt(k**2 - kS**2)
     zeta = sqrt(qzP / qzS)
 
     gnu = k * (1 - zeta) / (qzP - k * zeta)
 
-    n = 2 * (2 * pi * ggcst * rho * exp(-h * k) * gnu) ** 2 * ground ** 2 / w ** 4
+    n = 2 * (2 * pi * ggcst * rho * exp(-h * k) * gnu) ** 2 * ground**2 / w**4
 
-    n /= omicron ** 2
+    n /= omicron**2
 
     return n * ifo.gwinc.dhdl_sqr
 
@@ -228,7 +228,7 @@ def atmois(f, ifo):
     try:
         a_if = ifo.Atmospheric.InfrasoundLevel1Hz
         e_if = ifo.Atmospheric.InfrasoundExponent
-        psd_if = (a_if * f ** e_if) ** 2
+        psd_if = (a_if * f**e_if) ** 2
     except AttributeError:
         psd_if = atmoBowman(f) ** 2
 
@@ -238,7 +238,7 @@ def atmois(f, ifo):
     # And with the Bessel terms ignored... for 4 km this amounts to a 10%
     # correction at 10 Hz and a 30% correction at 1 Hz
     coupling_if = (
-        4.0 / 3 * (4 * pi / (k * w ** 2) * ggcst * rho_air / (ai_air * p_air)) ** 2
+        4.0 / 3 * (4 * pi / (k * w**2) * ggcst * rho_air / (ai_air * p_air)) ** 2
     )
 
     n_if = coupling_if * psd_if

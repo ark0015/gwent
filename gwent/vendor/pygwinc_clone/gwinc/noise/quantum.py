@@ -368,7 +368,7 @@ def shotradSignalRecycled(f, ifo):
     lambda_SR = 1 - (1 - mismatch) * (1 - bsloss)  # SR cavity loss [Power]
 
     tau = sqrt(ifo.Optics.SRM.Transmittance)  # SRM Transmittance [amplitude]
-    rho = sqrt(1 - tau ** 2)  # SRM Reflectivity [amplitude]
+    rho = sqrt(1 - tau**2)  # SRM Reflectivity [amplitude]
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     ds = ifo.Optics.SRM.Tunephase  # SRC Detunning
@@ -410,14 +410,14 @@ def shotradSignalRecycled(f, ifo):
     tArm = sqrt(1 - lambda_arm)
     tSR = sqrt(1 - lambda_SR)
     tSig = sqrt((1 - lambda_arm / 2) * (1 - lambda_SR / 2))
-    RT_SRM = rho ** 2 + tau ** 2
+    RT_SRM = rho**2 + tau**2
 
     lossArm = sqrt(lambda_arm)
     lossSR = sqrt(lambda_SR)
 
     Omega = 2 * pi * f  # Signal angular frequency [rad/s]
     h_SQL = sqrt(8 * hbar / (m * (Omega * L) ** 2))  # SQL Strain
-    K = 16 * P * omega_0 / (m * c ** 2 * Omega ** 2)
+    K = 16 * P * omega_0 / (m * c**2 * Omega**2)
 
     # arm cavity
     exp_2jOmegaL_c = exp(2j * Omega * L / c)
@@ -434,7 +434,7 @@ def shotradSignalRecycled(f, ifo):
     x0 = exp_2jOmegaL_c * rITM * tArm
     x1 = -x0 + 1
     x2 = 1 / x1
-    RES = np.array([[x2, np.zeros(nf)], [-K * x0 / x1 ** 2, x2]])
+    RES = np.array([[x2, np.zeros(nf)], [-K * x0 / x1**2, x2]])
     # end of generated code
 
     rho_ARM = getProdTF(RES, (R + T) * ARM - rITM * ID)
@@ -456,18 +456,18 @@ def shotradSignalRecycled(f, ifo):
     x0 = cos(phi)
     x1 = exp_2jOmegaL_c * tArm * (R + T)
     x2 = -rITM + x1
-    x3 = exp_1jOmegal_c ** 2 * r11 * tSR * x2
+    x3 = exp_1jOmegal_c**2 * r11 * tSR * x2
     x4 = sin(phi)
     x5 = exp_1jOmegal_c * r00 * tSR * x2
     x6 = exp_1jOmegal_c * tSR * (-K * r11 * x1 + r10 * x2)
     x7 = exp_1jOmegal_c * (x0 * x6 - x4 * x5)
-    x8 = rho * (x0 ** 2 * x3 + x4 * x7) + 1
+    x8 = rho * (x0**2 * x3 + x4 * x7) + 1
     x9 = x0 * x3 * x4
     x10 = exp_1jOmegal_c * (x0 * x5 + x4 * x6)
     x11 = x10 * x4 + x9
     x12 = x0 * x7 - x9
-    x13 = rho * (x0 * x10 - x3 * x4 ** 2) + 1
-    x14 = 1 / (-(rho ** 2) * x11 * x12 + x13 * x8)
+    x13 = rho * (x0 * x10 - x3 * x4**2) + 1
+    x14 = 1 / (-(rho**2) * x11 * x12 + x13 * x8)
     x15 = rho * x14
     RES = np.array([[x14 * x8, -x11 * x15], [-x12 * x15, x13 * x14]])
     # end of generated code
@@ -561,7 +561,7 @@ def shotradSignalRecycledBnC(f, ifo):
     lambda_SR = mismatch + bsloss  # SR cavity loss [Power]
 
     tau = sqrt(ifo.Optics.SRM.Transmittance)  # SRM Transmittance [amplitude]
-    rho = sqrt(1 - tau ** 2 - lambda_SR)  # SRM Reflectivity [amplitude]
+    rho = sqrt(1 - tau**2 - lambda_SR)  # SRM Reflectivity [amplitude]
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     ds = ifo.Optics.SRM.Tunephase  # SRC Detunning
@@ -575,13 +575,13 @@ def shotradSignalRecycledBnC(f, ifo):
     )  # [BnC, after 5.2] Loss coefficent for arm cavity
 
     I_0 = ifo.gwinc.pbs  # [BnC, Table 1] Power at BS (Power*prfactor) [W]
-    I_SQL = (m * L ** 2 * gamma_ac ** 4) / (
+    I_SQL = (m * L**2 * gamma_ac**4) / (
         4 * omega_0
     )  # [BnC, 2.14] Power to reach free mass SQL
     Kappa = (
         2
-        * ((I_0 / I_SQL) * gamma_ac ** 4)
-        / (Omega ** 2 * (gamma_ac ** 2 + Omega ** 2))
+        * ((I_0 / I_SQL) * gamma_ac**4)
+        / (Omega**2 * (gamma_ac**2 + Omega**2))
     )  # [BnC 2.13] Effective Radiation Pressure Coupling
     beta = arctan(Omega / gamma_ac)  # [BnC, after 2.11] Phase shift of GW SB in arm
     h_SQL = sqrt(8 * hbar / (m * (Omega * L) ** 2))  # [BnC, 2.12] SQL Strain
@@ -594,47 +594,47 @@ def shotradSignalRecycledBnC(f, ifo):
     exp_1jbeta = exp(1j * beta)
     cos_beta = exp_1jbeta.real
     invexp_1jbeta = 1 / exp_1jbeta
-    exp_2jbeta = exp_1jbeta ** 2
+    exp_2jbeta = exp_1jbeta**2
     cos_2beta = exp_2jbeta.real
     invexp_2jbeta = 1 / exp_2jbeta
-    exp_4jbeta = exp_2jbeta ** 2
+    exp_4jbeta = exp_2jbeta**2
     C11_L = (
-        (1 + rho ** 2) * (cos(2 * phi) + Kappa / 2 * sin(2 * phi))
+        (1 + rho**2) * (cos(2 * phi) + Kappa / 2 * sin(2 * phi))
         - 2 * rho * cos_2beta
         - 1
         / 4
         * epsilon
         * (
             -2 * (1 + exp_2jbeta) ** 2 * rho
-            + 4 * (1 + rho ** 2) * cos_beta ** 2 * cos(2 * phi)
-            + (3 + exp_2jbeta) * Kappa * (1 + rho ** 2) * sin(2 * phi)
+            + 4 * (1 + rho**2) * cos_beta**2 * cos(2 * phi)
+            + (3 + exp_2jbeta) * Kappa * (1 + rho**2) * sin(2 * phi)
         )
         + lambda_SR
         * (
             exp_2jbeta * rho
-            - 1 / 2 * (1 + rho ** 2) * (cos(2 * phi) + Kappa / 2 * sin(2 * phi))
+            - 1 / 2 * (1 + rho**2) * (cos(2 * phi) + Kappa / 2 * sin(2 * phi))
         )
     )
 
     C22_L = C11_L
 
-    C12_L = tau ** 2 * (
+    C12_L = tau**2 * (
         -(sin(2 * phi) + Kappa * sin(phi) ** 2)
         + 1
         / 2
         * epsilon
         * sin(phi)
-        * ((3 + exp_2jbeta) * Kappa * sin(phi) + 4 * cos_beta ** 2 * cos(phi))
+        * ((3 + exp_2jbeta) * Kappa * sin(phi) + 4 * cos_beta**2 * cos(phi))
         + 1 / 2 * lambda_SR * (sin(2 * phi) + Kappa * sin(phi) ** 2)
     )
 
-    C21_L = tau ** 2 * (
+    C21_L = tau**2 * (
         (sin(2 * phi) - Kappa * cos(phi) ** 2)
         + 1
         / 2
         * epsilon
         * cos(phi)
-        * ((3 + exp_2jbeta) * Kappa * cos(phi) - 4 * cos_beta ** 2 * sin(phi))
+        * ((3 + exp_2jbeta) * Kappa * cos(phi) - 4 * cos_beta**2 * sin(phi))
         + 1 / 2 * lambda_SR * (-sin(2 * phi) + Kappa * cos(phi) ** 2)
     )
 
@@ -677,7 +677,7 @@ def shotradSignalRecycledBnC(f, ifo):
 
     Q11 = 1 / (
         invexp_2jbeta
-        + rho ** 2 * exp_2jbeta
+        + rho**2 * exp_2jbeta
         - rho * (2 * cos(2 * phi) + Kappa * sin(2 * phi))
         + 1
         / 2
@@ -739,7 +739,7 @@ def shotradSignalRecycledBnC(f, ifo):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # overall coefficient
-    coeff = h_SQL ** 2 / (2 * Kappa * tau ** 2)
+    coeff = h_SQL**2 / (2 * Kappa * tau**2)
 
     # make normalization matrix
     Mq = make2x2TF(Q11, Q12, Q21, Q22)

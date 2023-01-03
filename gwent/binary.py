@@ -497,12 +497,12 @@ def Get_Char_Strain(source, in_frame="observer", out_frame="observer"):
                 * (source.h_f * (1 + source.z) ** 2) ** 2
             )
         elif out_frame == "source":
-            h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
+            h_char = np.sqrt(4 * source.f**2 * source.h_f**2)
         else:
             raise ValueError("The reference frame can only be observer or source.")
     elif in_frame == "observer":
         if out_frame == "observer":
-            h_char = np.sqrt(4 * source.f ** 2 * source.h_f ** 2)
+            h_char = np.sqrt(4 * source.f**2 * source.h_f**2)
         elif out_frame == "source":
             h_char = np.sqrt(
                 4
@@ -745,7 +745,7 @@ def Get_Mono_Strain(
         DL = DL.to("m")
 
         # Converts M = [M] to M = [sec]
-        m_conv = const.G / const.c ** 3
+        m_conv = const.G / const.c**3
 
         eta = source.q / (1 + source.q) ** 2
         M_time = source.M.to("kg") * m_conv
@@ -756,7 +756,7 @@ def Get_Mono_Strain(
                 raise ValueError("Inclination must be between -pi and pi.")
             a = (1 + np.cos(inc) ** 2) / 2
             b = np.cos(inc)
-            const_val = 4.0 * np.sqrt(a ** 2 + b ** 2)
+            const_val = 4.0 * np.sqrt(a**2 + b**2)
         else:
             const_val = 8 / np.sqrt(5)
 
@@ -797,7 +797,7 @@ def Get_F_Dot(source, freq=None, in_frame="observer", out_frame="observer"):
     out_frame: str, {'observer','source'}
         Determines whether the returned frequency is in the source or observer frame.
     """
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c**3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
     # Always assume the mass is in the source frame
@@ -851,7 +851,7 @@ def Get_Time_From_Merger(source, freq=None, in_frame="observer", out_frame="sour
     out_frame: str, {'source','observer'}
         Determines whether the returned frequency is in the source or observer frame.
     """
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c**3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
     # Always assume the mass is in the source frame
@@ -907,7 +907,7 @@ def Get_Source_Freq(source, tau, in_frame="observer", out_frame="source"):
     else:
         raise ValueError("The reference frame can only be observer or source.")
 
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c**3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
     M_time = source.M.to("kg") * m_conv
@@ -958,7 +958,7 @@ def Check_Freq_Evol(
     To get the change in frequency, we use eqn 41 from Hazboun,Romano, and Smith (2019) <https://arxiv.org/abs/1907.04341>
     which uses binomial expansion of f_T_evol_inst - f_init_inst and thus will never be imaginary
     """
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c**3  # Converts M = [M] to M = [sec]
     eta = source.q / (1 + source.q) ** 2
 
     M_time = source.M.to("kg") * m_conv

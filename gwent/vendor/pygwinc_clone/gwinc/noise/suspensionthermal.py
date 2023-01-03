@@ -42,7 +42,7 @@ def susptherm(f, ifo):
         # convert to beam line motion
         #  theta is squared because we rotate by theta into the suspension
         #  basis, and by theta to rotate back to the beam line basis
-        dxdF = hForce + theta ** 2 * vForce
+        dxdF = hForce + theta**2 * vForce
 
         # thermal noise (m^2/Hz) for one suspension
         w = 2 * pi * f
@@ -68,7 +68,7 @@ def susptherm(f, ifo):
             # convert to beam line motion.  theta is squared because
             # we rotate by theta into the suspension basis, and by
             # theta to rotate back to the beam line basis
-            dxdF[n, :] = hForce[n, :] + theta ** 2 * vForce[n, :]
+            dxdF[n, :] = hForce[n, :] + theta**2 * vForce[n, :]
 
             # thermal noise (m^2/Hz) for one suspension
             w = 2 * pi * f

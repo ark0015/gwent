@@ -31,7 +31,7 @@ def computeFCParams(ifo, fcParams):
     s1eps = sqrt(1 - eps)
 
     # cavity bandwidth [Hz]
-    gammaFC = fSQL / sqrt(s1eps + s1eps ** 3)
+    gammaFC = fSQL / sqrt(s1eps + s1eps**3)
     # cavity detuning [Hz]
     detuneFC = s1eps * gammaFC
 

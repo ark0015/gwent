@@ -25,10 +25,10 @@ def carrierdensity_adiabatic(f, ifo):
     gPhase = ifo.gwinc.finesse * 2 / pi
 
     psdElec = (
-        4 * H * gammaElec ** 2 * cdDens * diffElec / (pi * r0 ** 4 * Omega ** 2)
+        4 * H * gammaElec**2 * cdDens * diffElec / (pi * r0**4 * Omega**2)
     )  # units are meters
     psdHole = (
-        4 * H * gammaHole ** 2 * cdDens * diffHole / (pi * r0 ** 4 * Omega ** 2)
+        4 * H * gammaHole**2 * cdDens * diffHole / (pi * r0**4 * Omega**2)
     )  # units are meters
     psdMeters = 2 * (psdElec + psdHole)  # electrons and holes for two ITMs
     n = psdMeters / (gPhase * L) ** 2
@@ -60,7 +60,7 @@ def carrierdensity_exact(f, ifo):
     omega = 2 * pi * f
 
     def integrand(k, om, D):
-        return D * k ** 3 * exp(-(k ** 2) * w ** 2 / 4) / (D ** 2 * k ** 4 + om ** 2)
+        return D * k**3 * exp(-(k**2) * w**2 / 4) / (D**2 * k**4 + om**2)
 
     integralElec = np.array(
         [
@@ -78,7 +78,7 @@ def carrierdensity_exact(f, ifo):
     # From P1400084 Heinert et al. Eq. 15
     # psdCD = @(gamma,m,int) 2*(3/pi^7)^(1/3)*kBT*H*gamma^2*m/hbar^2*cdDens^(1/3)*int; %units are meters
     def psdCD(gamma, m, int_):
-        return 2 / pi * H * gamma ** 2 * cdDens * int_  # units are meters
+        return 2 / pi * H * gamma**2 * cdDens * int_  # units are meters
 
     psdElec = psdCD(gammaElec, mElec, integralElec)
     psdHole = psdCD(gammaHole, mHole, integralHole)
@@ -112,11 +112,11 @@ def thermorefractiveITM_adiabatic(f, ifo):
     psd = (
         4
         * H
-        * beta ** 2
+        * beta**2
         * kappa
         * kBT
         * Temp
-        / (pi * r0 ** 4 * Omega ** 2 * (rho * C) ** 2)
+        / (pi * r0**4 * Omega**2 * (rho * C) ** 2)
     )  # units are meters
     psdMeters = 2 * psd  # two ITMs
     n = psdMeters / (gPhase * L) ** 2
@@ -147,7 +147,7 @@ def thermorefractiveITM_exact(f, ifo):
     omega = 2 * pi * f
 
     def integrand(k, om, D):
-        return D * k ** 3 * exp(-(k ** 2) * w ** 2 / 4) / (D ** 2 * k ** 4 + om ** 2)
+        return D * k**3 * exp(-(k**2) * w**2 / 4) / (D**2 * k**4 + om**2)
 
     inte = np.array(
         [
@@ -160,7 +160,7 @@ def thermorefractiveITM_exact(f, ifo):
 
     # From P1400084 Heinert et al. Eq. 15
     # psdCD = @(gamma,m,int) 2*(3/pi^7)^(1/3)*kBT*H*gamma^2*m/hbar^2*cdDens^(1/3)*int; %units are meters
-    psdTR = lambda int_: 2 / pi * H * beta ** 2 * kBT * Temp / (rho * C) * int_
+    psdTR = lambda int_: 2 / pi * H * beta**2 * kBT * Temp / (rho * C) * int_
     # units are meters
 
     psd = psdTR(inte)
@@ -189,7 +189,7 @@ def subbrownian(f, ifo):
     kBT = const.kB * ifo.Materials.Substrate.Temp
 
     # Bulk substrate contribution
-    phibulk = c2 * f ** n
+    phibulk = c2 * f**n
 
     cITM, aITM = subbrownianFiniteCorr(ifo, "ITM")
     cETM, aETM = subbrownianFiniteCorr(ifo, "ETM")
@@ -199,8 +199,8 @@ def subbrownian(f, ifo):
     # csurfETM = alphas/(Y*pi*wETM^2);
     # csurfITM = alphas/(Y*pi*wITM^2);
 
-    csurfETM = alphas * (1 - 2 * sigma) / ((1 - sigma) * Y * pi * wETM ** 2)
-    csurfITM = alphas * (1 - 2 * sigma) / ((1 - sigma) * Y * pi * wITM ** 2)
+    csurfETM = alphas * (1 - 2 * sigma) / ((1 - sigma) * Y * pi * wETM**2)
+    csurfITM = alphas * (1 - 2 * sigma) / ((1 - sigma) * Y * pi * wITM**2)
     csurf = 8 * kBT * (csurfITM + csurfETM) / (2 * pi * f)
 
     # account for 2 ITM and 2 ETM, and convert to strain whith 1/L^2
@@ -241,23 +241,23 @@ def subbrownianFiniteCorr(ifo, opticName):
     Um = Um / ((1 - Qm) ** 2 - 4 * (km * h) ** 2 * Qm)  # LT 53 (BHV eq. btwn 29 & 30)
 
     x = exp(-((zeta * r0 / a) ** 2) / 4)
-    s = sum(x / (zeta ** 2 * j0m))  # LT 57
+    s = sum(x / (zeta**2 * j0m))  # LT 57
 
     x2 = x * x
-    U0 = sum(Um * x2 / (zeta * j0m ** 2))
+    U0 = sum(Um * x2 / (zeta * j0m**2))
     U0 = U0 * (1 - sigma) * (1 + sigma) / (pi * a * Y)  # LT 56 (BHV eq. 3)
 
-    p0 = 1 / (pi * a ** 2)  # LT 28
-    DeltaU = (pi * h ** 2 * p0) ** 2
-    DeltaU = DeltaU + 12 * pi * h ** 2 * p0 * sigma * s
-    DeltaU = DeltaU + 72 * (1 - sigma) * s ** 2
-    DeltaU = DeltaU * a ** 2 / (6 * pi * h ** 3 * Y)  # LT 54
+    p0 = 1 / (pi * a**2)  # LT 28
+    DeltaU = (pi * h**2 * p0) ** 2
+    DeltaU = DeltaU + 12 * pi * h**2 * p0 * sigma * s
+    DeltaU = DeltaU + 72 * (1 - sigma) * s**2
+    DeltaU = DeltaU * a**2 / (6 * pi * h**3 * Y)  # LT 54
 
     aftm = DeltaU + U0  # LT 58 (eq. following BHV 31)
 
     # amplitude coef for infinite TM
     #   factored out: (8 * kB * T * Phi) / (2 * pi * f)
-    aitm = (1 - sigma ** 2) / (2 * sqrt(2 * pi) * Y * r0)  # LT 59
+    aitm = (1 - sigma**2) / (2 * sqrt(2 * pi) * Y * r0)  # LT 59
 
     # finite mirror correction
     cftm = aftm / aitm
@@ -281,7 +281,7 @@ def subtherm(f, ifo):
     Temp = ifo.Materials.Substrate.Temp  # temperature
 
     S0 = (
-        8 * (1 + sigma) ** 2 * kappa * alpha ** 2 * Temp * kBT
+        8 * (1 + sigma) ** 2 * kappa * alpha**2 * Temp * kBT
     )  # note kBT has factor Temp
     S0 = S0 / (sqrt(2 * pi) * (CM * rho) ** 2)
     SITM = S0 / (wITM / sqrt(2)) ** 3  # LT 18 less factor 1/omega^2
@@ -320,15 +320,15 @@ def subthermFiniteCorr(ifo, opticName):
 
     pm = exp(-((km * r0) ** 2) / 4) / (pi * (a * j0m) ** 2)  # LT 37
 
-    c0 = 6 * (a / h) ** 2 * sum(j0m * pm / zeta ** 2)  # LT 32
+    c0 = 6 * (a / h) ** 2 * sum(j0m * pm / zeta**2)  # LT 32
     c1 = -2 * c0 / h  # LT 32
-    p0 = 1 / (pi * a ** 2)  # LT 28
+    p0 = 1 / (pi * a**2)  # LT 28
     c1 = c1 + p0 / (2 * h)  # LT 40
 
     coeff = (1 - Qm) * ((1 - Qm) * (1 + Qm) + 8 * h * km * Qm)
     coeff = coeff + 4 * (h * km) ** 2 * Qm * (1 + Qm)
     coeff = coeff * km * (pm * j0m) ** 2 * (1 - Qm)
     coeff = coeff / ((1 - Qm) ** 2 - 4 * (h * km) ** 2 * Qm) ** 2
-    coeff = sum(coeff) + h * c1 ** 2 / (1 + sigma) ** 2
-    coeff = coeff * (sqrt(2 * pi) * r0) ** 3 * a ** 2  # LT 46
+    coeff = sum(coeff) + h * c1**2 / (1 + sigma) ** 2
+    coeff = coeff * (sqrt(2 * pi) * r0) ** 3 * a**2  # LT 46
     return coeff

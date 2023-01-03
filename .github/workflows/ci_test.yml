@@ -5,42 +5,24 @@ on:
 #    branches:
 #    - master
   pull_request:
-
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel pytest pytest-cov
-        pip install numpy
-        pip install scipy
-        pip install matplotlib
-        pip install six
-        pip install pyOpenSSL
-        pip install pyparsing
-        pip install cycler
-        pip install kiwisolver
-        pip install cryptography
-        pip install cffi
-        pip install pycparser
-        pip install zipp
-        pip install lscsoft-glue
-        pip install ligo-segments
-    - name: Install lalsuite
-      run: |
-        pip install lalsuite
-    - name: Install other requirements
-      run: |
         pip install -r requirements.txt
         pip install -r requirements_dev.txt
     - name: Display Python, pip, and setuptools version
@@ -49,10 +31,10 @@ jobs:
         python -c "import pip; print(f'pip {pip.__version__}')"
         python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
         pip freeze
+    - name: Run Lint
+      run: make lint
     - name: Run Tests
-      run: |
-        pytest --cov-config=.coveragerc --cov=gwent tests/
-        make lint
+      run: make test
     - name: Codecov
       uses: codecov/codecov-action@v1
       with:

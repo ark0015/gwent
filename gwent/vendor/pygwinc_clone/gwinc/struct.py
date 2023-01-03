@@ -239,7 +239,7 @@ class Struct(object):
             else:
                 base = "s"
             txt.write(
-                u"{key}{delimiter}{value:{base}}{end}\n".format(
+                "{key}{delimiter}{value:{base}}{end}\n".format(
                     key=k,
                     value=v,
                     base=base,

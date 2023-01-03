@@ -67,7 +67,7 @@ def Get_Waveform(
         waveform_dict = {}
 
         M_time = (
-            source.M.to("kg") * const.G / const.c ** 3
+            source.M.to("kg") * const.G / const.c**3
         )  # Converts M = [M] to M = [sec]
 
         # Used for finding the starting frequency based on our SNR calculation assumption of
@@ -284,14 +284,14 @@ def Strain_Conv(
     DL = cosmo.luminosity_distance(source.z)
     DL = DL.to("m")
 
-    m_conv = const.G / const.c ** 3  # Converts M = [M] to M = [sec]
+    m_conv = const.G / const.c**3  # Converts M = [M] to M = [sec]
     M_time = source.M.to("kg") * m_conv
     # M_redshifted_time = source.M.to("kg") * (1 + source.z) * m_conv
 
     # frequency and strain of source in source frame
     freq_conv = 1 / M_time
     # Normalized factor to match Stationary phase approx at low frequencies
-    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_time ** 2
+    strain_conv = np.sqrt(5 / 24 / np.pi) * (const.c / DL) * M_time**2
     if inverse:
         if in_frame == "source":
             # converted to source frame natural units
@@ -586,7 +586,7 @@ def A_MR(freqs, f_RD, f_damp, Gammas):
     fg_d = Gammas[2] * f_damp
     return (
         (Gammas[0] * fg_d)
-        / (varf ** 2 + fg_d ** 2)
+        / (varf**2 + fg_d**2)
         * np.exp(-(Gammas[1] / fg_d) * varf)
     )
 
@@ -609,18 +609,18 @@ def DA_MR(freqs, f_RD, f_damp, Gammas):
     varf = freqs - f_RD
     fg_d = Gammas[2] * f_damp
     A_MR_0 = A_MR(freqs, f_RD, f_damp, Gammas)
-    return -A_MR_0 * (2 * varf / (varf ** 2 + fg_d ** 2) + Gammas[1] / fg_d)
+    return -A_MR_0 * (2 * varf / (varf**2 + fg_d**2) + Gammas[1] / fg_d)
 
 
 def A_intermediate(f1, f2, f3, v1, v2, v3, d1, d3):
     """Solves system of equations for intermediate amplitude matching"""
     Mat = np.array(
         [
-            [1.0, f1, f1 ** 2, f1 ** 3, f1 ** 4],
-            [1.0, f2, f2 ** 2, f2 ** 3, f2 ** 4],
-            [1.0, f3, f3 ** 2, f3 ** 3, f3 ** 4],
-            [0.0, 1.0, 2 * f1, 3 * f1 ** 2, 4 * f1 ** 3],
-            [0.0, 1.0, 2 * f3, 3 * f3 ** 2, 4 * f3 ** 3],
+            [1.0, f1, f1**2, f1**3, f1**4],
+            [1.0, f2, f2**2, f2**3, f2**4],
+            [1.0, f3, f3**2, f3**3, f3**4],
+            [0.0, 1.0, 2 * f1, 3 * f1**2, 4 * f1**3],
+            [0.0, 1.0, 2 * f3, 3 * f3**2, 4 * f3**3],
         ],
         dtype="float",
     )
@@ -642,9 +642,9 @@ def A_int(freqs, delt):
     return (
         delt[0]
         + delt[1] * freqs
-        + delt[2] * freqs ** 2
-        + delt[3] * freqs ** 3
-        + delt[4] * freqs ** 4
+        + delt[2] * freqs**2
+        + delt[3] * freqs**3
+        + delt[4] * freqs**4
     )
 
 
@@ -826,29 +826,29 @@ def PN_coeffs(eta, x1, x2, i):
         A_i = (
             -27312085 / 8128512
             - (1975055 / 338688) * eta
-            + (105271 / 24192) * eta ** 2
-            + (-81 / 32 + 8 * eta) * chi_a ** 2
+            + (105271 / 24192) * eta**2
+            + (-81 / 32 + 8 * eta) * chi_a**2
             - 81 / 16 * delta * chi_a * chi_s
-            + (-81 / 32 + 17 / 8 * eta) * chi_s ** 2
+            + (-81 / 32 + 17 / 8 * eta) * chi_s**2
         )
     elif i == 5:
         A_i = (
             -85 * np.pi / 64
             + 85 * np.pi / 16 * eta
             + (285197 / 16128 - 1579 / 4032 * eta) * delta * chi_a
-            + (285197 / 16128 - 15317 / 672 * eta - 2227 / 1008 * eta ** 2) * chi_s
+            + (285197 / 16128 - 15317 / 672 * eta - 2227 / 1008 * eta**2) * chi_s
         )
     elif i == 6:
         A_i = (
             -177520268561 / 8583708672
-            + (545384828789 / 5007163392 - 205 * np.pi ** 2 / 48) * eta
-            - 3248849057 / 178827264 * eta ** 2
-            + 34473079 / 6386688 * eta ** 3
-            + (1614569 / 64512 - 1873643 / 16128 * eta + 2167 / 42 * eta ** 2)
-            * chi_a ** 2
+            + (545384828789 / 5007163392 - 205 * np.pi**2 / 48) * eta
+            - 3248849057 / 178827264 * eta**2
+            + 34473079 / 6386688 * eta**3
+            + (1614569 / 64512 - 1873643 / 16128 * eta + 2167 / 42 * eta**2)
+            * chi_a**2
             + (31 * np.pi / 12 - 7 * np.pi / 3 * eta) * chi_s
-            + (1614569 / 64512 - 61391 / 1344 * eta + 57451 / 4032 * eta ** 2)
-            * chi_s ** 2
+            + (1614569 / 64512 - 61391 / 1344 * eta + 57451 / 4032 * eta**2)
+            * chi_s**2
             + delta
             * chi_a
             * (31 * np.pi / 12 + (1614569 / 32256 - 165961 / 2688 * eta) * chi_s)
@@ -930,7 +930,7 @@ def a_final(x1, x2, q, eta):
     :math:`a=J/M^{2}` where ``J = x1*m1**2 + x2*m2**2``
 
     """
-    a = (q ** 2 * x1 + x2) / (q ** 2 + 1)
+    a = (q**2 * x1 + x2) / (q**2 + 1)
     s4 = -0.1229
     s5 = 0.4537
     t0 = -2.8904
@@ -938,12 +938,12 @@ def a_final(x1, x2, q, eta):
     t3 = 2.5763
     return (
         a
-        + s4 * a ** 2 * eta
-        + s5 * a * eta ** 2
+        + s4 * a**2 * eta
+        + s5 * a * eta**2
         + t0 * a * eta
         + 2 * np.sqrt(3) * eta
-        + t2 * eta ** 2
-        + t3 * eta ** 3
+        + t2 * eta**2
+        + t3 * eta**3
     )
 
 

@@ -135,7 +135,7 @@ def getCoatBrownian(f, ifo, wBeam, dOpt):
     # layer contrubutions (b_j in PhysRevD.91.042002)
     brLayer = (
         (1 - nN * dcdp_z / 2) ** 2 * (Ysub / yN)
-        + (1 - pratsub - 2 * pratsub ** 2) ** 2
+        + (1 - pratsub - 2 * pratsub**2) ** 2
         * yN
         / ((1 + pratN) ** 2 * (1 - 2 * pratN) * Ysub)
     ) / (1 - pratN)
@@ -149,14 +149,14 @@ def getCoatBrownian(f, ifo, wBeam, dOpt):
     if (not is_low_slope) and (not is_high_slope):
         # this is the old code for frequency independent loss
         SbrZ = (
-            (4 * kBT / (pi * wBeam ** 2 * w))
+            (4 * kBT / (pi * wBeam**2 * w))
             * sum(dGeo * brLayer * phiN)
-            * (1 - pratsub - 2 * pratsub ** 2)
+            * (1 - pratsub - 2 * pratsub**2)
             / Ysub
         )
     else:
         SbrZ = (
-            (4 * kBT / (pi * wBeam ** 2 * w)) * (1 - pratsub - 2 * pratsub ** 2) / Ysub
+            (4 * kBT / (pi * wBeam**2 * w)) * (1 - pratsub - 2 * pratsub**2) / Ysub
         )
 
         SbrZ = SbrZ * (
@@ -230,9 +230,9 @@ def getCoatThermoOptic(f, ifo, wBeam, dOpt):
     # compute thermal source spectrum
     SsurfT, junk = getCoatThermal(f, ifo, wBeam)
 
-    StoZ = SsurfT * gTO * dTO ** 2
-    SteZ = SsurfT * gTE * dTE ** 2
-    StrZ = SsurfT * gTR * dTR ** 2
+    StoZ = SsurfT * gTO * dTO**2
+    SteZ = SsurfT * gTE * dTE**2
+    StrZ = SsurfT * gTR * dTR**2
     return (StoZ, SteZ, StrZ, T)
 
 
@@ -334,12 +334,12 @@ def getCoatThickCorr(f, ifo, dOpt, dTE, dTR):
     # various parts of gTC
     g0 = 2 * (sh - s) + 2 * R * (ch - c)
     g1 = 8 * sin(xi / 2) * (R * cosh(xi / 2) + sinh(xi / 2))
-    g2 = (1 + R ** 2) * sh + (1 - R ** 2) * s + 2 * R * ch
-    gD = (1 + R ** 2) * ch + (1 - R ** 2) * c + 2 * R * sh
+    g2 = (1 + R**2) * sh + (1 - R**2) * s + 2 * R * ch
+    gD = (1 + R**2) * ch + (1 - R**2) * c + 2 * R * sh
 
     # and finally, the correction factor
-    gTC = (pE ** 2 * g0 + pE * pR * xi * g1 + pR ** 2 * xi ** 2 * g2) / (
-        R * xi ** 2 * gD
+    gTC = (pE**2 * g0 + pE * pR * xi * g1 + pR**2 * xi**2 * g2) / (
+        R * xi**2 * gD
     )
     return gTC
 
@@ -360,7 +360,7 @@ def getCoatThermal(f, ifo, wBeam):
     # use substrate temperature
     subTemp = ifo.Materials.Substrate.Temp
 
-    kBT2 = const.kB * subTemp ** 2
+    kBT2 = const.kB * subTemp**2
 
     pS = ifo.Materials.Substrate
     C_S = pS.MassCM * pS.MassDensity
@@ -373,7 +373,7 @@ def getCoatThermal(f, ifo, wBeam):
     rdel = sqrt(2 * K_S / (C_S * w))
 
     # noise equation
-    SsurfT = 4 * kBT2 / (pi * w * C_S * rdel * wBeam ** 2)
+    SsurfT = 4 * kBT2 / (pi * w * C_S * rdel * wBeam**2)
     return SsurfT, rdel
 
 
@@ -632,7 +632,7 @@ def getCoatFiniteCorr(ifo, wBeam, dOpt):
     # between eq 77 and 78
     km = zeta / R
     Qm = exp(-2 * km * H)
-    pm = exp(-(km ** 2) * r0 ** 2 / 4) / j0m
+    pm = exp(-(km**2) * r0**2 / 4) / j0m
     # left out factor of pi * R^2 in denominator
 
     # eq 88
@@ -642,19 +642,19 @@ def getCoatFiniteCorr(ifo, wBeam, dOpt):
         + (Yr * (1 - 2 * sigS) + Zf - 2 * Cr)
         * (1 + sigS)
         * (1 - Qm) ** 2
-        / ((1 - Qm) ** 2 - 4 * km ** 2 * H ** 2 * Qm)
+        / ((1 - Qm) ** 2 - 4 * km**2 * H**2 * Qm)
     )
 
     # eq 90 and 91
-    S1 = (12 * R ** 2 / H ** 2) * sum(pm / zeta ** 2)
-    S2 = sum(pm ** 2 * Lm ** 2)
+    S1 = (12 * R**2 / H**2) * sum(pm / zeta**2)
+    S2 = sum(pm**2 * Lm**2)
     P = (Xr - 2 * sigS * Yr - Cr + S1 * (Cr - Yr * (1 - sigS))) ** 2 + S2
 
     # eq 60 and 70
     LAMBDA = -Cr + (Xr / (1 + sigS) + Yr * (1 - 2 * sigS)) / 2
 
     # eq 92
-    Cfsm = sqrt((r0 ** 2 * P) / (2 * R ** 2 * (1 + sigS) ** 2 * LAMBDA ** 2))
+    Cfsm = sqrt((r0**2 * P) / (2 * R**2 * (1 + sigS) ** 2 * LAMBDA**2))
     return Cfsm
 
 
@@ -673,9 +673,9 @@ def getCoatDopt(ifo, T, dL, dCap=0.5):
     dOpt = optical thickness vector Nlayer x 1
 
     """
+
     ##############################################
     def getTrans(ifo, Ndblt, dL, dH, dCap, dTweak):
-
         # the optical thickness vector
         dOpt = zeros(2 * Ndblt)
         dOpt[0] = dCap
@@ -687,13 +687,12 @@ def getCoatDopt(ifo, T, dL, dCap=0.5):
         for n in range(N):
             dOpt[-1] = dTweak[n]
             r = getCoatRefl(ifo, dOpt)[0]
-            T[n] = 1 - abs(r ** 2)
+            T[n] = 1 - abs(r**2)
 
         return T
 
     ##############################################
     def getTweak(ifo, T, Ndblt, dL, dH, dCap, dScan, Nfit):
-
         # tweak bottom layer
         Tn = getTrans(ifo, Ndblt, dL, dH, dCap, dScan)
         pf = polyfit(dScan, Tn - T, Nfit)

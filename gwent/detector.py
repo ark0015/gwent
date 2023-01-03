@@ -311,11 +311,11 @@ class PTA:
             if hasattr(self, "_I_data"):
                 if self._I_Type == "ASD":
                     S_n_f_sqrt = self._I_data[:, 1]
-                    self._S_n_f = S_n_f_sqrt ** 2 / u.Hz
+                    self._S_n_f = S_n_f_sqrt**2 / u.Hz
                 elif self._I_Type == "ENSD":
                     self._S_n_f = self._I_data[:, 1] / u.Hz
                 elif self._I_Type == "h":
-                    self._S_n_f = self.h_n_f ** 2 / self.fT
+                    self._S_n_f = self.h_n_f**2 / self.fT
             else:
                 if not hasattr(self, "_sensitivitycurve"):
                     self.Init_PTA()
@@ -441,7 +441,7 @@ class PTA:
 
                     if var_name == "rn_amp":
                         add_var = np.logspace(min(samp_var), max(samp_var), self.nbins)
-                        samp_var = 10 ** samp_var
+                        samp_var = 10**samp_var
                         return np.append(samp_var, add_var)
                     else:
                         return np.append(
@@ -776,7 +776,7 @@ class Interferometer:
 
     @property
     def P_n_f(self):
-        """Strain power sensitivity. """
+        """Strain power sensitivity."""
         raise NotImplementedError(
             "Power Spectral Density method must be defined inside SpaceBased or GroundBased classes."
         )
@@ -788,11 +788,11 @@ class Interferometer:
             if hasattr(self, "_I_data"):
                 if self._I_Type == "ASD":
                     S_n_f_sqrt = self._I_data[:, 1]
-                    self._S_n_f = S_n_f_sqrt ** 2 / u.Hz
+                    self._S_n_f = S_n_f_sqrt**2 / u.Hz
                 elif self._I_Type == "ENSD":
                     self._S_n_f = self._I_data[:, 1] / u.Hz
                 elif self._I_Type == "h":
-                    self._S_n_f = self.h_n_f ** 2 / self.fT
+                    self._S_n_f = self.h_n_f**2 / self.fT
             else:
                 raise NotImplementedError(
                     "Effective Noise Power Spectral Density method must be defined inside SpaceBased or GroundBased classes."
@@ -857,7 +857,7 @@ class GroundBased(Interferometer):
 
     @property
     def P_n_f(self):
-        """Power Spectral Density. """
+        """Power Spectral Density."""
         err_mssg = "Currently we only calculate the Effective Noise Power Spectral Density for Ground Based detectors.\n"
         err_mssg += "i.e. We do not separate the transfer function from the Power Spectral Density"
         raise NotImplementedError(err_mssg)
@@ -869,11 +869,11 @@ class GroundBased(Interferometer):
             if hasattr(self, "_I_data"):
                 if self._I_Type == "ASD":
                     S_n_f_sqrt = self._I_data[:, 1]
-                    self._S_n_f = S_n_f_sqrt ** 2 / u.Hz
+                    self._S_n_f = S_n_f_sqrt**2 / u.Hz
                 elif self._I_Type == "ENSD":
                     self._S_n_f = self._I_data[:, 1] / u.Hz
                 elif self._I_Type == "h":
-                    self._S_n_f = self.h_n_f ** 2 / self.fT
+                    self._S_n_f = self.h_n_f**2 / self.fT
             else:
                 if not any(
                     hasattr(self, attr)
@@ -1164,19 +1164,19 @@ class SpaceBased(Interferometer):
                 self.Set_T_Function_Type()
 
             P_acc = (
-                self.A_acc ** 2
+                self.A_acc**2
                 * (1 + (self.f_acc_break_low / self.fT) ** 2)
                 * (1 + (self.fT / (self.f_acc_break_high)) ** 4)
                 / (2 * np.pi * self.fT) ** 4
             )  # Acceleration Noise
-            P_IMS = self.A_IFO ** 2 * (
+            P_IMS = self.A_IFO**2 * (
                 1 + (self.f_IFO_break / self.fT) ** 4
             )  # Displacement noise of the interferometric TM--to-TM
 
             f_trans = const.c / 2 / np.pi / self.L  # Transfer frequency
             self._P_n_f = (
                 (P_IMS + 2 * (1 + np.cos(self.fT.value / f_trans.value) ** 2) * P_acc)
-                / self.L ** 2
+                / self.L**2
                 / u.Hz
             )
         return self._P_n_f
@@ -1192,18 +1192,18 @@ class SpaceBased(Interferometer):
             if hasattr(self, "_I_data"):
                 if self._I_Type == "ASD":
                     S_n_f_sqrt = self._I_data[:, 1]
-                    self._S_n_f = S_n_f_sqrt ** 2 / u.Hz
+                    self._S_n_f = S_n_f_sqrt**2 / u.Hz
                 elif self._I_Type == "ENSD":
                     self._S_n_f = self._I_data[:, 1] / u.Hz
                 elif self._I_Type == "h":
-                    self._S_n_f = self.h_n_f ** 2 / self.fT
+                    self._S_n_f = self.h_n_f**2 / self.fT
             else:
                 if self.Background:
                     self._S_n_f = (
                         self.P_n_f + self.Add_Background()
-                    ) / self.transferfunction ** 2
+                    ) / self.transferfunction**2
                 else:
-                    self._S_n_f = self.P_n_f / self.transferfunction ** 2
+                    self._S_n_f = self.P_n_f / self.transferfunction**2
 
         return self._S_n_f
 
@@ -1332,8 +1332,8 @@ class SpaceBased(Interferometer):
             bgam = 3 / 10
             afk = 0.0016
             bfk = -2 / 9
-            f_k = afk * self.T_obs ** bfk
-            gamma = agam * self.T_obs ** bgam
+            f_k = afk * self.T_obs**bfk
+            gamma = agam * self.T_obs**bgam
 
             f = self.fT.value
             S_c_f = (

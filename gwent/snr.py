@@ -90,7 +90,6 @@ def Get_SNR_Matrix(
     SNRMatrix = np.zeros((sampleSize_y, sampleSize_x))
 
     for i in range(sampleSize_x):
-
         if recalculate_noise in ["x", "both"]:
             # Update Attribute (also updates dictionary)
             if isinstance(instrument, detector.GroundBased):
@@ -481,7 +480,7 @@ def Calc_Chirp_SNR(source, instrument, integral_consts=None):
 
     # CALCULATE SNR FOR BOTH NOISE CURVES
     denom = S_n_f_interp  # Sky Averaged Noise Spectral Density
-    numer = h_cut ** 2
+    numer = h_cut**2
     integrand = numer / denom
     if isinstance(integrand, u.Quantity) and isinstance(f_cut, u.Quantity):
         SNRsqrd = integral_consts * np.trapz(

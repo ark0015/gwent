@@ -54,9 +54,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"gwent"
-copyright = u"2019, Andrew Kaiser"
-author = u"Andrew Kaiser"
+project = "gwent"
+copyright = "2019, Andrew Kaiser"
+author = "Andrew Kaiser"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -132,7 +132,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "gwent.tex", u"gwent Documentation", u"Andrew Kaiser", "manual"),
+    (master_doc, "gwent.tex", "gwent Documentation", "Andrew Kaiser", "manual"),
 ]
 
 
@@ -140,7 +140,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "gwent", u"gwent Documentation", [author], 1)]
+man_pages = [(master_doc, "gwent", "gwent Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------
@@ -152,7 +152,7 @@ texinfo_documents = [
     (
         master_doc,
         "gwent",
-        u"gwent Documentation",
+        "gwent Documentation",
         author,
         "gwent",
         "One line description of project.",
