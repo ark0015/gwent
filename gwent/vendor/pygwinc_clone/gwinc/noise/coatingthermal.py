@@ -673,9 +673,9 @@ def getCoatDopt(ifo, T, dL, dCap=0.5):
     dOpt = optical thickness vector Nlayer x 1
 
     """
+
     ##############################################
     def getTrans(ifo, Ndblt, dL, dH, dCap, dTweak):
-
         # the optical thickness vector
         dOpt = zeros(2 * Ndblt)
         dOpt[0] = dCap
@@ -693,7 +693,6 @@ def getCoatDopt(ifo, T, dL, dCap=0.5):
 
     ##############################################
     def getTweak(ifo, T, Ndblt, dL, dH, dCap, dScan, Nfit):
-
         # tweak bottom layer
         Tn = getTrans(ifo, Ndblt, dL, dH, dCap, dScan)
         pf = polyfit(dScan, Tn - T, Nfit)

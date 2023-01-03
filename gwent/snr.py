@@ -90,7 +90,6 @@ def Get_SNR_Matrix(
     SNRMatrix = np.zeros((sampleSize_y, sampleSize_x))
 
     for i in range(sampleSize_x):
-
         if recalculate_noise in ["x", "both"]:
             # Update Attribute (also updates dictionary)
             if isinstance(instrument, detector.GroundBased):

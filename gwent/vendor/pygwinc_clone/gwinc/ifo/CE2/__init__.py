@@ -54,7 +54,6 @@ class Substrate(nb.Budget):
 
 
 class CE2(nb.Budget):
-
     name = "Cosmic Explorer 2"
 
     noises = [
