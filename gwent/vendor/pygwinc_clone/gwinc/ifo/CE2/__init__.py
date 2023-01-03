@@ -6,10 +6,7 @@ class Newtonian(nb.Budget):
 
     name = "Newtonian"
 
-    style = dict(
-        label="Newtonian",
-        color="#15b01a",
-    )
+    style = dict(label="Newtonian", color="#15b01a",)
 
     noises = [
         NewtonianRayleigh,
@@ -23,10 +20,7 @@ class Coating(nb.Budget):
 
     name = "Coating"
 
-    style = dict(
-        label="Coating Thermal",
-        color="#fe0002",
-    )
+    style = dict(label="Coating Thermal", color="#fe0002",)
 
     noises = [
         CoatingBrownian,
@@ -39,11 +33,7 @@ class Substrate(nb.Budget):
 
     name = "Substrate"
 
-    style = dict(
-        label="Substrate Thermal",
-        color="#fb7d07",
-        linestyle="--",
-    )
+    style = dict(label="Substrate Thermal", color="#fb7d07", linestyle="--",)
 
     noises = [
         ITMThermoRefractive,

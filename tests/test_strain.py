@@ -565,10 +565,7 @@ def test_BBH_Mono_Funcs():
         source_5, freq=source_5.f_gw, in_frame="source", out_frame="source"
     )
     binary.Check_Freq_Evol(
-        source_5,
-        T_evol=4 * u.yr.to("s"),
-        T_evol_frame="observer",
-        f_gw_frame="source",
+        source_5, T_evol=4 * u.yr.to("s"), T_evol_frame="observer", f_gw_frame="source",
     )
 
 

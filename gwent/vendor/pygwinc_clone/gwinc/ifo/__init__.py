@@ -5,9 +5,7 @@ from ..struct import load_struct, STRUCT_EXT
 from ..util import load_module
 
 
-PLOT_STYLE = dict(
-    ylabel=u"Strain [1/\u221AHz]",
-)
+PLOT_STYLE = dict(ylabel=u"Strain [1/\u221AHz]",)
 
 
 def available_ifos():
@@ -55,8 +53,7 @@ def load_ifo(name_or_path):
         if name_or_path not in available_ifos():
             raise RuntimeError(
                 "Unknonw IFO '{}' (available IFOs: {}).".format(
-                    name_or_path,
-                    available_ifos(),
+                    name_or_path, available_ifos(),
                 )
             )
         bname = name_or_path

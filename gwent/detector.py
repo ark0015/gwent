@@ -375,9 +375,7 @@ class PTA:
                 return np.append(
                     samp_var,
                     np.logspace(
-                        min(np.log10(samp_var)),
-                        max(np.log10(samp_var)),
-                        self.nbins,
+                        min(np.log10(samp_var)), max(np.log10(samp_var)), self.nbins,
                     ),
                 )
             else:
@@ -561,9 +559,7 @@ class PTA:
                                 n_added_p = self.n_p - len(prev_var)
                                 var_draw = self.Get_Sample_Draws(var, n_added_p)
                                 setattr(
-                                    self,
-                                    var,
-                                    np.append(prev_var, var_draw),
+                                    self, var, np.append(prev_var, var_draw),
                                 )
                             else:
                                 pass

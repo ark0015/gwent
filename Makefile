@@ -56,7 +56,7 @@ lint: ## check style with black and flake8
 
 test: ## run tests quickly with the default Python
 	#python setup.py test
-	cd tests && pytest 
+	pytest 
 
 test-all: ## run tests on every Python version with tox
 	tox

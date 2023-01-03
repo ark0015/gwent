@@ -12,9 +12,10 @@ import pytest
 import os
 import sys
 
+"""
 current_path = os.getcwd()
 sys.path.insert(0, current_path)
-"""
+
 splt_path = current_path.split("/")
 gwent_path_idx = splt_path.index("Research")
 gwent_path = "/".join(splt_path[0 : gwent_path_idx + 1])

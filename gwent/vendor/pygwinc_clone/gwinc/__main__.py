@@ -234,10 +234,7 @@ def main():
         fom = eval("inspiral_range.{}".format(range_func))(freq, noises["Total"], H=H)
         logging.info("{}({}) = {:.2f} Mpc".format(range_func, fargs, fom))
         fom_title = "{func} {m1}/{m2} Msol: {fom:.2f} Mpc".format(
-            func=range_func,
-            m1=H.params["m1"],
-            m2=H.params["m2"],
-            fom=fom,
+            func=range_func, m1=H.params["m1"], m2=H.params["m2"], fom=fom,
         )
         plot_style["title"] += "\n{}".format(fom_title)
 
@@ -283,9 +280,7 @@ You may interact with plot using "plt." methods, e.g.:
         plot_noise(freq, traces, ax=ax, **plot_style)
         fig.tight_layout()
         if args.save:
-            fig.savefig(
-                args.save,
-            )
+            fig.savefig(args.save,)
         else:
             plt.show()
 
