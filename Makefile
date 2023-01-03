@@ -54,8 +54,12 @@ lint: ## check style with black and flake8
 	black --check .
 	flake8 --exclude=vendor --ignore=E203,E402,E501,F401,W503
 
+COV_COVERAGE_PERCENT ?= 85
 test: ## run tests quickly with the default Python
 	#python setup.py test
+	pytest --cov-report html --cov-report xml \
+		--cov-config .coveragerc --cov-fail-under=$(COV_COVERAGE_PERCENT) \
+		--cov=gwent tests
 	pytest 
 
 test-all: ## run tests on every Python version with tox
