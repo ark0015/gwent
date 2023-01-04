@@ -400,7 +400,10 @@ def Plot_SNR(
         dists = np.arange(dists_min, dists_max)
         dists = 10**dists * u.Gpc
 
-        distticks = [z_at_value(cosmo.luminosity_distance, dist) for dist in dists]
+        distticks = [
+            z_at_value(cosmo.luminosity_distance, dist, method="Bounded")
+            for dist in dists
+        ]
         # Set other side y-axis for lookback time scalings
         ax2.set_yticks(np.log10(distticks))
         ax2.set_yticklabels(
