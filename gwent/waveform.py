@@ -1,12 +1,13 @@
-import numpy as np
+import os
+
 import astropy.constants as const
 import astropy.units as u
+import lalsimulation
+import numpy as np
 from astropy.cosmology import WMAP9 as cosmo
 
-import os
-import lalsimulation
-
 import gwent
+
 from . import binary
 
 current_path = os.path.abspath(gwent.__path__[0])

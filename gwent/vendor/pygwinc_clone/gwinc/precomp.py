@@ -1,13 +1,14 @@
 from __future__ import division
-from numpy import pi, sqrt, sin, exp
-from scipy.io import loadmat
-import logging
-import copy
 
-from . import const
-from . import suspension
-from .struct import Struct
+import copy
+import logging
+
+from numpy import exp, pi, sin, sqrt
+from scipy.io import loadmat
+
+from . import const, suspension
 from .noise.coatingthermal import getCoatDopt
+from .struct import Struct
 
 
 def precompIFO(f, ifoin, PRfixed=True):

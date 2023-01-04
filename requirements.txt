@@ -7,3 +7,4 @@ matplotlib > 3.0
 h5py >= 2.10.0
 pyyaml >= 5.1.1
 lalsuite >= 6.79
+gwinc >= 0.4.1

@@ -5,18 +5,15 @@
 
 # Here we present a tutorial on how to use `gwent` to calculate SNRs for the instrument models currently implemented (LISA, PTAs, aLIGO, and Einstein Telescope) with the signal being an array of coalescing Binary Black Holes.
 
+import os
+import sys
+
 import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 
-import os
-import sys
-
 import gwent
-from gwent import binary
-from gwent import detector
-from gwent import snr
-from gwent import snrplot
+from gwent import binary, detector, snr, snrplot
 
 # We need to get the file directories to load in the instrument files.
 load_directory = gwent.__path__[0] + "/LoadFiles/InstrumentFiles/"

@@ -1,5 +1,4 @@
-from .. import nb
-from .. import noise
+from .. import nb, noise
 
 
 class QuantumVacuum(nb.Noise):

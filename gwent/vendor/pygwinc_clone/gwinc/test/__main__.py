@@ -1,14 +1,14 @@
-import os
-import sys
-import signal
-import pickle
-import subprocess
-import hashlib
-import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-
+import hashlib
 import logging
+import os
+import pickle
+import signal
+import subprocess
+import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 logging.basicConfig(format="%(message)s", level=os.getenv("LOG_LEVEL", logging.INFO))
 

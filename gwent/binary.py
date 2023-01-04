@@ -1,12 +1,12 @@
-import numpy as np
 import os
+
 import astropy.constants as const
 import astropy.units as u
+import numpy as np
 import scipy.interpolate as interp
 from astropy.cosmology import WMAP9 as cosmo
 
-from . import waveform
-from . import utils
+from . import utils, waveform
 
 
 class BinaryBlackHole:

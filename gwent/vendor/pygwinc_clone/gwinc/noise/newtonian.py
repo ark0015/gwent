@@ -2,10 +2,10 @@ from __future__ import division
 
 import numpy as np
 import scipy.integrate as scint
+from numpy import exp, pi, sqrt
 
-from numpy import pi, sqrt, exp
-from .seismic import seisNLNM
 from .. import const
+from .seismic import seisNLNM
 
 
 def gravg(f, ifo):

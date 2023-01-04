@@ -1,25 +1,9 @@
 from __future__ import division, print_function
-import scipy.special
+
 import numpy as np
-from numpy import (
-    pi,
-    sum,
-    zeros,
-    exp,
-    real,
-    imag,
-    sqrt,
-    sin,
-    cos,
-    sinh,
-    cosh,
-    polyfit,
-    roots,
-    max,
-    min,
-    ceil,
-    log,
-)
+import scipy.special
+from numpy import (ceil, cos, cosh, exp, imag, log, max, min, pi, polyfit,
+                   real, roots, sin, sinh, sqrt, sum, zeros)
 
 from .. import const
 from ..const import BESSEL_ZEROS as zeta

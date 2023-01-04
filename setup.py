@@ -3,7 +3,7 @@
 
 """The setup script."""
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -20,6 +20,7 @@ requirements = [
     "h5py",
     "pyyaml",
     "lalsuite",
+    "gwinc"
 ]
 
 setup_requirements = [
@@ -57,6 +58,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/ark0015/gwent",
-    version="0.4.0",
+    version="version='0.5.0'",
     zip_safe=False,
 )

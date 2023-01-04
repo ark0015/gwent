@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import pytest
 import astropy.units as u
 import numpy as np
+import pytest
 
 import gwent
-from gwent import detector
-from gwent import utils
+from gwent import detector, utils
 
 unit_1 = 1.0 * u.Hz
 

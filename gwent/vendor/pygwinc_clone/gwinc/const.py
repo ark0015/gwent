@@ -4,7 +4,6 @@
 import scipy.constants
 import scipy.special
 
-
 c = scipy.constants.c
 G = scipy.constants.G
 g = scipy.constants.g

@@ -1,5 +1,6 @@
 from __future__ import division
-from numpy import sqrt, log, pi
+
+from numpy import log, pi, sqrt
 
 from .. import const
 

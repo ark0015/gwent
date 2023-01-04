@@ -1,6 +1,7 @@
 from __future__ import division
-from numpy import pi, imag, zeros
+
 import numpy as np
+from numpy import imag, pi, zeros
 
 from .. import const
 

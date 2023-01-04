@@ -1,12 +1,11 @@
-import os
 import copy
-import tempfile
 import logging
+import os
+import tempfile
 
 import scipy.io
 
-from . import const
-from . import suspension
+from . import const, suspension
 from .struct import Struct
 
 ##################################################

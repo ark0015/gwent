@@ -1,5 +1,6 @@
-from numpy import sqrt
 from collections import OrderedDict
+
+from numpy import sqrt
 
 
 def plot_noise(freq, traces, ax=None, **kwargs):

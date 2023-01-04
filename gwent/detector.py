@@ -1,18 +1,20 @@
-import numpy as np
+import copy
 import os
 import sys
+
 import astropy.constants as const
 import astropy.units as u
+import hasasia.sensitivity as hassens
+import hasasia.sim as hassim
+import numpy as np
 import scipy.stats as stats
 
 import gwent
+
 from . import utils
 
-import hasasia.sensitivity as hassens
-import hasasia.sim as hassim
-
 current_path = os.path.abspath(gwent.__path__[0])
-sys.path.insert(0, current_path + "/vendor/pygwinc_clone")
+#sys.path.insert(0, current_path + "/vendor/pygwinc_clone")
 import gwinc
 
 load_directory = os.path.join(current_path, "LoadFiles/")
@@ -858,9 +860,8 @@ class GroundBased(Interferometer):
     @property
     def P_n_f(self):
         """Power Spectral Density."""
-        err_mssg = "Currently we only calculate the Effective Noise Power Spectral Density for Ground Based detectors.\n"
-        err_mssg += "i.e. We do not separate the transfer function from the Power Spectral Density"
-        raise NotImplementedError(err_mssg)
+        # Not sure about units
+        return self._trace.psd
 
     @property
     def S_n_f(self):
@@ -877,12 +878,10 @@ class GroundBased(Interferometer):
             else:
                 if not any(
                     hasattr(self, attr)
-                    for attr in ["_noise_budget", "_ifo", "_base_inst"]
+                    for attr in ["_noise_budget", "_base_inst"]
                 ):
                     self.Init_GroundBased()
-                self._S_n_f = (
-                    self._noise_budget(self.fT.value, ifo=self._ifo).calc() / u.Hz
-                )
+                self._S_n_f = self._trace.asd / u.Hz
         return self._S_n_f
 
     @S_n_f.deleter
@@ -891,23 +890,23 @@ class GroundBased(Interferometer):
 
     def Init_GroundBased(self):
         """Initialized the Ground Based detector in gwinc"""
+
         base_inst = [
-            name for name in self.name.split() if name in gwinc.available_ifos()
+            name for name in self.name.split() if name in gwinc.ifo.IFOS
         ]
         if len(base_inst) == 1:
             self._base_inst = base_inst[0]
         else:
             print(
-                "You must select a base instrument model from ",
-                [model for model in gwinc.available_ifos()],
-            )
+                f"You must select a base instrument model from {gwinc.ifo.IFOS}")
             print(
                 "Setting base instrument to aLIGO. To change base instrument, include different model in class name and reinitialize."
             )
             self._base_inst = "aLIGO"
 
-        self._noise_budget, self._init_ifo, _, _ = gwinc.load_ifo(self._base_inst)
-        self._ifo = gwinc.precompIFO(self.fT.value, self._init_ifo)
+        self._noise_budget = gwinc.load_budget(self._base_inst)
+        self._ifo = copy.deepcopy(self._noise_budget.ifo)
+        self._trace = self._noise_budget.run(freq=self.fT.value, ifo=self._ifo)
 
     def Set_Noise_Dict(self, noise_dict):
         """Sets new values in the nested dictionary of variable noise values
@@ -925,7 +924,7 @@ class GroundBased(Interferometer):
         ``obj.Set_Noise_Dict({'Infrastructure':{'Length':[3000,1000,5000],'Temp':500},'Laser':{'Wavelength':1e-5,'Power':130}})``
 
         """
-        if not hasattr(self, "_ifo"):
+        if not hasattr(self, "_noise_budget"):
             self.Init_GroundBased()
         if isinstance(noise_dict, dict):
             for base_noise, inner_noise_dict in noise_dict.items():
@@ -950,9 +949,7 @@ class GroundBased(Interferometer):
                                         sub_sub_noise,
                                         self._return_value,
                                     )
-                                    self._ifo = gwinc.precompIFO(
-                                        self.fT.value, self._ifo
-                                    )
+                                    self._trace = self._noise_budget.run(freq=self.fT.value, ifo=self._ifo)
                             else:
                                 self.var_dict = [
                                     base_noise + " " + sub_noise,
@@ -963,7 +960,7 @@ class GroundBased(Interferometer):
                                     sub_noise,
                                     self._return_value,
                                 )
-                                self._ifo = gwinc.precompIFO(self.fT.value, self._ifo)
+                                self._trace = self._noise_budget.run(freq=self.fT.value, ifo=self._ifo)
                         else:
                             raise ValueError(
                                 sub_noise
@@ -979,44 +976,48 @@ class GroundBased(Interferometer):
                     raise ValueError(err_mssg)
         else:
             raise ValueError("Input must be a dictionary of noise sources.")
+        # Overwrite old S_n_f with newly set parameters
+        if hasattr(self,"S_n_f"):
+            del self.S_n_f
 
     def Get_Noise_Dict(self):
         """Gets and prints the available variable noises in the detector design"""
         i = 0
         for key_1, item_1 in self._ifo.items():
             print(key_1, "Parameters:")
-            for key_2, item_2 in item_1.items():
-                if isinstance(item_2, np.ndarray):
-                    i += 1
-                    print("    ", key_2, ": array of shape", item_2.shape)
-                elif isinstance(item_2, list):
-                    i += 1
-                    print("    ", key_2, ": array of shape", len(item_2))
-                elif isinstance(item_2, (int, float)):
-                    i += 1
-                    print("    ", key_2, ":", item_2)
-                elif isinstance(item_2, gwinc.struct.Struct):
-                    print("    ", key_2, "Subparameters:")
-                    for key_3, item_3 in item_2.items():
-                        if isinstance(item_3, np.ndarray):
-                            i += 1
-                            print(
-                                "    ", "    ", key_3, ": array of shape", item_3.shape
-                            )
-                        elif isinstance(item_3, list):
-                            i += 1
-                            print(
-                                "    ", "    ", key_3, ": array of shape", len(item_3)
-                            )
-                        elif isinstance(item_3, (int, float)):
-                            i += 1
-                            print("    ", "    ", key_3, ":", item_3)
-                else:
-                    i += 1
-                    print("    ", key_2, ":", item_2)
+            if hasattr(item_1,"items"):
+                for key_2, item_2 in item_1.items():
+                    if isinstance(item_2, np.ndarray):
+                        i += 1
+                        print("    ", key_2, ": array of shape", item_2.shape)
+                    elif isinstance(item_2, list):
+                        i += 1
+                        print("    ", key_2, ": array of shape", len(item_2))
+                    elif isinstance(item_2, (int, float)):
+                        i += 1
+                        print("    ", key_2, ":", item_2)
+                    elif isinstance(item_2, gwinc.struct.Struct):
+                        print("    ", key_2, "Subparameters:")
+                        for key_3, item_3 in item_2.items():
+                            if isinstance(item_3, np.ndarray):
+                                i += 1
+                                print(
+                                    "    ", "    ", key_3, ": array of shape", item_3.shape
+                                )
+                            elif isinstance(item_3, list):
+                                i += 1
+                                print(
+                                    "    ", "    ", key_3, ": array of shape", len(item_3)
+                                )
+                            elif isinstance(item_3, (int, float)):
+                                i += 1
+                                print("    ", "    ", key_3, ":", item_3)
+                    else:
+                        i += 1
+                        print("    ", key_2, ":", item_2)
 
-        print(" ")
-        print("Number of Variables: ", i)
+            print(" ")
+            print("Number of Variables: ", i)
 
 
 class SpaceBased(Interferometer):

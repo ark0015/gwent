@@ -1,9 +1,8 @@
-import os
 import logging
+import os
 
-from ..struct import load_struct, STRUCT_EXT
+from ..struct import STRUCT_EXT, load_struct
 from ..util import load_module
-
 
 PLOT_STYLE = dict(
     ylabel="Strain [1/\u221AHz]",

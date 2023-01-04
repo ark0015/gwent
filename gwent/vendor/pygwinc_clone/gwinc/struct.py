@@ -1,11 +1,11 @@
+import io
 import os
 import re
-import io
-import yaml
+
 import numpy as np
+import yaml
 from scipy.io import loadmat
 from scipy.io.matlab.mio5_params import mat_struct
-
 
 # HACK: fix loading number in scientific notation
 #

@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import numpy as np
-
-import pytest
+import copy
 
 import astropy.constants as const
 import astropy.units as u
+import numpy as np
+import pytest
 
 import gwent
-from gwent import detector
-from gwent import binary
-from gwent import waveform
+from gwent import binary, detector, waveform
 
 load_directory = gwent.__path__[0] + "/LoadFiles/InstrumentFiles/"
 
@@ -410,10 +408,23 @@ def aLIGO_gwinc():
 def test_Get_Noise_Dict(aLIGO_gwinc):
     aLIGO_gwinc.Get_Noise_Dict()
 
+def test_Set_Noise_Dict(aLIGO_gwinc):
+    copy_aLIGO = copy.deepcopy(aLIGO_gwinc._noise_budget)
+    copy_aLIGO.ifo.Infrastructure.Length = 30
+    copy_aLIGO.ifo.Infrastructure.Temp = 500
+    copy_aLIGO.ifo.Laser.Wavelength = 1e-5
+    copy_aLIGO.ifo.Laser.Power = 130
+    copy_trace = copy_aLIGO.run(ifo=copy_aLIGO.ifo)
+    aLIGO_gwinc.Set_Noise_Dict(gwinc_dict)
+    assert np.all(copy_trace.asd==aLIGO_gwinc._trace.asd)
 
-def test_P_n_f_error(aLIGO_gwinc):
-    with pytest.raises(NotImplementedError):
-        aLIGO_gwinc.P_n_f
+def test_P_n_f():
+    aLIGO_gwinc_2 = detector.GroundBased(
+        "aLIGO gwinc 2", Ground_T_obs, noise_dict=gwinc_dict
+    )
+    copy_trace = aLIGO_gwinc_2._noise_budget.run(freq=aLIGO_gwinc_2.fT.value,
+        ifo=aLIGO_gwinc_2._ifo)
+    assert np.all(copy_trace.psd==aLIGO_gwinc_2.P_n_f)
 
 
 # BBH strain calculation

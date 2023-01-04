@@ -2,13 +2,10 @@
 # coding: utf-8
 
 import astropy.units as u
-
 import pytest
 
 import gwent
-from gwent import binary
-from gwent import detector
-from gwent import snr
+from gwent import binary, detector, snr
 
 # We need to get the file directories to load in the instrument files.
 load_directory = gwent.__path__[0] + "/LoadFiles/InstrumentFiles/"

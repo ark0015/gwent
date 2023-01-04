@@ -1,11 +1,10 @@
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-
 import astropy.units as u
-from astropy.cosmology import z_at_value
+import matplotlib as mpl
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.cosmology import WMAP9 as cosmo
+from astropy.cosmology import z_at_value
 
 
 def Plot_SNR(

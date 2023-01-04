@@ -1,18 +1,18 @@
 from __future__ import print_function
+
+import argparse
+import logging
 import os
 import signal
-import argparse
+
 import numpy as np
 from IPython.terminal.embed import InteractiveShellEmbed
 
-import logging
-
 logging.basicConfig(format="%(message)s", level=os.getenv("LOG_LEVEL", logging.INFO))
 
+from . import io, plot_noise
 from .ifo import available_ifos, load_ifo
 from .precomp import precompIFO
-from . import plot_noise
-from . import io
 
 ##################################################
 

@@ -1,7 +1,10 @@
 from __future__ import division
-from numpy import pi, sqrt, arctan, sin, cos, exp, size, ones, zeros, log10, conj, sum
-import numpy as np
+
 import logging
+
+import numpy as np
+from numpy import (arctan, conj, cos, exp, log10, ones, pi, sin, size, sqrt,
+                   sum, zeros)
 
 from .. import const
 from ..struct import Struct

@@ -1,6 +1,6 @@
 import datetime
-import h5py
 
+import h5py
 
 SCHEMA = "GWINC noise budget"
 SCHEMA_VERSION = 1

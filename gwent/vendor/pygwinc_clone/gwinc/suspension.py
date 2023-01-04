@@ -1,11 +1,12 @@
 from __future__ import division
-from numpy import pi, sqrt, sin, cos, tan, real, imag, zeros
-import numpy as np
+
 import logging
+
+import numpy as np
+from numpy import cos, imag, pi, real, sin, sqrt, tan, zeros
 
 from . import const
 from .struct import Struct
-
 
 # supported fiber geometries
 FIBER_TYPES = [

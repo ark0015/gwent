@@ -1,10 +1,8 @@
+import astropy.units as u
 import numpy as np
 import scipy.interpolate as interp
 
-import astropy.units as u
-
-from . import detector
-from . import binary
+from . import binary, detector
 
 
 def Get_SNR_Matrix(

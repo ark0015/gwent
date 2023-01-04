@@ -6,12 +6,7 @@
 
 import pytest
 
-from gwent import binary
-from gwent import detector
-from gwent import snr
-from gwent import snrplot
-from gwent import utils
-from gwent import waveform
+from gwent import binary, detector, snr, snrplot, utils, waveform
 
 
 @pytest.fixture

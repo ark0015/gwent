@@ -1,9 +1,10 @@
-import os
-import logging
-import itertools
+import collections
 import importlib
 import importlib.util
-import collections
+import itertools
+import logging
+import os
+
 import numpy as np
 import scipy.interpolate
 

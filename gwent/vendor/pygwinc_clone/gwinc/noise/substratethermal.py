@@ -1,8 +1,9 @@
 from __future__ import division, print_function
-from numpy import exp, inf, pi, sqrt
+
 import numpy as np
-import scipy.special
 import scipy.integrate
+import scipy.special
+from numpy import exp, inf, pi, sqrt
 
 from .. import const
 from ..const import BESSEL_ZEROS as zeta

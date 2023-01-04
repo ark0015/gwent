@@ -1,13 +1,14 @@
 from __future__ import division
+
+import logging
+from collections import OrderedDict
+
 import numpy as np
 from numpy import pi, sqrt
-from collections import OrderedDict
-import logging
 
-from . import load_ifo
-from .precomp import precompIFO
-from . import noise
+from . import load_ifo, noise
 from .plot import plot_noise
+from .precomp import precompIFO
 
 
 def gwinc(freq, ifoin, source=None, plot=False, PRfixed=True):
