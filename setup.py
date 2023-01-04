@@ -20,7 +20,7 @@ requirements = [
     "h5py",
     "pyyaml",
     "lalsuite",
-    "gwinc"
+    "gwinc",
 ]
 
 setup_requirements = [

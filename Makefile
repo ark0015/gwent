@@ -51,7 +51,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with black and flake8
-	isort .
+	isort -c .
 	black --check .
 	flake8 --exclude=vendor --ignore=E203,E402,E501,F401,W503
 
