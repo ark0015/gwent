@@ -101,7 +101,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-vendor/
+*/vendor/
 
 #JOSS Paper (for now)
 # paper/

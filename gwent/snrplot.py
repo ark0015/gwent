@@ -203,7 +203,8 @@ def Plot_SNR(
             )
         else:
             if smooth_contours:
-                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                # cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap = mpl.colormaps[contourf_kwargs["cmap"]]
                 cmap.set_under(color="white")
                 CS1 = ax.imshow(
                     logSNR,
@@ -236,7 +237,8 @@ def Plot_SNR(
             )
         else:
             if smooth_contours:
-                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                # cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap = mpl.colormaps[contourf_kwargs["cmap"]]
                 cmap.set_under(color="white")
                 CS1 = ax.imshow(
                     logSNR,
@@ -268,7 +270,8 @@ def Plot_SNR(
             )
         else:
             if smooth_contours:
-                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                # cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap = mpl.colormaps[contourf_kwargs["cmap"]]
                 cmap.set_under(color="white")
                 CS1 = ax.imshow(
                     logSNR,
@@ -297,7 +300,8 @@ def Plot_SNR(
             )
         else:
             if smooth_contours:
-                cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                # cmap = mpl.cm.get_cmap(name=contourf_kwargs["cmap"])
+                cmap = mpl.colormaps[contourf_kwargs["cmap"]]
                 cmap.set_under(color="white")
                 CS1 = ax.imshow(
                     logSNR,

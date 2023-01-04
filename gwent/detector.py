@@ -860,8 +860,7 @@ class GroundBased(Interferometer):
     @property
     def P_n_f(self):
         """Power Spectral Density."""
-        # Not sure about units
-        return self._trace.psd
+        return (self._trace.psd / u.Hz) ** 2
 
     @property
     def S_n_f(self):
@@ -880,7 +879,8 @@ class GroundBased(Interferometer):
                     hasattr(self, attr) for attr in ["_noise_budget", "_base_inst"]
                 ):
                     self.Init_GroundBased()
-                self._S_n_f = self._trace.asd / u.Hz
+                self._S_n_f = self._trace.psd / u.Hz
+                # self._S_n_f = self._noise_budget(self.fT.value,ifo=self._ifo).calc()/u.Hz
         return self._S_n_f
 
     @S_n_f.deleter

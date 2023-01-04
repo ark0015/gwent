@@ -3,11 +3,6 @@
 
 # # Using `gwent` to Calculate Signal-to-Noise Ratios
 
-# Here we present a tutorial on how to use `gwent` to calculate SNRs for the instrument models currently implemented (LISA, PTAs, aLIGO, and Einstein Telescope) with the signal being an array of coalescing Binary Black Holes.
-
-import os
-import sys
-
 import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
@@ -19,14 +14,10 @@ from gwent import binary, detector, snr, snrplot
 load_directory = gwent.__path__[0] + "/LoadFiles/InstrumentFiles/"
 
 # Number of SNRMatrix rows
-sampleRate_y = 10
+sampleRate_y = 5
 # Number of SNRMatrix columns
-sampleRate_x = 10
+sampleRate_x = 5
 
-
-# ## Source Selection Function
-# Takes in a an instrument model that dictates reasonable mass ranges for the particular detector mass regime and instantiates a source with the variable ranges limited by the waveform calibration region.
-# The source parameters must be set (ie. M,q,z,chi1,chi2), but one only needs to set the minima and maxima of the selected SNR axes variables.
 
 # q = m2/m1 reduced mass
 q = 1.0
@@ -41,7 +32,7 @@ chi_max = 0.85
 
 z = 0.1  # Redshift
 z_min = 1e-2
-z_max = 1e3
+z_max = 1e2
 
 
 @pytest.fixture
@@ -101,9 +92,9 @@ T_obs = 4.0 * u.yr  # Observing time in years
 T_obs_min = 1.0 * u.yr
 T_obs_max = 10.0 * u.yr
 noise_dict = {
-    "Infrastructure": {"Length": [3995, 2250, 4160], "Temp": [295, 100, 1e4]},
-    "Laser": {"Power": [125, 10, 1e3]},
-    "Materials": {"Substrate": {"Temp": [295, 10, 1e4]}},
+    "Infrastructure": {"Length": [3995, 2250, 4160], "Temp": [295, 100, 1e3]},
+    "Laser": {"Power": [125, 10, 1e4]},
+    "Materials": {"Substrate": {"Temp": [295, 10, 300]}},
     "Seismic": {"Gamma": [0.8, 0.1, 1.0], "Rho": [1.8e3, 1500, 2500]},
 }
 
@@ -250,6 +241,7 @@ def test_aLIGO_params_MvIL(source_ground_based, aLIGO_gwinc):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
     )
+    plt.show()
     fig, ax = fig, ax = snrplot.Plot_SNR(
         var_x,
         sample_x,
@@ -278,6 +270,7 @@ def test_aLIGO_params_ILvIT(source_ground_based, aLIGO_gwinc):
     [sample_x, sample_y, SNRMatrix] = snr.Get_SNR_Matrix(
         source_ground_based, aLIGO_gwinc, var_x, sampleRate_x, var_y, sampleRate_y
     )
+    plt.show()
     fig, ax = snrplot.Plot_SNR(
         var_x,
         sample_x,

@@ -3,7 +3,6 @@
 
 import copy
 
-import astropy.constants as const
 import astropy.units as u
 import numpy as np
 import pytest
@@ -411,7 +410,7 @@ def test_Get_Noise_Dict(aLIGO_gwinc):
 
 def test_Set_Noise_Dict(aLIGO_gwinc):
     copy_aLIGO = copy.deepcopy(aLIGO_gwinc._noise_budget)
-    copy_aLIGO.ifo.Infrastructure.Length = 30
+    copy_aLIGO.ifo.Infrastructure.Length = 3000
     copy_aLIGO.ifo.Infrastructure.Temp = 500
     copy_aLIGO.ifo.Laser.Wavelength = 1e-5
     copy_aLIGO.ifo.Laser.Power = 130
@@ -427,7 +426,7 @@ def test_P_n_f():
     copy_trace = aLIGO_gwinc_2._noise_budget.run(
         freq=aLIGO_gwinc_2.fT.value, ifo=aLIGO_gwinc_2._ifo
     )
-    assert np.all(copy_trace.psd == aLIGO_gwinc_2.P_n_f)
+    assert np.all(copy_trace.psd == np.sqrt(aLIGO_gwinc_2.P_n_f.value))
 
 
 # BBH strain calculation
