@@ -14,7 +14,7 @@ import gwent
 from . import utils
 
 current_path = os.path.abspath(gwent.__path__[0])
-#sys.path.insert(0, current_path + "/vendor/pygwinc_clone")
+# sys.path.insert(0, current_path + "/vendor/pygwinc_clone")
 import gwinc
 
 load_directory = os.path.join(current_path, "LoadFiles/")
@@ -877,8 +877,7 @@ class GroundBased(Interferometer):
                     self._S_n_f = self.h_n_f**2 / self.fT
             else:
                 if not any(
-                    hasattr(self, attr)
-                    for attr in ["_noise_budget", "_base_inst"]
+                    hasattr(self, attr) for attr in ["_noise_budget", "_base_inst"]
                 ):
                     self.Init_GroundBased()
                 self._S_n_f = self._trace.asd / u.Hz
@@ -891,14 +890,11 @@ class GroundBased(Interferometer):
     def Init_GroundBased(self):
         """Initialized the Ground Based detector in gwinc"""
 
-        base_inst = [
-            name for name in self.name.split() if name in gwinc.ifo.IFOS
-        ]
+        base_inst = [name for name in self.name.split() if name in gwinc.ifo.IFOS]
         if len(base_inst) == 1:
             self._base_inst = base_inst[0]
         else:
-            print(
-                f"You must select a base instrument model from {gwinc.ifo.IFOS}")
+            print(f"You must select a base instrument model from {gwinc.ifo.IFOS}")
             print(
                 "Setting base instrument to aLIGO. To change base instrument, include different model in class name and reinitialize."
             )
@@ -949,7 +945,9 @@ class GroundBased(Interferometer):
                                         sub_sub_noise,
                                         self._return_value,
                                     )
-                                    self._trace = self._noise_budget.run(freq=self.fT.value, ifo=self._ifo)
+                                    self._trace = self._noise_budget.run(
+                                        freq=self.fT.value, ifo=self._ifo
+                                    )
                             else:
                                 self.var_dict = [
                                     base_noise + " " + sub_noise,
@@ -960,7 +958,9 @@ class GroundBased(Interferometer):
                                     sub_noise,
                                     self._return_value,
                                 )
-                                self._trace = self._noise_budget.run(freq=self.fT.value, ifo=self._ifo)
+                                self._trace = self._noise_budget.run(
+                                    freq=self.fT.value, ifo=self._ifo
+                                )
                         else:
                             raise ValueError(
                                 sub_noise
@@ -977,7 +977,7 @@ class GroundBased(Interferometer):
         else:
             raise ValueError("Input must be a dictionary of noise sources.")
         # Overwrite old S_n_f with newly set parameters
-        if hasattr(self,"S_n_f"):
+        if hasattr(self, "S_n_f"):
             del self.S_n_f
 
     def Get_Noise_Dict(self):
@@ -985,7 +985,7 @@ class GroundBased(Interferometer):
         i = 0
         for key_1, item_1 in self._ifo.items():
             print(key_1, "Parameters:")
-            if hasattr(item_1,"items"):
+            if hasattr(item_1, "items"):
                 for key_2, item_2 in item_1.items():
                     if isinstance(item_2, np.ndarray):
                         i += 1
@@ -1002,12 +1002,20 @@ class GroundBased(Interferometer):
                             if isinstance(item_3, np.ndarray):
                                 i += 1
                                 print(
-                                    "    ", "    ", key_3, ": array of shape", item_3.shape
+                                    "    ",
+                                    "    ",
+                                    key_3,
+                                    ": array of shape",
+                                    item_3.shape,
                                 )
                             elif isinstance(item_3, list):
                                 i += 1
                                 print(
-                                    "    ", "    ", key_3, ": array of shape", len(item_3)
+                                    "    ",
+                                    "    ",
+                                    key_3,
+                                    ": array of shape",
+                                    len(item_3),
                                 )
                             elif isinstance(item_3, (int, float)):
                                 i += 1

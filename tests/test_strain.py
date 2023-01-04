@@ -408,6 +408,7 @@ def aLIGO_gwinc():
 def test_Get_Noise_Dict(aLIGO_gwinc):
     aLIGO_gwinc.Get_Noise_Dict()
 
+
 def test_Set_Noise_Dict(aLIGO_gwinc):
     copy_aLIGO = copy.deepcopy(aLIGO_gwinc._noise_budget)
     copy_aLIGO.ifo.Infrastructure.Length = 30
@@ -416,15 +417,17 @@ def test_Set_Noise_Dict(aLIGO_gwinc):
     copy_aLIGO.ifo.Laser.Power = 130
     copy_trace = copy_aLIGO.run(ifo=copy_aLIGO.ifo)
     aLIGO_gwinc.Set_Noise_Dict(gwinc_dict)
-    assert np.all(copy_trace.asd==aLIGO_gwinc._trace.asd)
+    assert np.all(copy_trace.asd == aLIGO_gwinc._trace.asd)
+
 
 def test_P_n_f():
     aLIGO_gwinc_2 = detector.GroundBased(
         "aLIGO gwinc 2", Ground_T_obs, noise_dict=gwinc_dict
     )
-    copy_trace = aLIGO_gwinc_2._noise_budget.run(freq=aLIGO_gwinc_2.fT.value,
-        ifo=aLIGO_gwinc_2._ifo)
-    assert np.all(copy_trace.psd==aLIGO_gwinc_2.P_n_f)
+    copy_trace = aLIGO_gwinc_2._noise_budget.run(
+        freq=aLIGO_gwinc_2.fT.value, ifo=aLIGO_gwinc_2._ifo
+    )
+    assert np.all(copy_trace.psd == aLIGO_gwinc_2.P_n_f)
 
 
 # BBH strain calculation
