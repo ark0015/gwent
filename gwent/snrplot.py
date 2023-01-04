@@ -445,7 +445,7 @@ def Plot_SNR(
         ages2 = ages2.to("Gyr")
         ages = np.hstack((ages1.value, ages2.value))
         ages = ages * u.Gyr
-        ageticks = [z_at_value(cosmo.age, age) for age in ages]
+        ageticks = [z_at_value(cosmo.age, age, method="Bounded") for age in ages]
 
         # Set axes limits
         ax2.set_yticks(np.log10(ageticks))
