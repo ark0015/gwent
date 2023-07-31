@@ -45,7 +45,7 @@ This includes:
 Calculates the strain from coalescing black hole binaries. It contains functionality for different source descriptions:
 
 * Slowly-evolving sources, ie. BHBs early in their inspiral where they appear to not change in frequency.
-* Rapidly-evolving sources, ie. BHBs in the final stages of coalescence. 
+* Rapidly-evolving sources, ie. BHBs in the final stages of coalescence.
 
   * Uses a fully Pythonic implementation of the phenomenological model ``IMRPhenomD`` to accurately represent the inspiral, merger, and ringdown of the BHB.
 
@@ -64,7 +64,7 @@ Getting Started
 
 README Figure and Data
 ----------------------
-If you are looking for quick data, we conveniently place the figure above in the `data <https://github.com/ark0015/gwent/tree/master/data>`_ folder on the Github repo. There you can also find the raw data used for this figure in ``.npz`` format. To load this data, simply use ``np.load(filename)``, and the data can be accessed by the kwargs ``'mass'``, ``'redshift'``, and ``'snr'``. E.g., 
+If you are looking for quick data, we conveniently place the figure above in the `data <https://github.com/ark0015/gwent/tree/master/data>`_ folder on the Github repo. There you can also find the raw data used for this figure in ``.npz`` format. To load this data, simply use ``np.load(filename)``, and the data can be accessed by the kwargs ``'mass'``, ``'redshift'``, and ``'snr'``. E.g.,
 
 .. code-block:: python
 
@@ -73,7 +73,7 @@ If you are looking for quick data, we conveniently place the figure above in the
     from gwent.snrplot import Plot_SNR
     loaded_file = np.load(filename)
     Plot_SNR('M',load_file['mass'],'z',load_file['redshift'],load_file['snr'])
-    
+
 Publication
 -----------
 This work and methodology is available on arXiv_. If you use ``gwent``, please cite this work using the following:
@@ -101,8 +101,6 @@ This work and methodology is available on arXiv_. If you use ``gwent``, please c
 
 Credits
 -------
-We utilize and include within the package a specific commit of ``pygwinc`` found at https://git.ligo.org/gwinc/pygwinc to create many of the ground-based gravitational wave detector sensitivity curves. At the time of creation, there is no ``pygwinc`` availability on PyPI, so we explicitly include the necessary portions of the code within.
-
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
