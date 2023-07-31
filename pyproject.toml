@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0",
+			"numpy",
+		    "scipy",
+		    "astropy",
+		    "hasasia",
+		    "matplotlib",
+		    "h5py",
+		    "pyyaml",
+		    "lalsuite",
+		    "gwinc",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gwent"
+version = "0.5.0"
+authors = [
+  { name="Andrew Kaiser", email="andrewkaiser70@gmail.com" },
+]
+description = "Gravitational Wave Detector Design Toolkit."
+readme = "README.rst"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ark0015/gwent"
+"Bug Tracker" = "https://github.com/ark0015/gwent/issues"

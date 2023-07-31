@@ -1,6 +1,13 @@
 =======
 History
 =======
+0.5.0 (2023-7-28)
+-------------------
+* Removed vendored gwinc and switched to pip install
+* Switched install to pyproject.toml not setup.py
+* Only supporting python 3.7 and up
+* Testing and linting changes
+
 0.4.0 (2021-1-8)
 -------------------
 * Adding functionality to use lalsuite waveforms
@@ -28,12 +35,12 @@ History
 * Major Changes to snrplot
 * Overhaul of tutorials
 * Minor Changes to binary and snr functions
-* Other Minor Changes sprinkled throughout 
+* Other Minor Changes sprinkled throughout
 
 0.1.16 (2020-1-19)
 -------------------
 * Removing install of pygwinc in setup.py
-* pygwinc must now be manually installed 
+* pygwinc must now be manually installed
 
 0.1.15 (2020-1-18)
 -------------------

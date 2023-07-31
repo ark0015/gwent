@@ -296,7 +296,7 @@ def Plot_SNR(
                 np.log10(sample_y),
                 logSNR,
                 print_logLevels,
-                **contour_kwargs
+                **contour_kwargs,
             )
         else:
             if smooth_contours:
@@ -324,14 +324,14 @@ def Plot_SNR(
                     np.log10(sample_y),
                     logSNR,
                     logLevels,
-                    **contourf_kwargs
+                    **contourf_kwargs,
                 )
             ax.contour(
                 np.log10(sample_x),
                 np.log10(sample_y),
                 logSNR,
                 print_logLevels,
-                **contour_kwargs
+                **contour_kwargs,
             )
         ax.set_xlim(np.log10(xlabel_min), np.log10(xlabel_max))
         ax.set_ylim(np.log10(ylabel_min), np.log10(ylabel_max))
@@ -390,7 +390,7 @@ def Plot_SNR(
                 np.log10(sample_y),
                 logSNR,
                 print_logLevels,
-                **contour_kwargs
+                **contour_kwargs,
             )
 
         dists_min = cosmo.luminosity_distance(ylabel_min).to("Gpc")
@@ -437,7 +437,7 @@ def Plot_SNR(
                 np.log10(sample_y),
                 logSNR,
                 print_logLevels,
-                **contour_kwargs
+                **contour_kwargs,
             )
 
         ages1 = np.array([13.5, 13, 10, 5, 1]) * u.Gyr
@@ -503,7 +503,7 @@ def Plot_SNR(
                 r"$10^{%i}$" % x if int(x) > 1 else r"$%i$" % (10**x)
                 for x in print_logLevels
             ],
-            **yticklabels_kwargs
+            **yticklabels_kwargs,
         )
 
     if display:
